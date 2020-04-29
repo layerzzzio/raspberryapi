@@ -1,9 +1,12 @@
 package vcore
 
 import (
+	"fmt"
+	"net/http"
 	"regexp"
 	"strconv"
 
+	"github.com/labstack/echo"
 	"github.com/raspibuddy/rpi"
 	"github.com/shirou/gopsutil/cpu"
 )
@@ -12,8 +15,8 @@ import (
 func (c *VCore) List() ([]rpi.VCore, error) {
 	percent, vCore, err := c.vsys.List()
 
-	if len(percent) != len(vCore) {
-		panic(err)
+	if err != nil || len(percent) != len(vCore) {
+		return nil, echo.NewHTTPError(http.StatusAccepted, "The results cannot be guaranteed")
 	}
 
 	var result []rpi.VCore
@@ -40,11 +43,15 @@ func (c *VCore) List() ([]rpi.VCore, error) {
 }
 
 // View returns a list of cores (virtual cores)
-func (c *VCore) View(id int) (rpi.VCore, error) {
+func (c *VCore) View(id int) (*rpi.VCore, error) {
 	percentTot, vCoreTot, err := c.vsys.List()
 
 	if len(percentTot) != len(vCoreTot) {
-		panic(err)
+		return nil, echo.NewHTTPError(http.StatusAccepted, "Results were not returned as they could not be guaranteed")
+	}
+
+	if id > len(percentTot) || id < 0 {
+		return nil, echo.NewHTTPError(http.StatusNotFound, fmt.Sprintf("There are only %v vCores; count starts at 0", len(percentTot)))
 	}
 
 	var percent float64
@@ -52,8 +59,6 @@ func (c *VCore) View(id int) (rpi.VCore, error) {
 		if id == i {
 			percent = s
 			break
-		} else {
-			percent = -1
 		}
 	}
 
@@ -82,7 +87,7 @@ func (c *VCore) View(id int) (rpi.VCore, error) {
 		Irq:    vCore.Irq,
 	}
 
-	return result, err
+	return &result, err
 }
 
 func extractNum(s string, min int, max int) (int, error) {

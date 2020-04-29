@@ -41,7 +41,7 @@ func (ls *LogService) List(ctx echo.Context) (resp []rpi.VCore, err error) {
 }
 
 // View logs the request when listing a specific vcore.
-func (ls *LogService) View(ctx echo.Context, id int) (resp rpi.VCore, err error) {
+func (ls *LogService) View(ctx echo.Context, id int) (resp *rpi.VCore, err error) {
 	defer func(begin time.Time) {
 		ls.logger.Log(
 			ctx,

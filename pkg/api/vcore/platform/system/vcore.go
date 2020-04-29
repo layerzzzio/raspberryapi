@@ -11,12 +11,12 @@ type VCore struct{}
 func (c VCore) List() ([]float64, []cpu.TimesStat, error) {
 	percent, err := cpu.Percent(1, true)
 	if err != nil {
-		error.Error(err)
+		return nil, nil, err
 	}
 
 	vcore, err := cpu.Times(true)
 	if err != nil {
-		error.Error(err)
+		return nil, nil, err
 	}
 
 	return percent, vcore, err

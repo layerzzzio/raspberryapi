@@ -9,7 +9,7 @@ import (
 // Service is a core service interface (controller)
 type Service interface {
 	List() ([]rpi.VCore, error)
-	View(int) (rpi.VCore, error)
+	View(int) (*rpi.VCore, error)
 }
 
 // VCore represents a core application service (service)

@@ -9,19 +9,21 @@ type CPU struct{}
 
 // List is a function
 func (c CPU) List() ([]cpu.InfoStat, []float64, []cpu.TimesStat, error) {
+	perVCore := false
+
 	info, err := cpu.Info()
 	if err != nil {
-		error.Error(err)
+		return nil, nil, nil, err
 	}
 
-	percent, err := cpu.Percent(1, false)
+	percent, err := cpu.Percent(1, perVCore)
 	if err != nil {
-		error.Error(err)
+		return nil, nil, nil, err
 	}
 
-	vCore, err := cpu.Times(false)
+	vCore, err := cpu.Times(perVCore)
 	if err != nil {
-		error.Error(err)
+		return nil, nil, nil, err
 	}
 
 	return info, percent, vCore, nil

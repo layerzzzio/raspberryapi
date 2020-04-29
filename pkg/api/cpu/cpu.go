@@ -1,13 +1,18 @@
 package cpu
 
-import "github.com/raspibuddy/rpi"
+import (
+	"net/http"
+
+	"github.com/labstack/echo"
+	"github.com/raspibuddy/rpi"
+)
 
 // List returns a list of cpus
 func (c *CPU) List() ([]rpi.CPU, error) {
 	info, percent, vCore, err := c.csys.List()
 
-	if len(info) != len(percent) && len(percent) != len(vCore) {
-		panic(err)
+	if err != nil || len(percent) != len(vCore) {
+		return nil, echo.NewHTTPError(http.StatusAccepted, "Results were not returned as they could not be guaranteed")
 	}
 
 	var result []rpi.CPU
