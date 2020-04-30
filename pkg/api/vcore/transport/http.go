@@ -24,7 +24,7 @@ func NewHTTP(svc vcore.Service, r *echo.Group) {
 func (h *HTTP) list(ctx echo.Context) error {
 	result, err := h.svc.List()
 	if err != nil {
-		return err
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request to an API error - please report to helloraspibuddy@gmail.com")
 	}
 	return ctx.JSON(http.StatusOK, result)
 }
@@ -32,7 +32,7 @@ func (h *HTTP) list(ctx echo.Context) error {
 func (h *HTTP) view(ctx echo.Context) error {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
-		return err
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request due to an invalid vcore id - should be an integer")
 	}
 
 	result, err := h.svc.View(id)

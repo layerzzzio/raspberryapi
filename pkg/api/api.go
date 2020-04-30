@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/raspibuddy/rpi/pkg/api/cpu"
 	cl "github.com/raspibuddy/rpi/pkg/api/cpu/logging"
+	"github.com/raspibuddy/rpi/pkg/api/cpu/platform/system"
 	ct "github.com/raspibuddy/rpi/pkg/api/cpu/transport"
 	"github.com/raspibuddy/rpi/pkg/api/vcore"
 	vl "github.com/raspibuddy/rpi/pkg/api/vcore/logging"
@@ -20,7 +21,7 @@ func Start(cfg *config.Configuration) error {
 
 	v1 := e.Group("/v1")
 
-	ct.NewHTTP(cl.New(cpu.New(), log).Service, v1)
+	ct.NewHTTP(cl.New(cpu.New(system.CPU{}), log).Service, v1)
 	vt.NewHTTP(vl.New(vcore.New(), log).Service, v1)
 
 	server.Start(e, &server.Config{

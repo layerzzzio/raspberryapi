@@ -2,7 +2,6 @@ package cpu
 
 import (
 	"github.com/raspibuddy/rpi"
-	"github.com/raspibuddy/rpi/pkg/api/cpu/platform/system"
 	"github.com/shirou/gopsutil/cpu"
 )
 
@@ -22,7 +21,6 @@ type CSYS interface {
 }
 
 // New creates a cpu service
-func New() *CPU {
-	return &CPU{csys: system.CPU{}}
+func New(csys CSYS) *CPU {
+	return &CPU{csys: csys}
 }
-

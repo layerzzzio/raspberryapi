@@ -28,9 +28,6 @@ func (c *CPU) List() ([]rpi.CPU, error) {
 				User:   vCore[i].User,
 				System: vCore[i].System,
 				Idle:   vCore[i].Idle,
-				Nice:   vCore[i].Nice,
-				Iowait: vCore[i].Iowait,
-				Irq:    vCore[i].Irq,
 			},
 		}
 		result = append(result, data)

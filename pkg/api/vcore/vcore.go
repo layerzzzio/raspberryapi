@@ -47,11 +47,11 @@ func (c *VCore) View(id int) (*rpi.VCore, error) {
 	percentTot, vCoreTot, err := c.vsys.List()
 
 	if len(percentTot) != len(vCoreTot) {
-		return nil, echo.NewHTTPError(http.StatusAccepted, "Results were not returned as they could not be guaranteed")
+		return nil, echo.NewHTTPError(http.StatusAccepted, "The request was accepted but the results could not be guaranteed thus not returned")
 	}
 
 	if id > len(percentTot) || id < 0 {
-		return nil, echo.NewHTTPError(http.StatusNotFound, fmt.Sprintf("There are only %v vCores; count starts at 0", len(percentTot)))
+		return nil, echo.NewHTTPError(http.StatusNotFound, fmt.Sprintf("There are only %v vCores; count starts from 0", len(percentTot)))
 	}
 
 	var percent float64

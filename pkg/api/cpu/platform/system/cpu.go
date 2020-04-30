@@ -27,5 +27,4 @@ func (c CPU) List() ([]cpu.InfoStat, []float64, []cpu.TimesStat, error) {
 	}
 
 	return info, percent, vCore, nil
-
 }
