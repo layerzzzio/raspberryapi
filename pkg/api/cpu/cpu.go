@@ -1,6 +1,7 @@
 package cpu
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo"
@@ -11,13 +12,14 @@ import (
 func (c *CPU) List() ([]rpi.CPU, error) {
 	info, percent, vCore, err := c.csys.List()
 
-	if err != nil || len(percent) != len(vCore) {
+	if err != nil || len(percent) != len(vCore) || len(percent) != len(info) {
 		return nil, echo.NewHTTPError(http.StatusAccepted, "Results were not returned as they could not be guaranteed")
 	}
 
 	var result []rpi.CPU
 
 	for i := range info {
+		fmt.Println(i)
 		data := rpi.CPU{
 			ID:        int(info[i].CPU),
 			Cores:     info[i].Cores,
