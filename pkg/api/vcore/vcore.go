@@ -1,6 +1,7 @@
 package vcore
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -14,30 +15,27 @@ import (
 
 // List populates and returns an array of vCore models.
 func (v *VCore) List() ([]rpi.VCore, error) {
-	percent, vCore, err := v.vsys.List()
+	percent, time, err := v.vsys.List()
 
-	if err != nil || len(percent) != len(vCore) {
-		return nil, echo.NewHTTPError(http.StatusAccepted, "Results were not returned as they could not be guaranteed")
+	if err != nil || len(percent) != len(time) {
+		return nil, echo.NewHTTPError(http.StatusAccepted, "results were not returned as they could not be guaranteed")
 	}
 
 	var result []rpi.VCore
 
 	var vCoreID int
-	for i, s := range vCore {
+	for i, s := range time {
 		vCoreID, err = concatID(extractNum(s.CPU, 0, 9))
 		if err != nil {
-			return nil, echo.NewHTTPError(http.StatusInternalServerError, "Parsing vCoreID was unsuccessful")
+			return nil, echo.NewHTTPError(http.StatusInternalServerError, "parsing id was unsuccessful")
 		}
 
 		spec := rpi.VCore{
 			ID:     vCoreID,
 			Used:   percent[i],
-			User:   vCore[i].User,
-			System: vCore[i].System,
-			Idle:   vCore[i].Idle,
-			Nice:   vCore[i].Nice,
-			Iowait: vCore[i].Iowait,
-			Irq:    vCore[i].Irq,
+			User:   time[i].User,
+			System: time[i].System,
+			Idle:   time[i].Idle,
 		}
 		result = append(result, spec)
 	}
@@ -46,14 +44,14 @@ func (v *VCore) List() ([]rpi.VCore, error) {
 
 // View populates and returns one single CPU model.
 func (v *VCore) View(id int) (*rpi.VCore, error) {
-	percentTot, vCoreTot, err := v.vsys.List()
+	percentTot, timeTot, err := v.vsys.List()
 
-	if len(percentTot) != len(vCoreTot) {
-		return nil, echo.NewHTTPError(http.StatusAccepted, "Results were not returned as they could not be guaranteed")
+	if err != nil || len(percentTot) != len(timeTot) {
+		return nil, echo.NewHTTPError(http.StatusAccepted, "results were not returned as they could not be guaranteed")
 	}
 
 	if id > len(percentTot) || id < 0 {
-		return nil, echo.NewHTTPError(http.StatusNotFound, fmt.Sprintf("There are only %v vCores; count starts from 0", len(percentTot)))
+		return nil, echo.NewHTTPError(http.StatusNotFound, fmt.Sprintf("there are only %v vcores; count starts from 0", len(percentTot)))
 	}
 
 	var percent float64
@@ -66,10 +64,10 @@ func (v *VCore) View(id int) (*rpi.VCore, error) {
 
 	var vCoreID int
 	var vCore cpu.TimesStat
-	for _, s := range vCoreTot {
+	for _, s := range timeTot {
 		vCoreID, err = concatID(extractNum(s.CPU, 0, 9))
 		if err != nil {
-			return nil, echo.NewHTTPError(http.StatusInternalServerError, "Parsing vCoreID was unsuccessful")
+			return nil, echo.NewHTTPError(http.StatusInternalServerError, "parsing id was unsuccessful")
 		}
 
 		if id == vCoreID {
@@ -84,9 +82,6 @@ func (v *VCore) View(id int) (*rpi.VCore, error) {
 		User:   vCore.User,
 		System: vCore.System,
 		Idle:   vCore.Idle,
-		Nice:   vCore.Nice,
-		Iowait: vCore.Iowait,
-		Irq:    vCore.Irq,
 	}
 
 	return &result, err
@@ -101,7 +96,7 @@ func concatID(input []string) (int, error) {
 	str := strings.Join(input[:], "")
 	res, err := strconv.Atoi(str)
 	if err != nil {
-		return -1, err
+		return -1, errors.New("invalid syntax")
 	}
 	return res, nil
 }

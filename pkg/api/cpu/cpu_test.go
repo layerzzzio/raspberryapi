@@ -6,33 +6,35 @@ import (
 	"testing"
 
 	"github.com/labstack/echo"
+	"github.com/raspibuddy/rpi"
 	"github.com/raspibuddy/rpi/pkg/utl/mock/mocksys"
 	cext "github.com/shirou/gopsutil/cpu"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestListError(t *testing.T) {
+func TestListNilResultError(t *testing.T) {
 	csys := &mocksys.CPU{
 		ListFn: func() ([]cext.InfoStat, []float64, []cext.TimesStat, error) {
 			return nil, nil, nil, errors.New("test error")
 		},
 	}
 
+	wantedErr := echo.NewHTTPError(http.StatusAccepted, "results were not returned as they could not be guaranteed")
+
 	s := New(csys)
 	cpus, err := s.List()
 	assert.Nil(t, cpus)
 	assert.NotNil(t, err)
-	assert.EqualValues(t, "Results were not returned as they could not be guaranteed", err.(*echo.HTTPError).Message)
-	assert.EqualValues(t, http.StatusAccepted, err.(*echo.HTTPError).Code)
+	assert.Equal(t, err, wantedErr)
 }
 
-func TestListLengthDiff(t *testing.T) {
+func TestListLengthDiffError(t *testing.T) {
 	cases := []struct {
 		name string
 		csys *mocksys.CPU
 	}{
 		{
-			name: "Length array info greater than array percent & time",
+			name: "length array info greater than percent & time arrays",
 			csys: &mocksys.CPU{
 				ListFn: func() ([]cext.InfoStat, []float64, []cext.TimesStat, error) {
 					return []cext.InfoStat{
@@ -62,7 +64,7 @@ func TestListLengthDiff(t *testing.T) {
 			},
 		},
 		{
-			name: "Length array percent greater than array info & time",
+			name: "length array percent greater than info & time arrays",
 			csys: &mocksys.CPU{
 				ListFn: func() ([]cext.InfoStat, []float64, []cext.TimesStat, error) {
 					return []cext.InfoStat{
@@ -86,7 +88,7 @@ func TestListLengthDiff(t *testing.T) {
 			},
 		},
 		{
-			name: "Length array time greater than array info & percent",
+			name: "length array time greater than info & percent arrays",
 			csys: &mocksys.CPU{
 				ListFn: func() ([]cext.InfoStat, []float64, []cext.TimesStat, error) {
 					return []cext.InfoStat{
@@ -123,7 +125,7 @@ func TestListLengthDiff(t *testing.T) {
 			cpus, err := s.List()
 			assert.Nil(t, cpus)
 			assert.NotNil(t, err)
-			assert.EqualValues(t, "Results were not returned as they could not be guaranteed", err.(*echo.HTTPError).Message)
+			assert.EqualValues(t, "results were not returned as they could not be guaranteed", err.(*echo.HTTPError).Message)
 			assert.EqualValues(t, http.StatusAccepted, err.(*echo.HTTPError).Code)
 		})
 	}
@@ -152,15 +154,21 @@ func TestListSuccess(t *testing.T) {
 		},
 	}
 
+	wantedData := rpi.CPU{
+		ID:        0,
+		ModelName: "test model",
+		Cores:     int32(16),
+		Mhz:       2300.99,
+		Stats: rpi.CPUStats{
+			Used:   99.9,
+			User:   111.1,
+			System: 222.2,
+			Idle:   333.3,
+		},
+	}
+
 	s := New(csys)
 	cpus, err := s.List()
-	assert.EqualValues(t, cpus[0].ID, 0)
-	assert.EqualValues(t, cpus[0].ModelName, "test model")
-	assert.EqualValues(t, cpus[0].Cores, int32(16))
-	assert.EqualValues(t, cpus[0].Mhz, 2300.99)
-	assert.EqualValues(t, cpus[0].Stats.Used, 99.9)
-	assert.EqualValues(t, cpus[0].Stats.User, 111.1)
-	assert.EqualValues(t, cpus[0].Stats.System, 222.2)
-	assert.EqualValues(t, cpus[0].Stats.Idle, 333.3)
+	assert.Equal(t, cpus[0], wantedData)
 	assert.Nil(t, err)
 }

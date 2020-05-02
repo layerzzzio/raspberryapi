@@ -17,7 +17,7 @@ func (c VCore) List() ([]float64, []cpu.TimesStat, error) {
 
 	time, errT := cpu.Times(true)
 	if errP != nil || errT != nil {
-		return nil, nil, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve the CPU metrics")
+		return nil, nil, echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the CPU metrics")
 	}
 
 	return percent, time, nil

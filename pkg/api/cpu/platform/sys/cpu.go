@@ -18,7 +18,7 @@ func (c CPU) List() ([]cpu.InfoStat, []float64, []cpu.TimesStat, error) {
 	time, errT := cpu.Times(false)
 
 	if errI != nil || errP != nil || errT != nil {
-		return nil, nil, nil, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve the CPU metrics")
+		return nil, nil, nil, echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the CPU metrics")
 	}
 
 	return info, percent, time, nil

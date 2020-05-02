@@ -13,7 +13,7 @@ func (c *CPU) List() ([]rpi.CPU, error) {
 	info, percent, vCore, err := c.csys.List()
 
 	if err != nil || len(percent) != len(vCore) || len(percent) != len(info) {
-		return nil, echo.NewHTTPError(http.StatusAccepted, "Results were not returned as they could not be guaranteed")
+		return nil, echo.NewHTTPError(http.StatusAccepted, "results were not returned as they could not be guaranteed")
 	}
 
 	var result []rpi.CPU
