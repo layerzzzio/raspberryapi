@@ -2,7 +2,7 @@ package vcore
 
 import (
 	"github.com/raspibuddy/rpi"
-	"github.com/raspibuddy/rpi/pkg/api/vcore/platform/system"
+	"github.com/raspibuddy/rpi/pkg/api/vcore/platform/sys"
 	"github.com/shirou/gopsutil/cpu"
 )
 
@@ -23,6 +23,6 @@ type VSYS interface {
 }
 
 // New creates a core service
-func New() *VCore {
-	return &VCore{vsys: system.VCore{}}
+func New(vsys VSYS) *VCore {
+	return &VCore{vsys: sys.VCore{}}
 }

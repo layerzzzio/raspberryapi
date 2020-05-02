@@ -5,26 +5,28 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/labstack/echo"
 	"github.com/raspibuddy/rpi"
 	"github.com/shirou/gopsutil/cpu"
 )
 
-// List returns a list of cores (virtual cores)
-func (c *VCore) List() ([]rpi.VCore, error) {
-	percent, vCore, err := c.vsys.List()
+// List populates and returns an array of vCore models.
+func (v *VCore) List() ([]rpi.VCore, error) {
+	percent, vCore, err := v.vsys.List()
 
 	if err != nil || len(percent) != len(vCore) {
-		return nil, echo.NewHTTPError(http.StatusAccepted, "The results cannot be guaranteed")
+		return nil, echo.NewHTTPError(http.StatusAccepted, "Results were not returned as they could not be guaranteed")
 	}
 
 	var result []rpi.VCore
 
+	var vCoreID int
 	for i, s := range vCore {
-		vCoreID, err := extractNum(s.CPU, 0, 9)
+		vCoreID, err = concatID(extractNum(s.CPU, 0, 9))
 		if err != nil {
-			error.Error(err)
+			return nil, echo.NewHTTPError(http.StatusInternalServerError, "Parsing vCoreID was unsuccessful")
 		}
 
 		spec := rpi.VCore{
@@ -42,12 +44,12 @@ func (c *VCore) List() ([]rpi.VCore, error) {
 	return result, err
 }
 
-// View returns a list of cores (virtual cores)
-func (c *VCore) View(id int) (*rpi.VCore, error) {
-	percentTot, vCoreTot, err := c.vsys.List()
+// View populates and returns one single CPU model.
+func (v *VCore) View(id int) (*rpi.VCore, error) {
+	percentTot, vCoreTot, err := v.vsys.List()
 
 	if len(percentTot) != len(vCoreTot) {
-		return nil, echo.NewHTTPError(http.StatusAccepted, "The request was accepted but the results could not be guaranteed thus not returned")
+		return nil, echo.NewHTTPError(http.StatusAccepted, "Results were not returned as they could not be guaranteed")
 	}
 
 	if id > len(percentTot) || id < 0 {
@@ -65,9 +67,9 @@ func (c *VCore) View(id int) (*rpi.VCore, error) {
 	var vCoreID int
 	var vCore cpu.TimesStat
 	for _, s := range vCoreTot {
-		vCoreID, err = extractNum(s.CPU, 0, 9)
+		vCoreID, err = concatID(extractNum(s.CPU, 0, 9))
 		if err != nil {
-			error.Error(err)
+			return nil, echo.NewHTTPError(http.StatusInternalServerError, "Parsing vCoreID was unsuccessful")
 		}
 
 		if id == vCoreID {
@@ -89,11 +91,15 @@ func (c *VCore) View(id int) (*rpi.VCore, error) {
 
 	return &result, err
 }
-
-func extractNum(s string, min int, max int) (int, error) {
+func extractNum(s string, min int, max int) []string {
 	r := regexp.MustCompile("[" + strconv.Itoa(min) + "-" + strconv.Itoa(max) + "]+")
-	num := r.FindString(s)
-	res, err := strconv.Atoi(num)
+	res := r.FindAllString(s, -1)
+	return res
+}
+
+func concatID(input []string) (int, error) {
+	str := strings.Join(input[:], "")
+	res, err := strconv.Atoi(str)
 	if err != nil {
 		return -1, err
 	}

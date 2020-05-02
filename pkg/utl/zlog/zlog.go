@@ -8,12 +8,12 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// Log represents a zerolog logger
+// Log represents a zerolog logger.
 type Log struct {
 	logger *zerolog.Logger
 }
 
-// New instantiates new zero logger
+// New instantiates a new zero logger.
 func New() *Log {
 	z := zerolog.New(os.Stdout)
 	return &Log{
@@ -21,7 +21,7 @@ func New() *Log {
 	}
 }
 
-// Log logs using zerolog
+// Log logs using zerolog.
 func (z *Log) Log(ctx echo.Context, source, msg string, err error, params map[string]interface{}) {
 
 	if params == nil {

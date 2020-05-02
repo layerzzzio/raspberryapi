@@ -8,7 +8,7 @@ import (
 	"github.com/raspibuddy/rpi/pkg/api/cpu"
 )
 
-// New creates a new cpu logging service.
+// New creates a new CPU logging service instance.
 func New(svc cpu.Service, logger rpi.Logger) *LogService {
 	return &LogService{
 		Service: svc,
@@ -16,7 +16,7 @@ func New(svc cpu.Service, logger rpi.Logger) *LogService {
 	}
 }
 
-// LogService represents a cpu logging service.
+// LogService represents a CPU logging service.
 type LogService struct {
 	cpu.Service
 	logger rpi.Logger
@@ -24,7 +24,7 @@ type LogService struct {
 
 const name = "cpu"
 
-// List is a logging method specific to the cpu.
+// List is the logging function attached to the List CPU services and responsible for logging it out.
 func (ls *LogService) List(ctx echo.Context) (resp []rpi.CPU, err error) {
 	defer func(begin time.Time) {
 		ls.logger.Log(

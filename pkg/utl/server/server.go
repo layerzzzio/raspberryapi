@@ -11,7 +11,7 @@ import (
 	"github.com/labstack/echo/middleware"
 )
 
-// New instantates new Echo server
+// New instantiates a new Echo server.
 func New() *echo.Echo {
 	e := echo.New()
 	e.Use(middleware.Logger(), middleware.Recover())
@@ -23,7 +23,7 @@ func healthCheck(c echo.Context) error {
 	return c.JSON(http.StatusOK, "OK")
 }
 
-// Config represents server specific config
+// Config represents the server configuration.
 type Config struct {
 	Port                string
 	ReadTimeoutSeconds  int
@@ -31,7 +31,7 @@ type Config struct {
 	Debug               bool
 }
 
-// Start starts an echo server
+// Start starts an echo server.
 func Start(e *echo.Echo, cfg *Config) {
 	s := &http.Server{
 		Addr:         cfg.Port,

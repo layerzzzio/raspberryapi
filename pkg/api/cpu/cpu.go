@@ -8,7 +8,7 @@ import (
 	"github.com/raspibuddy/rpi"
 )
 
-// List returns a list of cpus
+// List populates and returns an array of CPU models.
 func (c *CPU) List() ([]rpi.CPU, error) {
 	info, percent, vCore, err := c.csys.List()
 

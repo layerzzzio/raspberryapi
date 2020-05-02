@@ -5,22 +5,22 @@ import (
 	"github.com/shirou/gopsutil/cpu"
 )
 
-// Service is a cpu service interface (controller)
+// Service represents all CPU application services.
 type Service interface {
 	List() ([]rpi.CPU, error)
 }
 
-// CPU represents a cpu application service (service)
+// CPU represents a CPU application service.
 type CPU struct {
 	csys CSYS
 }
 
-// CSYS represents cpu data layer interface
+// CSYS represents a CPU repository service.
 type CSYS interface {
 	List() ([]cpu.InfoStat, []float64, []cpu.TimesStat, error)
 }
 
-// New creates a cpu service
+// New creates a CPU application service instance.
 func New(csys CSYS) *CPU {
 	return &CPU{csys: csys}
 }

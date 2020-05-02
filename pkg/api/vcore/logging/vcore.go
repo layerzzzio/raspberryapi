@@ -9,7 +9,7 @@ import (
 	"github.com/raspibuddy/rpi/pkg/api/vcore"
 )
 
-// New creates a new vcore logging service.
+// New creates a new vCore logging service instance.
 func New(svc vcore.Service, logger rpi.Logger) *LogService {
 	return &LogService{
 		Service: svc,
@@ -17,7 +17,7 @@ func New(svc vcore.Service, logger rpi.Logger) *LogService {
 	}
 }
 
-// LogService represents a cpu logging service.
+// LogService represents a vCore logging service.
 type LogService struct {
 	vcore.Service
 	logger rpi.Logger
@@ -25,7 +25,7 @@ type LogService struct {
 
 const name = "vcore"
 
-// List logs the requests when listing the vcores.
+// List is the logging function attached to the List vCore services and responsible for logging it out.
 func (ls *LogService) List(ctx echo.Context) (resp []rpi.VCore, err error) {
 	defer func(begin time.Time) {
 		ls.logger.Log(
@@ -40,7 +40,7 @@ func (ls *LogService) List(ctx echo.Context) (resp []rpi.VCore, err error) {
 	return ls.Service.List()
 }
 
-// View logs the request when listing a specific vcore.
+// View is the logging function attached to the View vCore services and responsible for logging it out.
 func (ls *LogService) View(ctx echo.Context, id int) (resp *rpi.VCore, err error) {
 	defer func(begin time.Time) {
 		ls.logger.Log(

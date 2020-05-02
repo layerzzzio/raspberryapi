@@ -2,10 +2,9 @@ package main
 
 import (
 	"flag"
-	"fmt"
 
 	"github.com/raspibuddy/rpi/pkg/api"
-	"github.com/raspibuddy/rpi/utl/config"
+	"github.com/raspibuddy/rpi/pkg/utl/config"
 )
 
 func main() {
@@ -15,11 +14,7 @@ func main() {
 	cfg, err := config.Load(*cfgPath)
 	checkErr(err)
 
-	fmt.Println("No error when parsing the config file")
 	checkErr(api.Start(cfg))
-
-	// fmt.Println(cpu.Times(false))
-	// fmt.Println(cpu.Percent(1, true))
 }
 
 func checkErr(err error) {

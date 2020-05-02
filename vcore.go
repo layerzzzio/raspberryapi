@@ -1,6 +1,6 @@
 package rpi
 
-// VCore suhjsdhs
+// VCore represents a current system vCore.
 type VCore struct {
 	ID        int     `json:"id"`
 	Used      float64 `json:"percentUsed"`

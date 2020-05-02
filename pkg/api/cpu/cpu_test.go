@@ -1,4 +1,4 @@
-package cpu_test
+package cpu
 
 import (
 	"errors"
@@ -6,8 +6,7 @@ import (
 	"testing"
 
 	"github.com/labstack/echo"
-	"github.com/raspibuddy/rpi/pkg/api/cpu"
-	"github.com/raspibuddy/rpi/utl/mock/mocksys"
+	"github.com/raspibuddy/rpi/pkg/utl/mock/mocksys"
 	cext "github.com/shirou/gopsutil/cpu"
 	"github.com/stretchr/testify/assert"
 )
@@ -19,7 +18,7 @@ func TestListError(t *testing.T) {
 		},
 	}
 
-	s := cpu.New(csys)
+	s := New(csys)
 	cpus, err := s.List()
 	assert.Nil(t, cpus)
 	assert.NotNil(t, err)
@@ -120,7 +119,7 @@ func TestListLengthDiff(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			s := cpu.New(tc.csys)
+			s := New(tc.csys)
 			cpus, err := s.List()
 			assert.Nil(t, cpus)
 			assert.NotNil(t, err)
@@ -153,7 +152,7 @@ func TestListSuccess(t *testing.T) {
 		},
 	}
 
-	s := cpu.New(csys)
+	s := New(csys)
 	cpus, err := s.List()
 	assert.EqualValues(t, cpus[0].ID, 0)
 	assert.EqualValues(t, cpus[0].ModelName, "test model")

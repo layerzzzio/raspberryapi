@@ -7,7 +7,7 @@ import (
 	"github.com/raspibuddy/rpi/pkg/api/cpu"
 )
 
-// HTTP is a struct implementing a CPU application service.
+// HTTP is a struct implementing a core application service.
 type HTTP struct {
 	svc cpu.Service
 }
