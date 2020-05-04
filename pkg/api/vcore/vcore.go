@@ -51,7 +51,7 @@ func (v *VCore) View(id int) (*rpi.VCore, error) {
 	}
 
 	if id > len(percentTot) || id < 0 {
-		return nil, echo.NewHTTPError(http.StatusNotFound, fmt.Sprintf("there are only %v vcores; count starts from 0", len(percentTot)))
+		return nil, echo.NewHTTPError(http.StatusNotFound, fmt.Sprintf("id out of range : this system has  %v vcores; count starts from 0", len(percentTot)))
 	}
 
 	var percent float64
