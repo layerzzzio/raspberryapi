@@ -10,6 +10,7 @@ import (
 	vs "github.com/raspibuddy/rpi/pkg/api/vcore/platform/sys"
 	vt "github.com/raspibuddy/rpi/pkg/api/vcore/transport"
 	"github.com/raspibuddy/rpi/pkg/utl/config"
+	"github.com/raspibuddy/rpi/pkg/utl/metrics"
 	"github.com/raspibuddy/rpi/pkg/utl/server"
 	"github.com/raspibuddy/rpi/pkg/utl/zlog"
 )
@@ -22,8 +23,10 @@ func Start(cfg *config.Configuration) error {
 
 	v1 := e.Group("/v1")
 
-	ct.NewHTTP(cl.New(cpu.New(cs.CPU{}), log).Service, v1)
-	vt.NewHTTP(vl.New(vcore.New(vs.VCore{}), log).Service, v1)
+	m := metrics.Service{}
+
+	ct.NewHTTP(cl.New(cpu.New(cs.CPU{}, m), log).Service, v1)
+	vt.NewHTTP(vl.New(vcore.New(vs.VCore{}, m), log).Service, v1)
 
 	server.Start(e, &server.Config{
 		Port:                cfg.Server.Port,
