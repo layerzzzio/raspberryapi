@@ -34,7 +34,7 @@ func TestList(t *testing.T) {
 				},
 			},
 			wantedData: nil,
-			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the VCore metrics"),
+			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the vcore metrics"),
 		},
 		{
 			name: "error: info array is nil",
@@ -47,7 +47,7 @@ func TestList(t *testing.T) {
 				},
 			},
 			wantedData: nil,
-			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the VCore metrics"),
+			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the vcore metrics"),
 		},
 		{
 			name: "error: percent array is nil",
@@ -67,7 +67,7 @@ func TestList(t *testing.T) {
 				},
 			},
 			wantedData: nil,
-			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the VCore metrics"),
+			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the vcore metrics"),
 		},
 		{
 			name: "success",
@@ -142,7 +142,7 @@ func TestView(t *testing.T) {
 				},
 			},
 			wantedData: rpi.VCore{},
-			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the VCore metrics"),
+			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the vcore metrics"),
 		},
 		{
 			name: "error: info array is nil",
@@ -155,7 +155,7 @@ func TestView(t *testing.T) {
 				},
 			},
 			wantedData: rpi.VCore{},
-			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the VCore metrics"),
+			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the vcore metrics"),
 		},
 		{
 			name: "error: percent array is nil",
@@ -175,7 +175,7 @@ func TestView(t *testing.T) {
 				},
 			},
 			wantedData: rpi.VCore{},
-			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the VCore metrics"),
+			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the vcore metrics"),
 		},
 		{
 			name: "success",

@@ -6,14 +6,10 @@ require (
 	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/go-ole/go-ole v1.2.4 // indirect
-	github.com/go-playground/universal-translator v0.17.0 // indirect
-	github.com/go-playground/validator v9.31.0+incompatible // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/gommon v0.3.0 // indirect
-	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/pkg/errors v0.8.1
-	github.com/ribice/gorsk v2.1.0+incompatible
 	github.com/rs/zerolog v1.18.0
 	github.com/shirou/gopsutil v2.20.3+incompatible
 	github.com/stretchr/testify v1.4.0

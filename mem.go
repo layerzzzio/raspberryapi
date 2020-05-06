@@ -1,13 +1,13 @@
 package rpi
 
-// MemoryUsage represents the current system swap memory usage.
-type MemoryUsage struct {
-	STotal       uint64  `json:"sMemTotal"`
-	SUsed        uint64  `json:"sMemUsed"`
-	SFree        uint64  `json:"sMemFree"`
-	SUsedPercent float64 `json:"sMemUsedPercent"`
-	VTotal       uint64  `json:"vMemTotal"`
-	VAvailable   uint64  `json:"vMemAvailable"`
-	VUsed        uint64  `json:"vMemUsed"`
-	VUsedPercent float64 `json:"vMemUsedPercent"`
+// MEM represents the current system swap memory usage.
+type MEM struct {
+	STotal       uint64  `json:"swapMemTotal"`
+	SUsed        uint64  `json:"swapMemUsed"`
+	SFree        uint64  `json:"swapMemFree"`
+	SUsedPercent float64 `json:"swapMemUsedPercent"`
+	VTotal       uint64  `json:"virtMemTotal"`
+	VAvailable   uint64  `json:"virtMemAvailable"`
+	VUsed        uint64  `json:"virtMemUsed"`
+	VUsedPercent float64 `json:"virtMemUsedPercent"`
 }

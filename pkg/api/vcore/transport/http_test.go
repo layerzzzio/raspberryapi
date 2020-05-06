@@ -8,7 +8,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/labstack/echo"
 	"github.com/raspibuddy/rpi"
 	"github.com/raspibuddy/rpi/pkg/api/vcore"
 	"github.com/raspibuddy/rpi/pkg/api/vcore/transport"
@@ -33,7 +32,7 @@ func TestList(t *testing.T) {
 			wantedStatus: http.StatusInternalServerError,
 		},
 		{
-			name: "error: ",
+			name: "error: List result is nil",
 			vsys: &mocksys.VCore{
 				ListFn: func([]float64, []cpu.TimesStat) ([]rpi.VCore, error) {
 					return nil, errors.New("test error")
@@ -119,11 +118,11 @@ func TestView(t *testing.T) {
 			req:          `a`,
 		},
 		{
-			name: "error: ",
+			name: "error: View result is nil",
 			req:  "1",
 			vsys: &mocksys.VCore{
 				ViewFn: func(int, []float64, []cpu.TimesStat) (rpi.VCore, error) {
-					return rpi.VCore{}, echo.NewHTTPError(http.StatusInternalServerError, "results were not returned as they could not be guaranteed")
+					return rpi.VCore{}, errors.New("test error")
 				},
 			},
 			wantedStatus: http.StatusInternalServerError,

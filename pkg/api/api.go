@@ -5,6 +5,10 @@ import (
 	cl "github.com/raspibuddy/rpi/pkg/api/cpu/logging"
 	cs "github.com/raspibuddy/rpi/pkg/api/cpu/platform/sys"
 	ct "github.com/raspibuddy/rpi/pkg/api/cpu/transport"
+	"github.com/raspibuddy/rpi/pkg/api/mem"
+	ml "github.com/raspibuddy/rpi/pkg/api/mem/logging"
+	ms "github.com/raspibuddy/rpi/pkg/api/mem/platform/sys"
+	mt "github.com/raspibuddy/rpi/pkg/api/mem/transport"
 	"github.com/raspibuddy/rpi/pkg/api/vcore"
 	vl "github.com/raspibuddy/rpi/pkg/api/vcore/logging"
 	vs "github.com/raspibuddy/rpi/pkg/api/vcore/platform/sys"
@@ -27,6 +31,7 @@ func Start(cfg *config.Configuration) error {
 
 	ct.NewHTTP(cl.New(cpu.New(cs.CPU{}, m), log).Service, v1)
 	vt.NewHTTP(vl.New(vcore.New(vs.VCore{}, m), log).Service, v1)
+	mt.NewHTTP(ml.New(mem.New(ms.MEM{}, m), log).Service, v1)
 
 	server.Start(e, &server.Config{
 		Port:                cfg.Server.Port,

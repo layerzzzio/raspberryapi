@@ -13,7 +13,7 @@ func (v *VCore) List() ([]rpi.VCore, error) {
 	times, errT := v.m.Times(true)
 
 	if errP != nil || errT != nil {
-		return nil, echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the VCore metrics")
+		return nil, echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the vcore metrics")
 	}
 
 	return v.vsys.List(percent, times)
@@ -25,7 +25,7 @@ func (v *VCore) View(id int) (rpi.VCore, error) {
 	times, errT := v.m.Times(true)
 
 	if errP != nil || errT != nil {
-		return rpi.VCore{}, echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the VCore metrics")
+		return rpi.VCore{}, echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the vcore metrics")
 	}
 
 	return v.vsys.View(id, percent, times)

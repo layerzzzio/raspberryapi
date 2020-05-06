@@ -10,6 +10,7 @@ import (
 // Service represents all CPU application services.
 type Service interface {
 	List() ([]rpi.CPU, error)
+	View(int) (rpi.CPU, error)
 }
 
 // CPU represents a CPU application service.
@@ -21,6 +22,7 @@ type CPU struct {
 // CSYS represents a CPU repository service.
 type CSYS interface {
 	List([]cpu.InfoStat, []float64, []cpu.TimesStat) ([]rpi.CPU, error)
+	View(int, []cpu.InfoStat, []float64, []cpu.TimesStat) (rpi.CPU, error)
 }
 
 // Metrics represents the system metrics interface

@@ -126,7 +126,7 @@ func TestList(t *testing.T) {
 				},
 			},
 			wantedData: nil,
-			wantedErr:  echo.NewHTTPError(http.StatusAccepted, "results were not returned as they could not be guaranteed"),
+			wantedErr:  echo.NewHTTPError(http.StatusNotFound, "results were not returned as they could not be guaranteed"),
 		},
 		{
 			name:    "error: times array length greater than percent array length",
@@ -140,7 +140,7 @@ func TestList(t *testing.T) {
 				},
 			},
 			wantedData: nil,
-			wantedErr:  echo.NewHTTPError(http.StatusAccepted, "results were not returned as they could not be guaranteed"),
+			wantedErr:  echo.NewHTTPError(http.StatusNotFound, "results were not returned as they could not be guaranteed"),
 		},
 		{
 			name:    "error: parsing ID failed",
@@ -154,7 +154,7 @@ func TestList(t *testing.T) {
 				},
 			},
 			wantedData: nil,
-			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "parsing id was unsuccessful"),
+			wantedErr:  echo.NewHTTPError(http.StatusNotFound, "parsing id was unsuccessful"),
 		},
 		{
 			name:    "success",
@@ -217,7 +217,7 @@ func TestView(t *testing.T) {
 				},
 			},
 			wantedData: rpi.VCore{},
-			wantedErr:  echo.NewHTTPError(http.StatusAccepted, "results were not returned as they could not be guaranteed"),
+			wantedErr:  echo.NewHTTPError(http.StatusNotFound, "results were not returned as they could not be guaranteed"),
 		},
 		{
 			name:    "error: times array length greater than percent array length",
@@ -231,7 +231,7 @@ func TestView(t *testing.T) {
 				},
 			},
 			wantedData: rpi.VCore{},
-			wantedErr:  echo.NewHTTPError(http.StatusAccepted, "results were not returned as they could not be guaranteed"),
+			wantedErr:  echo.NewHTTPError(http.StatusNotFound, "results were not returned as they could not be guaranteed"),
 		},
 		{
 			name:    "error: id value greater than vcore number",
@@ -246,7 +246,7 @@ func TestView(t *testing.T) {
 				},
 			},
 			wantedData: rpi.VCore{},
-			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "id out of range"),
+			wantedErr:  echo.NewHTTPError(http.StatusNotFound, "id out of range"),
 		},
 		{
 			name:    "error: id value is negative",
@@ -261,10 +261,10 @@ func TestView(t *testing.T) {
 				},
 			},
 			wantedData: rpi.VCore{},
-			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "id out of range"),
+			wantedErr:  echo.NewHTTPError(http.StatusNotFound, "id out of range"),
 		},
 		{
-			name:    "error: id value equal 0",
+			name:    "error: id value equals 0",
 			id:      0,
 			percent: []float64{99.9},
 			times: []cpu.TimesStat{
@@ -276,7 +276,7 @@ func TestView(t *testing.T) {
 				},
 			},
 			wantedData: rpi.VCore{},
-			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "id out of range"),
+			wantedErr:  echo.NewHTTPError(http.StatusNotFound, "id out of range"),
 		},
 		{
 			name:    "error: parsing ID failed",
@@ -291,7 +291,7 @@ func TestView(t *testing.T) {
 				},
 			},
 			wantedData: rpi.VCore{},
-			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "parsing id was unsuccessful"),
+			wantedErr:  echo.NewHTTPError(http.StatusNotFound, "parsing id was unsuccessful"),
 		},
 		{
 			name:    "success",

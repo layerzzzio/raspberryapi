@@ -19,14 +19,14 @@ type VCore struct{}
 // TODO: to find a way to know which unit is used between USER_HZ and Jiffies
 func (v VCore) List(percent []float64, times []cpu.TimesStat) ([]rpi.VCore, error) {
 	if len(percent) != len(times) {
-		return nil, echo.NewHTTPError(http.StatusAccepted, "results were not returned as they could not be guaranteed")
+		return nil, echo.NewHTTPError(http.StatusNotFound, "results were not returned as they could not be guaranteed")
 	}
 
 	var result []rpi.VCore
 	for i, s := range times {
 		vCoreID, err := concatID(extractNum(s.CPU, 0, 9))
 		if err != nil {
-			return nil, echo.NewHTTPError(http.StatusInternalServerError, "parsing id was unsuccessful")
+			return nil, echo.NewHTTPError(http.StatusNotFound, "parsing id was unsuccessful")
 		}
 
 		spec := rpi.VCore{
@@ -46,32 +46,26 @@ func (v VCore) List(percent []float64, times []cpu.TimesStat) ([]rpi.VCore, erro
 // TODO: i.e. than List() here above
 func (v VCore) View(id int, percentTot []float64, timesTot []cpu.TimesStat) (rpi.VCore, error) {
 	if len(percentTot) != len(timesTot) {
-		return rpi.VCore{}, echo.NewHTTPError(http.StatusAccepted, "results were not returned as they could not be guaranteed")
+		return rpi.VCore{}, echo.NewHTTPError(http.StatusNotFound, "results were not returned as they could not be guaranteed")
 	}
 
 	if id > len(percentTot) || id < 1 {
-		return rpi.VCore{}, echo.NewHTTPError(http.StatusInternalServerError, "id out of range")
+		return rpi.VCore{}, echo.NewHTTPError(http.StatusNotFound, "id out of range")
 	}
 
-	var percent float64
-	for i, s := range percentTot {
-		if id == i+1 {
-			percent = s
-			break
-		}
-	}
+	percent := percentTot[id-1]
 
 	var vCoreID int
 	var err error
-	var vCore cpu.TimesStat
-	for _, s := range timesTot {
-		vCoreID, err = concatID(extractNum(s.CPU, 0, 9))
+	var times cpu.TimesStat
+	for _, t := range timesTot {
+		vCoreID, err = concatID(extractNum(t.CPU, 0, 9))
 		if err != nil {
-			return rpi.VCore{}, echo.NewHTTPError(http.StatusInternalServerError, "parsing id was unsuccessful")
+			return rpi.VCore{}, echo.NewHTTPError(http.StatusNotFound, "parsing id was unsuccessful")
 		}
 
 		if id == vCoreID+1 {
-			vCore = s
+			times = t
 			break
 		}
 	}
@@ -79,9 +73,9 @@ func (v VCore) View(id int, percentTot []float64, timesTot []cpu.TimesStat) (rpi
 	result := rpi.VCore{
 		ID:     vCoreID + 1,
 		Used:   percent,
-		User:   vCore.User,
-		System: vCore.System,
-		Idle:   vCore.Idle,
+		User:   times.User,
+		System: times.System,
+		Idle:   times.Idle,
 	}
 
 	return result, nil

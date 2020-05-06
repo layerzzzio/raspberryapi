@@ -14,7 +14,7 @@ type CPU struct{}
 // List returns a list of CPU stats including some info about it and the percent & time usage per workload (in USER_HZ or Jiffies)
 func (c CPU) List(info []cpu.InfoStat, percent []float64, times []cpu.TimesStat) ([]rpi.CPU, error) {
 	if len(percent) != len(times) || len(times) != len(info) {
-		return nil, echo.NewHTTPError(http.StatusAccepted, "results were not returned as they could not be guaranteed")
+		return nil, echo.NewHTTPError(http.StatusNotFound, "results were not returned as they could not be guaranteed")
 	}
 
 	var result []rpi.CPU
@@ -33,5 +33,43 @@ func (c CPU) List(info []cpu.InfoStat, percent []float64, times []cpu.TimesStat)
 		}
 		result = append(result, data)
 	}
+	return result, nil
+}
+
+// View returns a CPU stats including some info about it and the percent & time usage per workload (in USER_HZ or Jiffies)
+func (c CPU) View(id int, infoTot []cpu.InfoStat, percentTot []float64, timesTot []cpu.TimesStat) (rpi.CPU, error) {
+	if len(percentTot) != len(timesTot) || len(timesTot) != len(infoTot) {
+		return rpi.CPU{}, echo.NewHTTPError(http.StatusNotFound, "results were not returned as they could not be guaranteed")
+	}
+
+	if id > len(percentTot) || id < 1 {
+		return rpi.CPU{}, echo.NewHTTPError(http.StatusNotFound, "id out of range")
+	}
+
+	var cpuID int
+	var info cpu.InfoStat
+	for _, t := range infoTot {
+		cpuID = int(t.CPU) + 1
+		if id == cpuID {
+			info = t
+			break
+		}
+	}
+
+	percent := percentTot[id-1]
+	times := timesTot[id-1]
+
+	result := rpi.CPU{
+		ID:        cpuID,
+		Cores:     info.Cores,
+		ModelName: info.ModelName,
+		Mhz:       info.Mhz,
+		Stats: rpi.CPUStats{
+			Used:   percent,
+			User:   times.User,
+			System: times.System,
+			Idle:   times.Idle,
+		}}
+
 	return result, nil
 }
