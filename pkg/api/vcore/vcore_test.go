@@ -26,10 +26,10 @@ func TestList(t *testing.T) {
 		{
 			name: "error: info & percent arrays are both nil",
 			metrics: &mock.Metrics{
-				PercentFn: func(time.Duration, bool) ([]float64, error) {
+				CPUPercentFn: func(time.Duration, bool) ([]float64, error) {
 					return nil, errors.New("test error percent")
 				},
-				TimesFn: func(bool) ([]cpu.TimesStat, error) {
+				CPUTimesFn: func(bool) ([]cpu.TimesStat, error) {
 					return nil, errors.New("test error times")
 				},
 			},
@@ -39,10 +39,10 @@ func TestList(t *testing.T) {
 		{
 			name: "error: info array is nil",
 			metrics: &mock.Metrics{
-				PercentFn: func(time.Duration, bool) ([]float64, error) {
+				CPUPercentFn: func(time.Duration, bool) ([]float64, error) {
 					return []float64{99.9}, nil
 				},
-				TimesFn: func(bool) ([]cpu.TimesStat, error) {
+				CPUTimesFn: func(bool) ([]cpu.TimesStat, error) {
 					return nil, errors.New("test error times")
 				},
 			},
@@ -52,10 +52,10 @@ func TestList(t *testing.T) {
 		{
 			name: "error: percent array is nil",
 			metrics: &mock.Metrics{
-				PercentFn: func(time.Duration, bool) ([]float64, error) {
+				CPUPercentFn: func(time.Duration, bool) ([]float64, error) {
 					return nil, errors.New("test error percent")
 				},
-				TimesFn: func(bool) ([]cpu.TimesStat, error) {
+				CPUTimesFn: func(bool) ([]cpu.TimesStat, error) {
 					return []cpu.TimesStat{
 						{
 							CPU:    "cpu0",
@@ -72,10 +72,10 @@ func TestList(t *testing.T) {
 		{
 			name: "success",
 			metrics: &mock.Metrics{
-				PercentFn: func(time.Duration, bool) ([]float64, error) {
+				CPUPercentFn: func(time.Duration, bool) ([]float64, error) {
 					return []float64{99.9}, nil
 				},
-				TimesFn: func(bool) ([]cpu.TimesStat, error) {
+				CPUTimesFn: func(bool) ([]cpu.TimesStat, error) {
 					return []cpu.TimesStat{
 						{
 							CPU:    "cpu0",
@@ -134,10 +134,10 @@ func TestView(t *testing.T) {
 		{
 			name: "error: info & percent arrays are both nil",
 			metrics: &mock.Metrics{
-				PercentFn: func(time.Duration, bool) ([]float64, error) {
+				CPUPercentFn: func(time.Duration, bool) ([]float64, error) {
 					return nil, errors.New("test error percent")
 				},
-				TimesFn: func(bool) ([]cpu.TimesStat, error) {
+				CPUTimesFn: func(bool) ([]cpu.TimesStat, error) {
 					return nil, errors.New("test error times")
 				},
 			},
@@ -147,10 +147,10 @@ func TestView(t *testing.T) {
 		{
 			name: "error: info array is nil",
 			metrics: &mock.Metrics{
-				PercentFn: func(time.Duration, bool) ([]float64, error) {
+				CPUPercentFn: func(time.Duration, bool) ([]float64, error) {
 					return []float64{99.9}, nil
 				},
-				TimesFn: func(bool) ([]cpu.TimesStat, error) {
+				CPUTimesFn: func(bool) ([]cpu.TimesStat, error) {
 					return nil, errors.New("test error times")
 				},
 			},
@@ -160,10 +160,10 @@ func TestView(t *testing.T) {
 		{
 			name: "error: percent array is nil",
 			metrics: &mock.Metrics{
-				PercentFn: func(time.Duration, bool) ([]float64, error) {
+				CPUPercentFn: func(time.Duration, bool) ([]float64, error) {
 					return nil, errors.New("test error percent")
 				},
-				TimesFn: func(bool) ([]cpu.TimesStat, error) {
+				CPUTimesFn: func(bool) ([]cpu.TimesStat, error) {
 					return []cpu.TimesStat{
 						{
 							CPU:    "cpu0",
@@ -181,10 +181,10 @@ func TestView(t *testing.T) {
 			name: "success",
 			id:   1,
 			metrics: &mock.Metrics{
-				PercentFn: func(time.Duration, bool) ([]float64, error) {
+				CPUPercentFn: func(time.Duration, bool) ([]float64, error) {
 					return []float64{99.9}, nil
 				},
-				TimesFn: func(bool) ([]cpu.TimesStat, error) {
+				CPUTimesFn: func(bool) ([]cpu.TimesStat, error) {
 					return []cpu.TimesStat{
 						{
 							CPU:    "cpu0",

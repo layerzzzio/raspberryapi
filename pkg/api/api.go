@@ -5,6 +5,10 @@ import (
 	cl "github.com/raspibuddy/rpi/pkg/api/cpu/logging"
 	cs "github.com/raspibuddy/rpi/pkg/api/cpu/platform/sys"
 	ct "github.com/raspibuddy/rpi/pkg/api/cpu/transport"
+	"github.com/raspibuddy/rpi/pkg/api/disk"
+	dl "github.com/raspibuddy/rpi/pkg/api/disk/logging"
+	ds "github.com/raspibuddy/rpi/pkg/api/disk/platform/sys"
+	dt "github.com/raspibuddy/rpi/pkg/api/disk/transport"
 	"github.com/raspibuddy/rpi/pkg/api/mem"
 	ml "github.com/raspibuddy/rpi/pkg/api/mem/logging"
 	ms "github.com/raspibuddy/rpi/pkg/api/mem/platform/sys"
@@ -22,16 +26,14 @@ import (
 // Start starts the API service.
 func Start(cfg *config.Configuration) error {
 	e := server.New()
-
 	log := zlog.New()
-
 	v1 := e.Group("/v1")
-
 	m := metrics.Service{}
 
 	ct.NewHTTP(cl.New(cpu.New(cs.CPU{}, m), log).Service, v1)
 	vt.NewHTTP(vl.New(vcore.New(vs.VCore{}, m), log).Service, v1)
-	mt.NewHTTP(ml.New(mem.New(ms.MEM{}, m), log).Service, v1)
+	mt.NewHTTP(ml.New(mem.New(ms.Mem{}, m), log).Service, v1)
+	dt.NewHTTP(dl.New(disk.New(ds.Disk{}, m), log).Service, v1)
 
 	server.Start(e, &server.Config{
 		Port:                cfg.Server.Port,

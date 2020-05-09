@@ -25,7 +25,7 @@ type LogService struct {
 const name = "mem"
 
 // List is the logging function attached to the List mem services and responsible for logging it out.
-func (ls *LogService) List(ctx echo.Context) (resp rpi.MEM, err error) {
+func (ls *LogService) List(ctx echo.Context) (resp rpi.Mem, err error) {
 	defer func(begin time.Time) {
 		ls.logger.Log(
 			ctx,

@@ -9,8 +9,8 @@ import (
 
 // List populates and returns an array of vCore models.
 func (v *VCore) List() ([]rpi.VCore, error) {
-	percent, errP := v.m.Percent(1, true)
-	times, errT := v.m.Times(true)
+	percent, errP := v.m.CPUPercent(1, true)
+	times, errT := v.m.CPUTimes(true)
 
 	if errP != nil || errT != nil {
 		return nil, echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the vcore metrics")
@@ -21,8 +21,8 @@ func (v *VCore) List() ([]rpi.VCore, error) {
 
 // View populates and returns one single CPU model.
 func (v *VCore) View(id int) (rpi.VCore, error) {
-	percent, errP := v.m.Percent(1, true)
-	times, errT := v.m.Times(true)
+	percent, errP := v.m.CPUPercent(1, true)
+	times, errT := v.m.CPUTimes(true)
 
 	if errP != nil || errT != nil {
 		return rpi.VCore{}, echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the vcore metrics")

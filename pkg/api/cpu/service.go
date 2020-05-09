@@ -27,9 +27,9 @@ type CSYS interface {
 
 // Metrics represents the system metrics interface
 type Metrics interface {
-	Info() ([]cpu.InfoStat, error)
-	Percent(time.Duration, bool) ([]float64, error)
-	Times(bool) ([]cpu.TimesStat, error)
+	CPUInfo() ([]cpu.InfoStat, error)
+	CPUPercent(time.Duration, bool) ([]float64, error)
+	CPUTimes(bool) ([]cpu.TimesStat, error)
 }
 
 // New creates a CPU application service instance.

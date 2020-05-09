@@ -16,7 +16,7 @@ func TestList(t *testing.T) {
 		name       string
 		swapMem    mext.SwapMemoryStat
 		virtualMem mext.VirtualMemoryStat
-		wantedData rpi.MEM
+		wantedData rpi.Mem
 		wantedErr  error
 	}{
 		{
@@ -28,7 +28,7 @@ func TestList(t *testing.T) {
 				Available:   111,
 				UsedPercent: 66.6,
 			},
-			wantedData: rpi.MEM{
+			wantedData: rpi.Mem{
 				STotal:       0,
 				SUsed:        0,
 				SFree:        0,
@@ -54,7 +54,7 @@ func TestList(t *testing.T) {
 				Available:   0,
 				UsedPercent: 0,
 			},
-			wantedData: rpi.MEM{
+			wantedData: rpi.Mem{
 				STotal:       333,
 				SUsed:        222,
 				SFree:        111,
@@ -80,7 +80,7 @@ func TestList(t *testing.T) {
 				Available:   111,
 				UsedPercent: 66.6,
 			},
-			wantedData: rpi.MEM{
+			wantedData: rpi.Mem{
 				STotal:       333,
 				SUsed:        222,
 				SFree:        111,
@@ -96,7 +96,7 @@ func TestList(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			s := mem.MSYS(sys.MEM{})
+			s := mem.MSYS(sys.Mem{})
 			mems, err := s.List(tc.swapMem, tc.virtualMem)
 			assert.Equal(t, tc.wantedData, mems)
 			assert.Equal(t, tc.wantedErr, err)

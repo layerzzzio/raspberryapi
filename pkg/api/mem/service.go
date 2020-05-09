@@ -7,18 +7,18 @@ import (
 
 // Service represents all MEM application services.
 type Service interface {
-	List() (rpi.MEM, error)
+	List() (rpi.Mem, error)
 }
 
-// MEM represents a MEM application service.
-type MEM struct {
+// Mem represents a MEM application service.
+type Mem struct {
 	msys MSYS
 	mt   Metrics
 }
 
 // MSYS represents a MEM repository service.
 type MSYS interface {
-	List(mem.SwapMemoryStat, mem.VirtualMemoryStat) (rpi.MEM, error)
+	List(mem.SwapMemoryStat, mem.VirtualMemoryStat) (rpi.Mem, error)
 }
 
 // Metrics represents the system metrics interface
@@ -28,6 +28,6 @@ type Metrics interface {
 }
 
 // New creates a MEM application service instance.
-func New(msys MSYS, mt Metrics) *MEM {
-	return &MEM{msys: msys, mt: mt}
+func New(msys MSYS, mt Metrics) *Mem {
+	return &Mem{msys: msys, mt: mt}
 }

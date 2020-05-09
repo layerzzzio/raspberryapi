@@ -9,26 +9,26 @@ import (
 
 // Metrics mock
 type Metrics struct {
-	InfoFn       func() ([]cpu.InfoStat, error)
-	PercentFn    func(time.Duration, bool) ([]float64, error)
-	TimesFn      func(bool) ([]cpu.TimesStat, error)
+	CPUInfoFn    func() ([]cpu.InfoStat, error)
+	CPUPercentFn func(time.Duration, bool) ([]float64, error)
+	CPUTimesFn   func(bool) ([]cpu.TimesStat, error)
 	SwapMemFn    func() (mem.SwapMemoryStat, error)
 	VirtualMemFn func() (mem.VirtualMemoryStat, error)
 }
 
-// Info mock
-func (m Metrics) Info() ([]cpu.InfoStat, error) {
-	return m.InfoFn()
+// CPUInfo mock
+func (m Metrics) CPUInfo() ([]cpu.InfoStat, error) {
+	return m.CPUInfoFn()
 }
 
-// Percent mock
-func (m Metrics) Percent(interval time.Duration, perVCore bool) ([]float64, error) {
-	return m.PercentFn(interval, perVCore)
+// CPUPercent mock
+func (m Metrics) CPUPercent(interval time.Duration, perVCore bool) ([]float64, error) {
+	return m.CPUPercentFn(interval, perVCore)
 }
 
-// Times mock
-func (m Metrics) Times(perVCore bool) ([]cpu.TimesStat, error) {
-	return m.TimesFn(perVCore)
+// CPUTimes mock
+func (m Metrics) CPUTimes(perVCore bool) ([]cpu.TimesStat, error) {
+	return m.CPUTimesFn(perVCore)
 }
 
 // SwapMemory mock

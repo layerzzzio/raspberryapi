@@ -1,7 +1,7 @@
 package rpi
 
-// MEM represents the current system swap memory usage.
-type MEM struct {
+// Mem represents the current system swap memory usage.
+type Mem struct {
 	STotal       uint64  `json:"swapMemTotal"`
 	SUsed        uint64  `json:"swapMemUsed"`
 	SFree        uint64  `json:"swapMemFree"`

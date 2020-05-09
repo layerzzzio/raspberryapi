@@ -27,8 +27,8 @@ type VSYS interface {
 
 // Metrics represents the system metrics interface
 type Metrics interface {
-	Percent(time.Duration, bool) ([]float64, error)
-	Times(bool) ([]cpu.TimesStat, error)
+	CPUPercent(time.Duration, bool) ([]float64, error)
+	CPUTimes(bool) ([]cpu.TimesStat, error)
 }
 
 // New creates a core service

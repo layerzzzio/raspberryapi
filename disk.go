@@ -1,17 +1,19 @@
 package rpi
 
-// PartitionList represents a current system disk partition.
-type PartitionList struct {
-	Device     string `json:"device"`
-	Mountpoint string `json:"mountpoint"`
-	Fstype     string `json:"fstype"`
-	Opts       string `json:"opts"`
+// Disk represents the current system disk.
+type Disk struct {
+	ID          string       `json:"id"`
+	Filesystem  string       `json:"filesystem"`
+	Fstype      string       `json:"fstype"`
+	Opts        string       `json:"opts"`
+	Mountpoints []MountPoint `json:"mountpoints"`
 }
 
-// DiskUsage represent a current system disk partition usage metrics.
-type DiskUsage struct {
-	Path              string  `json:"path"`
+// MountPoint is
+type MountPoint struct {
+	Mountpoint        string  `json:"mountpoint"`
 	Fstype            string  `json:"fstype"`
+	Opts              string  `json:"opts"`
 	Total             uint64  `json:"total"`
 	Free              uint64  `json:"free"`
 	Used              uint64  `json:"used"`

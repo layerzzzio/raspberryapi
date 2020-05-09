@@ -19,13 +19,13 @@ import (
 )
 
 func TestList(t *testing.T) {
-	var listResponse rpi.MEM
+	var listResponse rpi.Mem
 
 	cases := []struct {
 		name         string
-		msys         *mocksys.MEM
+		msys         *mocksys.Mem
 		wantedStatus int
-		wantedResp   rpi.MEM
+		wantedResp   rpi.Mem
 	}{
 		{
 			name:         "error: invalid request response",
@@ -33,18 +33,18 @@ func TestList(t *testing.T) {
 		},
 		{
 			name: "error: List result is nil",
-			msys: &mocksys.MEM{
-				ListFn: func(mext.SwapMemoryStat, mext.VirtualMemoryStat) (rpi.MEM, error) {
-					return rpi.MEM{}, errors.New("test error")
+			msys: &mocksys.Mem{
+				ListFn: func(mext.SwapMemoryStat, mext.VirtualMemoryStat) (rpi.Mem, error) {
+					return rpi.Mem{}, errors.New("test error")
 				},
 			},
 			wantedStatus: http.StatusInternalServerError,
 		},
 		{
 			name: "success",
-			msys: &mocksys.MEM{
-				ListFn: func(mext.SwapMemoryStat, mext.VirtualMemoryStat) (rpi.MEM, error) {
-					return rpi.MEM{
+			msys: &mocksys.Mem{
+				ListFn: func(mext.SwapMemoryStat, mext.VirtualMemoryStat) (rpi.Mem, error) {
+					return rpi.Mem{
 						STotal:       333,
 						SUsed:        222,
 						SFree:        111,
@@ -57,7 +57,7 @@ func TestList(t *testing.T) {
 				},
 			},
 			wantedStatus: http.StatusOK,
-			wantedResp: rpi.MEM{
+			wantedResp: rpi.Mem{
 				STotal:       333,
 				SUsed:        222,
 				SFree:        111,
@@ -92,7 +92,7 @@ func TestList(t *testing.T) {
 				panic(err)
 			}
 
-			if (tc.wantedResp != rpi.MEM{}) {
+			if (tc.wantedResp != rpi.Mem{}) {
 				response := listResponse
 				if err := json.Unmarshal(body, &response); err != nil {
 					t.Fatal(err)

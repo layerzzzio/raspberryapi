@@ -18,8 +18,8 @@ func TestList(t *testing.T) {
 	cases := []struct {
 		name       string
 		metrics    *mock.Metrics
-		msys       *mocksys.MEM
-		wantedData rpi.MEM
+		msys       *mocksys.Mem
+		wantedData rpi.Mem
 		wantedErr  error
 	}{
 		{
@@ -32,7 +32,7 @@ func TestList(t *testing.T) {
 					return mext.VirtualMemoryStat{}, errors.New("test error info")
 				},
 			},
-			wantedData: rpi.MEM{},
+			wantedData: rpi.Mem{},
 			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the mem metrics"),
 		},
 		{
@@ -47,7 +47,7 @@ func TestList(t *testing.T) {
 					}, nil
 				},
 			},
-			wantedData: rpi.MEM{},
+			wantedData: rpi.Mem{},
 			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the mem metrics"),
 		},
 		{
@@ -62,7 +62,7 @@ func TestList(t *testing.T) {
 					return mext.VirtualMemoryStat{}, errors.New("test error info")
 				},
 			},
-			wantedData: rpi.MEM{},
+			wantedData: rpi.Mem{},
 			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the mem metrics"),
 		},
 		{
@@ -85,9 +85,9 @@ func TestList(t *testing.T) {
 					}, nil
 				},
 			},
-			msys: &mocksys.MEM{
-				ListFn: func(mext.SwapMemoryStat, mext.VirtualMemoryStat) (rpi.MEM, error) {
-					return rpi.MEM{
+			msys: &mocksys.Mem{
+				ListFn: func(mext.SwapMemoryStat, mext.VirtualMemoryStat) (rpi.Mem, error) {
+					return rpi.Mem{
 						STotal:       333,
 						SUsed:        222,
 						SFree:        111,
@@ -99,7 +99,7 @@ func TestList(t *testing.T) {
 					}, nil
 				},
 			},
-			wantedData: rpi.MEM{
+			wantedData: rpi.Mem{
 				STotal:       333,
 				SUsed:        222,
 				SFree:        111,

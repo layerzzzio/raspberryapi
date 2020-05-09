@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/shirou/gopsutil/cpu"
+	"github.com/shirou/gopsutil/disk"
 	"github.com/shirou/gopsutil/mem"
 )
 
@@ -12,8 +13,8 @@ import (
 // Service is
 type Service struct{}
 
-// Info is
-func (s Service) Info() ([]cpu.InfoStat, error) {
+// CPUInfo is
+func (s Service) CPUInfo() ([]cpu.InfoStat, error) {
 	info, err := cpu.Info()
 	if err != nil {
 		return nil, err
@@ -21,8 +22,8 @@ func (s Service) Info() ([]cpu.InfoStat, error) {
 	return info, nil
 }
 
-// Percent is
-func (s Service) Percent(interval time.Duration, perVCore bool) ([]float64, error) {
+// CPUPercent is
+func (s Service) CPUPercent(interval time.Duration, perVCore bool) ([]float64, error) {
 	percent, err := cpu.Percent(interval, perVCore)
 	if err != nil {
 		return nil, err
@@ -30,8 +31,8 @@ func (s Service) Percent(interval time.Duration, perVCore bool) ([]float64, erro
 	return percent, nil
 }
 
-// Times is
-func (s Service) Times(perVCore bool) ([]cpu.TimesStat, error) {
+// CPUTimes is
+func (s Service) CPUTimes(perVCore bool) ([]cpu.TimesStat, error) {
 	times, err := cpu.Times(perVCore)
 	if err != nil {
 		return nil, err
@@ -55,4 +56,29 @@ func (s Service) VirtualMemory() (mem.VirtualMemoryStat, error) {
 		return mem.VirtualMemoryStat{}, err
 	}
 	return *vmem, nil
+}
+
+// DiskStats is
+func (s Service) DiskStats(all bool) (map[string]disk.PartitionStat, map[string]*disk.UsageStat, error) {
+	listDisk := make(map[string]disk.PartitionStat)
+	stats := make(map[string]*disk.UsageStat)
+
+	disks, err := disk.Partitions(all)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	for i := range disks {
+		listDisk[disks[i].Device] = disks[i]
+	}
+
+	for i := range disks {
+		usage, err := disk.Usage(disks[i].Mountpoint)
+		if err != nil {
+			return nil, nil, err
+		}
+		stats[disks[i].Device] = usage
+	}
+
+	return listDisk, stats, nil
 }

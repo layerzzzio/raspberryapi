@@ -23,8 +23,8 @@ func (v VCore) List(percent []float64, times []cpu.TimesStat) ([]rpi.VCore, erro
 	}
 
 	var result []rpi.VCore
-	for i, s := range times {
-		vCoreID, err := concatID(extractNum(s.CPU, 0, 9))
+	for i, t := range times {
+		vCoreID, err := concatID(extractNum(t.CPU, 0, 9))
 		if err != nil {
 			return nil, echo.NewHTTPError(http.StatusNotFound, "parsing id was unsuccessful")
 		}
@@ -32,9 +32,9 @@ func (v VCore) List(percent []float64, times []cpu.TimesStat) ([]rpi.VCore, erro
 		spec := rpi.VCore{
 			ID:     vCoreID + 1,
 			Used:   percent[i],
-			User:   times[i].User,
-			System: times[i].System,
-			Idle:   times[i].Idle,
+			User:   t.User,
+			System: t.System,
+			Idle:   t.Idle,
 		}
 		result = append(result, spec)
 	}

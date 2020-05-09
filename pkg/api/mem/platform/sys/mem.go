@@ -5,12 +5,12 @@ import (
 	"github.com/shirou/gopsutil/mem"
 )
 
-// MEM represents an empty MEM entity on the current system.
-type MEM struct{}
+// Mem represents an empty MEM entity on the current system.
+type Mem struct{}
 
 // List returns a list of MEM stats including some swap and virtual memory
-func (c MEM) List(swap mem.SwapMemoryStat, vmem mem.VirtualMemoryStat) (rpi.MEM, error) {
-	result := rpi.MEM{
+func (c Mem) List(swap mem.SwapMemoryStat, vmem mem.VirtualMemoryStat) (rpi.Mem, error) {
+	result := rpi.Mem{
 		STotal:       swap.Total,
 		SUsed:        swap.Used,
 		SFree:        swap.Free,
