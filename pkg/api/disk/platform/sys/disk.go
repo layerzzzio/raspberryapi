@@ -47,6 +47,7 @@ func (d Disk) List(listDev map[string][]metrics.DStats) ([]rpi.Disk, error) {
 			rpi.Disk{
 				ID:          id[0],
 				Filesystem:  dev,
+				Fstype:      fsType(devMP),
 				Mountpoints: devMP,
 			})
 
@@ -85,20 +86,46 @@ func (d Disk) View(device string, listDev map[string][]metrics.DStats) (rpi.Disk
 					},
 				)
 			}
-			break
-		}
 
-		result = rpi.Disk{
-			ID:          id[0],
-			Filesystem:  dev,
-			Mountpoints: devMP,
+			result = rpi.Disk{
+				ID:          id[0],
+				Filesystem:  dev,
+				Fstype:      fsType(devMP),
+				Mountpoints: devMP,
+			}
+
+			break
 		}
 	}
 	return result, nil
 }
 
-func extractDeviceID(s string) []string {
+func extractDeviceID(dev string) []string {
 	r := regexp.MustCompile("[^\"/]+$")
-	res := r.FindAllString(s, -1)
+	res := r.FindAllString(dev, -1)
 	return res
+}
+
+func fsType(mp []rpi.MountPoint) string {
+	var fstypes []string
+
+	for i := range mp {
+		if len(fstypes) > 0 {
+			if fstypes[i-1] != mp[i].Fstype {
+				fstypes = append(fstypes, mp[i].Fstype)
+			} else {
+				fstypes = nil
+			}
+		} else {
+			fstypes = append(fstypes, mp[i].Fstype)
+		}
+	}
+
+	var fstype string
+	if len(fstypes) == 1 {
+		fstype = mp[0].Fstype
+	} else {
+		fstype = "multi_fstype"
+	}
+	return fstype
 }
