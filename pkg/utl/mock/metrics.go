@@ -5,6 +5,7 @@ import (
 
 	"github.com/raspibuddy/rpi/pkg/utl/metrics"
 	"github.com/shirou/gopsutil/cpu"
+	"github.com/shirou/gopsutil/load"
 	"github.com/shirou/gopsutil/mem"
 )
 
@@ -16,6 +17,8 @@ type Metrics struct {
 	SwapMemFn    func() (mem.SwapMemoryStat, error)
 	VirtualMemFn func() (mem.VirtualMemoryStat, error)
 	DiskStatsFn  func(bool) (map[string][]metrics.DStats, error)
+	LoadAvgFn    func() (load.AvgStat, error)
+	LoadProcsFn  func() (load.MiscStat, error)
 }
 
 // CPUInfo mock
@@ -46,4 +49,14 @@ func (m Metrics) VirtualMemory() (mem.VirtualMemoryStat, error) {
 // DiskStats mock
 func (m Metrics) DiskStats(all bool) (map[string][]metrics.DStats, error) {
 	return m.DiskStatsFn(all)
+}
+
+// LoadAvg mock
+func (m Metrics) LoadAvg() (load.AvgStat, error) {
+	return m.LoadAvgFn()
+}
+
+// LoadProcs mock
+func (m Metrics) LoadProcs() (load.MiscStat, error) {
+	return m.LoadProcsFn()
 }

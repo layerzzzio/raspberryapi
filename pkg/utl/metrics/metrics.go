@@ -5,6 +5,7 @@ import (
 
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/disk"
+	"github.com/shirou/gopsutil/load"
 	"github.com/shirou/gopsutil/mem"
 )
 
@@ -104,4 +105,22 @@ func (s Service) DiskStats(all bool) (map[string][]DStats, error) {
 	}
 
 	return dstats, nil
+}
+
+// LoadAvg is
+func (s Service) LoadAvg() (load.AvgStat, error) {
+	temp, err := load.Avg()
+	if err != nil {
+		return load.AvgStat{}, err
+	}
+	return *temp, nil
+}
+
+// LoadProcs is
+func (s Service) LoadProcs() (load.MiscStat, error) {
+	procs, err := load.Misc()
+	if err != nil {
+		return load.MiscStat{}, err
+	}
+	return *procs, nil
 }
