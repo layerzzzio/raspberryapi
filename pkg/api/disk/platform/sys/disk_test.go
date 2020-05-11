@@ -1,318 +1,154 @@
 package sys_test
 
-// import (
-// 	"net/http"
-// 	"testing"
+import (
+	"testing"
 
-// 	"github.com/labstack/echo"
-// 	"github.com/raspibuddy/rpi"
-// 	"github.com/raspibuddy/rpi/pkg/api/cpu"
-// 	"github.com/raspibuddy/rpi/pkg/api/cpu/platform/sys"
-// 	cext "github.com/shirou/gopsutil/cpu"
-// 	"github.com/stretchr/testify/assert"
-// )
+	"github.com/raspibuddy/rpi"
+	"github.com/raspibuddy/rpi/pkg/api/disk"
+	"github.com/raspibuddy/rpi/pkg/api/disk/platform/sys"
+	"github.com/raspibuddy/rpi/pkg/utl/metrics"
+	dext "github.com/shirou/gopsutil/disk"
+	"github.com/stretchr/testify/assert"
+)
 
-// func TestList(t *testing.T) {
-// 	cases := []struct {
-// 		name       string
-// 		info       []cext.InfoStat
-// 		percent    []float64
-// 		times      []cext.TimesStat
-// 		wantedData []rpi.CPU
-// 		wantedErr  error
-// 	}{
-// 		{
-// 			name: "error: info array length greater than percent & times array length",
-// 			info: []cext.InfoStat{
-// 				{
-// 					CPU: int32(0),
-// 				},
-// 				{
-// 					CPU: int32(1),
-// 				},
-// 			},
-// 			percent: []float64{99.9},
-// 			times: []cext.TimesStat{
-// 				{
-// 					CPU:    "cpu-total",
-// 					User:   111.1,
-// 					System: 222.2,
-// 					Idle:   333.3,
-// 				},
-// 			},
-// 			wantedData: nil,
-// 			wantedErr:  echo.NewHTTPError(http.StatusNotFound, "results were not returned as they could not be guaranteed"),
-// 		},
-// 		{
-// 			name: "error: percent array length greater than info & times array length",
-// 			info: []cext.InfoStat{
-// 				{
-// 					CPU: int32(0),
-// 				},
-// 			},
-// 			percent: []float64{50.0, 99.9},
-// 			times: []cext.TimesStat{
-// 				{
-// 					CPU:    "cpu-total",
-// 					User:   111.1,
-// 					System: 222.2,
-// 					Idle:   333.3,
-// 				},
-// 			},
-// 			wantedData: nil,
-// 			wantedErr:  echo.NewHTTPError(http.StatusNotFound, "results were not returned as they could not be guaranteed"),
-// 		},
-// 		{
-// 			name: "error: times array length greater than info & percent array length",
-// 			info: []cext.InfoStat{
-// 				{
-// 					CPU: int32(0),
-// 				},
-// 			},
-// 			percent: []float64{99.9},
-// 			times: []cext.TimesStat{
-// 				{
-// 					CPU:    "cpu-total-0",
-// 					User:   111.1,
-// 					System: 222.2,
-// 					Idle:   333.3,
-// 				},
-// 				{
-// 					CPU:    "cpu-total-1",
-// 					User:   444.4,
-// 					System: 555.5,
-// 					Idle:   666.6,
-// 				},
-// 			},
-// 			wantedData: nil,
-// 			wantedErr:  echo.NewHTTPError(http.StatusNotFound, "results were not returned as they could not be guaranteed"),
-// 		},
-// 		{
-// 			name: "success",
-// 			info: []cext.InfoStat{
-// 				{
-// 					CPU:       int32(0),
-// 					Cores:     int32(8),
-// 					ModelName: "intel processor",
-// 					Mhz:       2300.99,
-// 				},
-// 			},
-// 			percent: []float64{99.9},
-// 			times: []cext.TimesStat{
-// 				{
-// 					CPU:    "cpu-total",
-// 					User:   111.1,
-// 					System: 222.2,
-// 					Idle:   333.3,
-// 				},
-// 			},
-// 			wantedData: []rpi.CPU{
-// 				{
-// 					ID:        1,
-// 					Cores:     int32(8),
-// 					ModelName: "intel processor",
-// 					Mhz:       2300.99,
-// 					Stats: rpi.CPUStats{
-// 						Used:   99.9,
-// 						User:   111.1,
-// 						System: 222.2,
-// 						Idle:   333.3,
-// 					},
-// 				},
-// 			},
-// 			wantedErr: nil,
-// 		},
-// 	}
+func TestList(t *testing.T) {
+	cases := []struct {
+		name       string
+		dstats     map[string][]metrics.DStats
+		wantedData []rpi.Disk
+		wantedErr  error
+	}{
+		{
+			name: "success: multiple devices containing multiple mount points",
+			dstats: map[string][]metrics.DStats{
+				"/dev1": {
+					{
+						Partition: dext.PartitionStat{
+							Device:     "/dev1",
+							Mountpoint: "/dev1/mp11",
+							Fstype:     "fs11",
+							Opts:       "rw11",
+						},
+						Mountpoint: &dext.UsageStat{
+							Path:              "/dev1/mp11",
+							Fstype:            "fs11",
+							Total:             1,
+							Free:              2,
+							Used:              3,
+							UsedPercent:       4.4,
+							InodesTotal:       5,
+							InodesUsed:        6,
+							InodesFree:        7,
+							InodesUsedPercent: 8.8,
+						},
+					},
+					{
+						Partition: dext.PartitionStat{
+							Device:     "/dev1",
+							Mountpoint: "/dev1/mp12",
+							Fstype:     "fs12",
+							Opts:       "rw12",
+						},
+						Mountpoint: &dext.UsageStat{
+							Path:              "/dev1/mp12",
+							Fstype:            "fs12",
+							Total:             1,
+							Free:              2,
+							Used:              3,
+							UsedPercent:       4.4,
+							InodesTotal:       5,
+							InodesUsed:        6,
+							InodesFree:        7,
+							InodesUsedPercent: 8.8,
+						},
+					},
+				},
+				"/dev2": {
+					{
+						Partition: dext.PartitionStat{
+							Device:     "/dev2",
+							Mountpoint: "/dev2/mp21",
+							Fstype:     "fs21",
+							Opts:       "rw21",
+						},
+						Mountpoint: &dext.UsageStat{
+							Path:              "/dev2/mp21",
+							Fstype:            "fs21",
+							Total:             11,
+							Free:              22,
+							Used:              33,
+							UsedPercent:       44.4,
+							InodesTotal:       55,
+							InodesUsed:        66,
+							InodesFree:        77,
+							InodesUsedPercent: 88.8,
+						},
+					},
+				},
+			},
+			wantedData: []rpi.Disk{
+				{
+					ID:         "dev1",
+					Filesystem: "/dev1",
+					Mountpoints: []rpi.MountPoint{
+						{
+							Mountpoint:        "/dev1/mp11",
+							Fstype:            "fs11",
+							Opts:              "rw11",
+							Total:             1,
+							Free:              2,
+							Used:              3,
+							UsedPercent:       4.4,
+							InodesTotal:       5,
+							InodesUsed:        6,
+							InodesFree:        7,
+							InodesUsedPercent: 8.8,
+						},
+						{
+							Mountpoint:        "/dev1/mp12",
+							Fstype:            "fs12",
+							Opts:              "rw12",
+							Total:             1,
+							Free:              2,
+							Used:              3,
+							UsedPercent:       4.4,
+							InodesTotal:       5,
+							InodesUsed:        6,
+							InodesFree:        7,
+							InodesUsedPercent: 8.8,
+						},
+					},
+				},
+				{
+					ID:         "dev2",
+					Filesystem: "/dev2",
+					Mountpoints: []rpi.MountPoint{
+						{
+							Mountpoint:        "/dev2/mp21",
+							Fstype:            "fs21",
+							Opts:              "rw21",
+							Total:             11,
+							Free:              22,
+							Used:              33,
+							UsedPercent:       44.4,
+							InodesTotal:       55,
+							InodesUsed:        66,
+							InodesFree:        77,
+							InodesUsedPercent: 88.8,
+						},
+					},
+				},
+			},
+			wantedErr: nil,
+		},
+	}
 
-// 	for _, tc := range cases {
-// 		t.Run(tc.name, func(t *testing.T) {
-// 			s := cpu.CSYS(sys.CPU{})
-// 			cpus, err := s.List(tc.info, tc.percent, tc.times)
-// 			assert.Equal(t, tc.wantedData, cpus)
-// 			assert.Equal(t, tc.wantedErr, err)
-// 		})
-// 	}
-// }
-
-// func TestView(t *testing.T) {
-// 	cases := []struct {
-// 		name       string
-// 		id         int
-// 		info       []cext.InfoStat
-// 		percent    []float64
-// 		times      []cext.TimesStat
-// 		wantedData rpi.CPU
-// 		wantedErr  error
-// 	}{
-// 		{
-// 			name: "error: info array length greater than percent & times array length",
-// 			info: []cext.InfoStat{
-// 				{
-// 					CPU: int32(0),
-// 				},
-// 				{
-// 					CPU: int32(1),
-// 				},
-// 			},
-// 			percent: []float64{99.9},
-// 			times: []cext.TimesStat{
-// 				{
-// 					CPU:    "cpu-total",
-// 					User:   111.1,
-// 					System: 222.2,
-// 					Idle:   333.3,
-// 				},
-// 			},
-// 			wantedData: rpi.CPU{},
-// 			wantedErr:  echo.NewHTTPError(http.StatusNotFound, "results were not returned as they could not be guaranteed"),
-// 		},
-// 		{
-// 			name: "error: percent array length greater than info & times array length",
-// 			info: []cext.InfoStat{
-// 				{
-// 					CPU: int32(0),
-// 				},
-// 			},
-// 			percent: []float64{50.0, 99.9},
-// 			times: []cext.TimesStat{
-// 				{
-// 					CPU:    "cpu-total",
-// 					User:   111.1,
-// 					System: 222.2,
-// 					Idle:   333.3,
-// 				},
-// 			},
-// 			wantedData: rpi.CPU{},
-// 			wantedErr:  echo.NewHTTPError(http.StatusNotFound, "results were not returned as they could not be guaranteed"),
-// 		},
-// 		{
-// 			name: "error: times array length greater than info & percent array length",
-// 			info: []cext.InfoStat{
-// 				{
-// 					CPU: int32(0),
-// 				},
-// 			},
-// 			percent: []float64{99.9},
-// 			times: []cext.TimesStat{
-// 				{
-// 					CPU:    "cpu-total-0",
-// 					User:   111.1,
-// 					System: 222.2,
-// 					Idle:   333.3,
-// 				},
-// 				{
-// 					CPU:    "cpu-total-1",
-// 					User:   111.1,
-// 					System: 222.2,
-// 					Idle:   333.3,
-// 				},
-// 			},
-// 			wantedData: rpi.CPU{},
-// 			wantedErr:  echo.NewHTTPError(http.StatusNotFound, "results were not returned as they could not be guaranteed"),
-// 		},
-// 		{
-// 			name: "error: id value greater than cpu number",
-// 			id:   2,
-// 			info: []cext.InfoStat{
-// 				{
-// 					CPU: int32(0),
-// 				},
-// 			},
-// 			percent: []float64{99.9},
-// 			times: []cext.TimesStat{
-// 				{
-// 					CPU:    "cpu-total",
-// 					User:   111.1,
-// 					System: 222.2,
-// 					Idle:   333.3,
-// 				},
-// 			},
-// 			wantedData: rpi.CPU{},
-// 			wantedErr:  echo.NewHTTPError(http.StatusNotFound, "id out of range"),
-// 		},
-// 		{
-// 			name: "error: id value is negative",
-// 			id:   -1,
-// 			info: []cext.InfoStat{
-// 				{
-// 					CPU: int32(0),
-// 				},
-// 			},
-// 			percent: []float64{99.9},
-// 			times: []cext.TimesStat{
-// 				{
-// 					CPU:    "cpu-total",
-// 					User:   111.1,
-// 					System: 222.2,
-// 					Idle:   333.3,
-// 				},
-// 			},
-// 			wantedData: rpi.CPU{},
-// 			wantedErr:  echo.NewHTTPError(http.StatusNotFound, "id out of range"),
-// 		},
-// 		{
-// 			name: "error: id value equals 0",
-// 			id:   0,
-// 			info: []cext.InfoStat{
-// 				{
-// 					CPU: int32(0),
-// 				},
-// 			},
-// 			percent: []float64{99.9},
-// 			times: []cext.TimesStat{
-// 				{
-// 					CPU:    "cpu-total",
-// 					User:   111.1,
-// 					System: 222.2,
-// 					Idle:   333.3,
-// 				},
-// 			},
-// 			wantedData: rpi.CPU{},
-// 			wantedErr:  echo.NewHTTPError(http.StatusNotFound, "id out of range"),
-// 		},
-// 		{
-// 			name: "success",
-// 			id:   1,
-// 			info: []cext.InfoStat{
-// 				{
-// 					CPU:       int32(0),
-// 					Cores:     int32(8),
-// 					ModelName: "intel processor",
-// 					Mhz:       2300.99,
-// 				},
-// 			},
-// 			percent: []float64{99.9},
-// 			times: []cext.TimesStat{
-// 				{
-// 					CPU:    "cpu-total",
-// 					User:   111.1,
-// 					System: 222.2,
-// 					Idle:   333.3,
-// 				},
-// 			},
-// 			wantedData: rpi.CPU{
-
-// 				ID:        1,
-// 				Cores:     int32(8),
-// 				ModelName: "intel processor",
-// 				Mhz:       2300.99,
-// 				Stats: rpi.CPUStats{
-// 					Used:   99.9,
-// 					User:   111.1,
-// 					System: 222.2,
-// 					Idle:   333.3,
-// 				},
-// 			},
-// 			wantedErr: nil,
-// 		},
-// 	}
-
-// 	for _, tc := range cases {
-// 		t.Run(tc.name, func(t *testing.T) {
-// 			s := cpu.CSYS(sys.CPU{})
-// 			cpus, err := s.View(tc.id, tc.info, tc.percent, tc.times)
-// 			assert.Equal(t, tc.wantedData, cpus)
-// 			assert.Equal(t, tc.wantedErr, err)
-// 		})
-// 	}
-// }
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := disk.DSYS(sys.Disk{})
+			disk, err := s.List(tc.dstats)
+			assert.Equal(t, tc.wantedData, disk)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}

@@ -13,6 +13,12 @@ import (
 // Service is
 type Service struct{}
 
+// DStats represents a pair of partition stats and mount point usage stats
+type DStats struct {
+	Partition  disk.PartitionStat
+	Mountpoint *disk.UsageStat
+}
+
 // CPUInfo is
 func (s Service) CPUInfo() ([]cpu.InfoStat, error) {
 	info, err := cpu.Info()
@@ -59,26 +65,43 @@ func (s Service) VirtualMemory() (mem.VirtualMemoryStat, error) {
 }
 
 // DiskStats is
-func (s Service) DiskStats(all bool) (map[string]disk.PartitionStat, map[string]*disk.UsageStat, error) {
-	listDisk := make(map[string]disk.PartitionStat)
-	stats := make(map[string]*disk.UsageStat)
+func (s Service) DiskStats(all bool) (map[string][]DStats, error) {
+	dstats := make(map[string][]DStats)
 
 	disks, err := disk.Partitions(all)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	for i := range disks {
-		listDisk[disks[i].Device] = disks[i]
-	}
-
-	for i := range disks {
-		usage, err := disk.Usage(disks[i].Mountpoint)
+	for _, d := range disks {
+		usage, err := disk.Usage(d.Mountpoint)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
-		stats[disks[i].Device] = usage
+
+		dstats[d.Device] = append(
+			dstats[d.Device],
+			DStats{
+				disk.PartitionStat{
+					Fstype:     d.Fstype,
+					Opts:       d.Opts,
+					Mountpoint: d.Mountpoint,
+				},
+				&disk.UsageStat{
+					Path:              usage.Path,
+					Fstype:            usage.Fstype,
+					Total:             usage.Total,
+					Free:              usage.Free,
+					Used:              usage.Used,
+					UsedPercent:       usage.UsedPercent,
+					InodesTotal:       usage.InodesTotal,
+					InodesFree:        usage.InodesFree,
+					InodesUsed:        usage.InodesUsed,
+					InodesUsedPercent: usage.InodesUsedPercent,
+				},
+			},
+		)
 	}
 
-	return listDisk, stats, nil
+	return dstats, nil
 }

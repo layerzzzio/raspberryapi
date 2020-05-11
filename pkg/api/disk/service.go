@@ -2,7 +2,7 @@ package disk
 
 import (
 	"github.com/raspibuddy/rpi"
-	"github.com/shirou/gopsutil/disk"
+	"github.com/raspibuddy/rpi/pkg/utl/metrics"
 )
 
 // Service represents all disk application services.
@@ -19,13 +19,13 @@ type Disk struct {
 
 // DSYS represents a disk repository service.
 type DSYS interface {
-	List(map[string]disk.PartitionStat, map[string]*disk.UsageStat) ([]rpi.Disk, error)
-	View(string, map[string]disk.PartitionStat, map[string]*disk.UsageStat) (rpi.Disk, error)
+	List(map[string][]metrics.DStats) ([]rpi.Disk, error)
+	View(string, map[string][]metrics.DStats) (rpi.Disk, error)
 }
 
 // Metrics represents the system metrics interface
 type Metrics interface {
-	DiskStats(bool) (map[string]disk.PartitionStat, map[string]*disk.UsageStat, error)
+	DiskStats(bool) (map[string][]metrics.DStats, error)
 }
 
 // New creates a Disk application service instance.

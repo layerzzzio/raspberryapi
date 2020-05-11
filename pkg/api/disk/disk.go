@@ -9,22 +9,22 @@ import (
 
 // List populates and returns an array of Disk models.
 func (d *Disk) List() ([]rpi.Disk, error) {
-	disks, stats, err := d.m.DiskStats(false)
+	dstats, err := d.m.DiskStats(false)
 
 	if err != nil {
 		return nil, echo.NewHTTPError(http.StatusInternalServerError, "could not list the disk metrics")
 	}
 
-	return d.dsys.List(disks, stats)
+	return d.dsys.List(dstats)
 }
 
-// View populates and returns a Disk models.
+//View populates and returns a Disk models.
 func (d *Disk) View(dev string) (rpi.Disk, error) {
-	disks, stats, err := d.m.DiskStats(false)
+	dstats, err := d.m.DiskStats(false)
 
 	if err != nil {
 		return rpi.Disk{}, echo.NewHTTPError(http.StatusInternalServerError, "could not view the disk metrics")
 	}
 
-	return d.dsys.View(dev, disks, stats)
+	return d.dsys.View(dev, dstats)
 }

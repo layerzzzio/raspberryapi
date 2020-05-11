@@ -5,7 +5,6 @@ type Disk struct {
 	ID          string       `json:"id"`
 	Filesystem  string       `json:"filesystem"`
 	Fstype      string       `json:"fstype"`
-	Opts        string       `json:"opts"`
 	Mountpoints []MountPoint `json:"mountpoints"`
 }
 
