@@ -3,6 +3,7 @@ package mock
 import (
 	"time"
 
+	"github.com/raspibuddy/rpi/pkg/utl/metrics"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/mem"
 )
@@ -14,6 +15,7 @@ type Metrics struct {
 	CPUTimesFn   func(bool) ([]cpu.TimesStat, error)
 	SwapMemFn    func() (mem.SwapMemoryStat, error)
 	VirtualMemFn func() (mem.VirtualMemoryStat, error)
+	DiskStatsFn  func(bool) (map[string][]metrics.DStats, error)
 }
 
 // CPUInfo mock
@@ -39,4 +41,9 @@ func (m Metrics) SwapMemory() (mem.SwapMemoryStat, error) {
 // VirtualMemory mock
 func (m Metrics) VirtualMemory() (mem.VirtualMemoryStat, error) {
 	return m.VirtualMemFn()
+}
+
+// DiskStats mock
+func (m Metrics) DiskStats(all bool) (map[string][]metrics.DStats, error) {
+	return m.DiskStatsFn(all)
 }

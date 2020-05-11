@@ -9,23 +9,22 @@ import (
 	"testing"
 
 	"github.com/raspibuddy/rpi"
-	"github.com/raspibuddy/rpi/pkg/api/cpu"
-	"github.com/raspibuddy/rpi/pkg/api/cpu/transport"
+	"github.com/raspibuddy/rpi/pkg/api/disk"
+	"github.com/raspibuddy/rpi/pkg/api/disk/transport"
 	"github.com/raspibuddy/rpi/pkg/utl/metrics"
 	"github.com/raspibuddy/rpi/pkg/utl/mock/mocksys"
 	"github.com/raspibuddy/rpi/pkg/utl/server"
-	cext "github.com/shirou/gopsutil/cpu"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestList(t *testing.T) {
-	var listResponse []rpi.CPU
+	var listResponse []rpi.Disk
 
 	cases := []struct {
 		name         string
-		csys         *mocksys.CPU
+		dsys         *mocksys.Disk
 		wantedStatus int
-		wantedResp   []rpi.CPU
+		wantedResp   []rpi.Disk
 	}{
 		{
 			name:         "error: invalid request response",
@@ -33,8 +32,8 @@ func TestList(t *testing.T) {
 		},
 		{
 			name: "error: List result is nil",
-			csys: &mocksys.CPU{
-				ListFn: func([]cext.InfoStat, []float64, []cext.TimesStat) ([]rpi.CPU, error) {
+			dsys: &mocksys.Disk{
+				ListFn: func(map[string][]metrics.DStats) ([]rpi.Disk, error) {
 					return nil, errors.New("test error")
 				},
 			},
@@ -42,36 +41,52 @@ func TestList(t *testing.T) {
 		},
 		{
 			name: "success",
-			csys: &mocksys.CPU{
-				ListFn: func([]cext.InfoStat, []float64, []cext.TimesStat) ([]rpi.CPU, error) {
-					return []rpi.CPU{
+			dsys: &mocksys.Disk{
+				ListFn: func(map[string][]metrics.DStats) ([]rpi.Disk, error) {
+					return []rpi.Disk{
 						{
-							ID:        1,
-							Cores:     int32(8),
-							ModelName: "intel processor",
-							Mhz:       2300.99,
-							Stats: rpi.CPUStats{
-								Used:   99.9,
-								User:   111.1,
-								System: 222.2,
-								Idle:   333.3,
+							ID:         "dev1",
+							Filesystem: "/dev1",
+							Fstype:     "fs11",
+							Mountpoints: []rpi.MountPoint{
+								{
+									Mountpoint:        "/dev1/mp11",
+									Fstype:            "fs11",
+									Opts:              "rw11",
+									Total:             1,
+									Free:              2,
+									Used:              3,
+									UsedPercent:       4.4,
+									InodesTotal:       5,
+									InodesUsed:        6,
+									InodesFree:        7,
+									InodesUsedPercent: 8.8,
+								},
 							},
 						},
 					}, nil
 				},
 			},
 			wantedStatus: http.StatusOK,
-			wantedResp: []rpi.CPU{
+			wantedResp: []rpi.Disk{
 				{
-					ID:        1,
-					Cores:     int32(8),
-					ModelName: "intel processor",
-					Mhz:       2300.99,
-					Stats: rpi.CPUStats{
-						Used:   99.9,
-						User:   111.1,
-						System: 222.2,
-						Idle:   333.3,
+					ID:         "dev1",
+					Filesystem: "/dev1",
+					Fstype:     "fs11",
+					Mountpoints: []rpi.MountPoint{
+						{
+							Mountpoint:        "/dev1/mp11",
+							Fstype:            "fs11",
+							Opts:              "rw11",
+							Total:             1,
+							Free:              2,
+							Used:              3,
+							UsedPercent:       4.4,
+							InodesTotal:       5,
+							InodesUsed:        6,
+							InodesFree:        7,
+							InodesUsedPercent: 8.8,
+						},
 					},
 				},
 			},
@@ -82,12 +97,12 @@ func TestList(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			r := server.New()
 			rg := r.Group("")
-			s := cpu.New(tc.csys, metrics.Service{})
+			s := disk.New(tc.dsys, metrics.Service{})
 			transport.NewHTTP(s, rg)
 			ts := httptest.NewServer(r)
 
 			defer ts.Close()
-			path := ts.URL + "/cpus"
+			path := ts.URL + "/disks"
 			res, err := http.Get(path)
 			if err != nil {
 				t.Fatal(err)
@@ -113,60 +128,71 @@ func TestList(t *testing.T) {
 }
 
 func TestView(t *testing.T) {
-	var listResponse rpi.CPU
+	var listResponse rpi.Disk
 
 	cases := []struct {
 		name         string
 		req          string
-		csys         *mocksys.CPU
+		dsys         *mocksys.Disk
 		wantedStatus int
-		wantedResp   rpi.CPU
+		wantedResp   rpi.Disk
 	}{
 		{
-			name:         "error: invalid request",
-			wantedStatus: http.StatusBadRequest,
-			req:          `a`,
-		},
-		{
 			name: "error: View result is nil",
-			req:  "1",
-			csys: &mocksys.CPU{
-				ViewFn: func(int, []cext.InfoStat, []float64, []cext.TimesStat) (rpi.CPU, error) {
-					return rpi.CPU{}, errors.New("test error")
+			req:  `a`,
+			dsys: &mocksys.Disk{
+				ViewFn: func(string, map[string][]metrics.DStats) (rpi.Disk, error) {
+					return rpi.Disk{}, errors.New("test error")
 				},
 			},
 			wantedStatus: http.StatusInternalServerError,
 		},
 		{
 			name: "success",
-			req:  "1",
-			csys: &mocksys.CPU{
-				ViewFn: func(int, []cext.InfoStat, []float64, []cext.TimesStat) (rpi.CPU, error) {
-					return rpi.CPU{
-						ID:        1,
-						Cores:     int32(8),
-						ModelName: "intel processor",
-						Mhz:       2300.99,
-						Stats: rpi.CPUStats{
-							Used:   99.9,
-							User:   111.1,
-							System: 222.2,
-							Idle:   333.3,
+			req:  "dev1",
+			dsys: &mocksys.Disk{
+				ViewFn: func(string, map[string][]metrics.DStats) (rpi.Disk, error) {
+					return rpi.Disk{
+						ID:         "dev1",
+						Filesystem: "/dev1",
+						Fstype:     "fs11",
+						Mountpoints: []rpi.MountPoint{
+							{
+								Mountpoint:        "/dev1/mp11",
+								Fstype:            "fs11",
+								Opts:              "rw11",
+								Total:             1,
+								Free:              2,
+								Used:              3,
+								UsedPercent:       4.4,
+								InodesTotal:       5,
+								InodesUsed:        6,
+								InodesFree:        7,
+								InodesUsedPercent: 8.8,
+							},
 						},
 					}, nil
 				},
 			},
 			wantedStatus: http.StatusOK,
-			wantedResp: rpi.CPU{
-				ID:        1,
-				Cores:     int32(8),
-				ModelName: "intel processor",
-				Mhz:       2300.99,
-				Stats: rpi.CPUStats{
-					Used:   99.9,
-					User:   111.1,
-					System: 222.2,
-					Idle:   333.3,
+			wantedResp: rpi.Disk{
+				ID:         "dev1",
+				Filesystem: "/dev1",
+				Fstype:     "fs11",
+				Mountpoints: []rpi.MountPoint{
+					{
+						Mountpoint:        "/dev1/mp11",
+						Fstype:            "fs11",
+						Opts:              "rw11",
+						Total:             1,
+						Free:              2,
+						Used:              3,
+						UsedPercent:       4.4,
+						InodesTotal:       5,
+						InodesUsed:        6,
+						InodesFree:        7,
+						InodesUsedPercent: 8.8,
+					},
 				},
 			},
 		},
@@ -176,12 +202,12 @@ func TestView(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			r := server.New()
 			rg := r.Group("")
-			s := cpu.New(tc.csys, metrics.Service{})
+			s := disk.New(tc.dsys, metrics.Service{})
 			transport.NewHTTP(s, rg)
 			ts := httptest.NewServer(r)
 
 			defer ts.Close()
-			path := ts.URL + "/cpus/" + tc.req
+			path := ts.URL + "/disks/" + tc.req
 			res, err := http.Get(path)
 			if err != nil {
 				t.Fatal(err)
@@ -194,7 +220,7 @@ func TestView(t *testing.T) {
 				panic(err)
 			}
 
-			if tc.wantedResp.ID > 0 {
+			if tc.wantedResp.ID != "" {
 				response := listResponse
 				if err := json.Unmarshal(body, &response); err != nil {
 					t.Fatal(err)
