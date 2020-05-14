@@ -17,6 +17,10 @@ import (
 	ml "github.com/raspibuddy/rpi/pkg/api/mem/logging"
 	ms "github.com/raspibuddy/rpi/pkg/api/mem/platform/sys"
 	mt "github.com/raspibuddy/rpi/pkg/api/mem/transport"
+	"github.com/raspibuddy/rpi/pkg/api/process"
+	pl "github.com/raspibuddy/rpi/pkg/api/process/logging"
+	ps "github.com/raspibuddy/rpi/pkg/api/process/platform/sys"
+	pt "github.com/raspibuddy/rpi/pkg/api/process/transport"
 	"github.com/raspibuddy/rpi/pkg/api/vcore"
 	vl "github.com/raspibuddy/rpi/pkg/api/vcore/logging"
 	vs "github.com/raspibuddy/rpi/pkg/api/vcore/platform/sys"
@@ -39,6 +43,7 @@ func Start(cfg *config.Configuration) error {
 	mt.NewHTTP(ml.New(mem.New(ms.Mem{}, m), log).Service, v1)
 	dt.NewHTTP(dl.New(disk.New(ds.Disk{}, m), log).Service, v1)
 	lt.NewHTTP(ll.New(load.New(ls.Load{}, m), log).Service, v1)
+	pt.NewHTTP(pl.New(process.New(ps.Process{}, m), log).Service, v1)
 
 	server.Start(e, &server.Config{
 		Port:                cfg.Server.Port,

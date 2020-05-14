@@ -4,8 +4,16 @@ import (
 	"time"
 )
 
-// Process is
-type Process struct {
+// ProcessSummary is
+type ProcessSummary struct {
+	ID         int32   `json:"id"`
+	Name       string  `json:"name"`
+	CPUPercent float64 `json:"cpuPercent"`
+	MemPercent float32 `json:"memPercent"`
+}
+
+// ProcessDetails is
+type ProcessDetails struct {
 	ID           int32     `json:"id"`
 	Name         string    `json:"name"`
 	Username     string    `json:"username"`
@@ -16,10 +24,6 @@ type Process struct {
 	Background   bool      `json:"background"`
 	IsRunning    bool      `json:"isRunning"`
 	CPUPercent   float64   `json:"cpuPercent"`
-	CPUTimes     CPUStats  `json:"cpuTimes"`
-	Threads      int32     `json:"threads"`
 	MemPercent   float32   `json:"memPercent"`
-	MemInfo      Mem       `json:"memInfo"`
 	ParentP      int32     `json:"parentPID"`
-	ChildrenP    []int32   `json:"childrenPID"`
 }

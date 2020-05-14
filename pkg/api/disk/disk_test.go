@@ -40,7 +40,7 @@ func TestList(t *testing.T) {
 					return map[string][]metrics.DStats{
 						"/dev1": {
 							{
-								Partition: dext.PartitionStat{
+								Partition: &dext.PartitionStat{
 									Device:     "/dev1",
 									Mountpoint: "/dev1/mp11",
 									Fstype:     "fs11",
@@ -119,7 +119,7 @@ func TestList(t *testing.T) {
 					return map[string][]metrics.DStats{
 						"/dev1": {
 							{
-								Partition: dext.PartitionStat{
+								Partition: &dext.PartitionStat{
 									Device:     "/dev1",
 									Mountpoint: "/dev1/mp11",
 									Fstype:     "fs11",
@@ -139,7 +139,7 @@ func TestList(t *testing.T) {
 								},
 							},
 							{
-								Partition: dext.PartitionStat{
+								Partition: &dext.PartitionStat{
 									Device:     "/dev1",
 									Mountpoint: "/dev1/mp12",
 									Fstype:     "fs12",
@@ -244,7 +244,7 @@ func TestList(t *testing.T) {
 					return map[string][]metrics.DStats{
 						"/dev1": {
 							{
-								Partition: dext.PartitionStat{
+								Partition: &dext.PartitionStat{
 									Device:     "/dev1",
 									Mountpoint: "/dev1/mp11",
 									Fstype:     "fs11",
@@ -264,7 +264,7 @@ func TestList(t *testing.T) {
 								},
 							},
 							{
-								Partition: dext.PartitionStat{
+								Partition: &dext.PartitionStat{
 									Device:     "/dev1",
 									Mountpoint: "/dev1/mp12",
 									Fstype:     "fs12",
@@ -286,7 +286,7 @@ func TestList(t *testing.T) {
 						},
 						"/dev2": {
 							{
-								Partition: dext.PartitionStat{
+								Partition: &dext.PartitionStat{
 									Device:     "/dev2",
 									Mountpoint: "/dev2/mp21",
 									Fstype:     "fs21",
@@ -464,7 +464,7 @@ func TestView(t *testing.T) {
 					return map[string][]metrics.DStats{
 						"/dev1": {
 							{
-								Partition: dext.PartitionStat{
+								Partition: &dext.PartitionStat{
 									Device:     "/dev1",
 									Mountpoint: "/dev1/mp11",
 									Fstype:     "fs11",
@@ -541,7 +541,7 @@ func TestView(t *testing.T) {
 					return map[string][]metrics.DStats{
 						"/dev1": {
 							{
-								Partition: dext.PartitionStat{
+								Partition: &dext.PartitionStat{
 									Device:     "/dev1",
 									Mountpoint: "/dev1/mp11",
 									Fstype:     "fs11",
@@ -561,7 +561,7 @@ func TestView(t *testing.T) {
 								},
 							},
 							{
-								Partition: dext.PartitionStat{
+								Partition: &dext.PartitionStat{
 									Device:     "/dev1",
 									Mountpoint: "/dev1/mp12",
 									Fstype:     "fs12",
@@ -663,7 +663,7 @@ func TestView(t *testing.T) {
 					return map[string][]metrics.DStats{
 						"/dev1": {
 							{
-								Partition: dext.PartitionStat{
+								Partition: &dext.PartitionStat{
 									Device:     "/dev1",
 									Mountpoint: "/dev1/mp11",
 									Fstype:     "fs11",
@@ -683,7 +683,7 @@ func TestView(t *testing.T) {
 								},
 							},
 							{
-								Partition: dext.PartitionStat{
+								Partition: &dext.PartitionStat{
 									Device:     "/dev1",
 									Mountpoint: "/dev1/mp12",
 									Fstype:     "fs12",
@@ -705,7 +705,7 @@ func TestView(t *testing.T) {
 						},
 						"/dev2": {
 							{
-								Partition: dext.PartitionStat{
+								Partition: &dext.PartitionStat{
 									Device:     "/dev2",
 									Mountpoint: "/dev2/mp21",
 									Fstype:     "fs21",
