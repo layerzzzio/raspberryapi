@@ -67,6 +67,8 @@ func (d Disk) View(device string, listDev map[string][]metrics.DStats) (rpi.Disk
 			return rpi.Disk{}, echo.NewHTTPError(http.StatusNotFound, "parsing id was unsuccessful")
 		}
 
+		//TODO: returns a nice error message if the device does not exists
+
 		if id[0] == device {
 			for _, v := range dstats {
 				devMP = append(

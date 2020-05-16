@@ -7,18 +7,32 @@ import (
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/load"
 	"github.com/shirou/gopsutil/mem"
+	"github.com/shirou/gopsutil/process"
 )
 
 // Metrics mock
 type Metrics struct {
-	CPUInfoFn    func() ([]cpu.InfoStat, error)
-	CPUPercentFn func(time.Duration, bool) ([]float64, error)
-	CPUTimesFn   func(bool) ([]cpu.TimesStat, error)
-	SwapMemFn    func() (mem.SwapMemoryStat, error)
-	VirtualMemFn func() (mem.VirtualMemoryStat, error)
-	DiskStatsFn  func(bool) (map[string][]metrics.DStats, error)
-	LoadAvgFn    func() (load.AvgStat, error)
-	LoadProcsFn  func() (load.MiscStat, error)
+	CPUInfoFn        func() ([]cpu.InfoStat, error)
+	CPUPercentFn     func(time.Duration, bool) ([]float64, error)
+	CPUTimesFn       func(bool) ([]cpu.TimesStat, error)
+	SwapMemFn        func() (mem.SwapMemoryStat, error)
+	VirtualMemFn     func() (mem.VirtualMemoryStat, error)
+	DiskStatsFn      func(bool) (map[string][]metrics.DStats, error)
+	LoadAvgFn        func() (load.AvgStat, error)
+	LoadProcsFn      func() (load.MiscStat, error)
+	ProcessesFn      func(id ...int32) ([]metrics.PInfo, error)
+	PsPIDFn          func(p *process.Process, c chan (int32))
+	PsNameFn         func(p *process.Process, c chan (string))
+	PsCPUPerFn       func(p *process.Process, c chan (float64))
+	PsMemPerFn       func(p *process.Process, c chan (float32))
+	PsUsernameFn     func(p *process.Process, c chan (string))
+	PsCmdLineFn      func(p *process.Process, c chan (string))
+	PsStatusFn       func(p *process.Process, c chan (string))
+	PsCreationTimeFn func(p *process.Process, c chan (time.Time))
+	PsBackgroundFn   func(p *process.Process, c chan (bool))
+	PsForegroundFn   func(p *process.Process, c chan (bool))
+	PsIsRunningFn    func(p *process.Process, c chan (bool))
+	PsParentFn       func(p *process.Process, c chan (int32))
 }
 
 // CPUInfo mock
@@ -59,4 +73,72 @@ func (m Metrics) LoadAvg() (load.AvgStat, error) {
 // LoadProcs mock
 func (m Metrics) LoadProcs() (load.MiscStat, error) {
 	return m.LoadProcsFn()
+}
+
+// Processes mock
+func (m Metrics) Processes(id ...int32) ([]metrics.PInfo, error) {
+	if len(id) > 1 && id[0] > 0 {
+		return m.ProcessesFn(id[0])
+	}
+	return m.ProcessesFn()
+}
+
+// PsPID mock
+func (m Metrics) PsPID(p *process.Process, c chan (int32)) {
+	m.PsPIDFn(p, c)
+}
+
+// PsName mock
+func (m Metrics) PsName(p *process.Process, c chan (string)) {
+	m.PsNameFn(p, c)
+}
+
+// PsCPUPer mock
+func (m Metrics) PsCPUPer(p *process.Process, c chan (float64)) {
+	m.PsCPUPerFn(p, c)
+}
+
+// PsMemPer mock
+func (m Metrics) PsMemPer(p *process.Process, c chan (float32)) {
+	m.PsMemPerFn(p, c)
+}
+
+// PsUsername mock
+func (m Metrics) PsUsername(p *process.Process, c chan (string)) {
+	m.PsUsernameFn(p, c)
+}
+
+// PsCmdLine mock
+func (m Metrics) PsCmdLine(p *process.Process, c chan (string)) {
+	m.PsCmdLineFn(p, c)
+}
+
+// PsStatus mock
+func (m Metrics) PsStatus(p *process.Process, c chan (string)) {
+	m.PsStatusFn(p, c)
+}
+
+// PsCreationTime mock
+func (m Metrics) PsCreationTime(p *process.Process, c chan (time.Time)) {
+	m.PsCreationTimeFn(p, c)
+}
+
+// PsForeground mock
+func (m Metrics) PsForeground(p *process.Process, c chan (bool)) {
+	m.PsForegroundFn(p, c)
+}
+
+// PsBackground mock
+func (m Metrics) PsBackground(p *process.Process, c chan (bool)) {
+	m.PsBackgroundFn(p, c)
+}
+
+// PsIsRunning mock
+func (m Metrics) PsIsRunning(p *process.Process, c chan (bool)) {
+	m.PsIsRunningFn(p, c)
+}
+
+// PsParent mock
+func (m Metrics) PsParent(p *process.Process, c chan (int32)) {
+	m.PsParentFn(p, c)
 }

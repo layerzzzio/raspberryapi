@@ -44,7 +44,7 @@ func (p Process) View(id int32, pinfo []metrics.PInfo) (rpi.ProcessDetails, erro
 				IsRunning:    pinfo[i].IsRunning,
 				CPUPercent:   pinfo[i].CPUPercent,
 				MemPercent:   pinfo[i].MemPercent,
-				ParentP:      pinfo[i].ParentP.Pid,
+				ParentP:      pinfo[i].ParentP,
 			}
 			break
 		}

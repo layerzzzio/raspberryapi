@@ -1,6 +1,7 @@
 package process
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo"
@@ -8,23 +9,26 @@ import (
 )
 
 // List populates and returns an array of Process models.
-func (d *Process) List() ([]rpi.ProcessSummary, error) {
-	pinfo, err := d.m.Processes()
+func (p *Process) List() ([]rpi.ProcessSummary, error) {
+	pinfo, err := p.m.Processes()
 
 	if err != nil {
 		return nil, echo.NewHTTPError(http.StatusInternalServerError, "could not list the process metrics")
 	}
 
-	return d.psys.List(pinfo)
+	return p.psys.List(pinfo)
 }
 
 //View populates and returns a Process model.
-func (d *Process) View(id int32) (rpi.ProcessDetails, error) {
-	pinfo, err := d.m.Processes(id)
+func (p *Process) View(id int32) (rpi.ProcessDetails, error) {
+	pinfo, err := p.m.Processes(id)
 
 	if err != nil {
+		if err.Error() == "process not found" {
+			return rpi.ProcessDetails{}, echo.NewHTTPError(http.StatusInternalServerError, fmt.Sprintf("process %v does not exist", id))
+		}
 		return rpi.ProcessDetails{}, echo.NewHTTPError(http.StatusInternalServerError, "could not view the process metrics")
 	}
 
-	return d.psys.View(id, pinfo)
+	return p.psys.View(id, pinfo)
 }

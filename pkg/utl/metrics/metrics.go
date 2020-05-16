@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"errors"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -14,7 +15,30 @@ import (
 // TODO: to test this method by simulating different OS scenarios in a Docker container (raspbian/strech)
 
 // Service is
-type Service struct{}
+type Service struct {
+	m Metrics
+}
+
+// Metrics is
+type Metrics interface {
+	PsPID(p *process.Process, c chan (int32))
+	PsName(p *process.Process, c chan (string))
+	PsCPUPer(p *process.Process, c chan (float64))
+	PsMemPer(p *process.Process, c chan (float32))
+	PsUsername(p *process.Process, c chan (string))
+	PsCmdLine(p *process.Process, c chan (string))
+	PsStatus(p *process.Process, c chan (string))
+	PsCreationTime(p *process.Process, c chan (time.Time))
+	PsBackground(p *process.Process, c chan (bool))
+	PsForeground(p *process.Process, c chan (bool))
+	PsIsRunning(p *process.Process, c chan (bool))
+	PsParent(p *process.Process, c chan (int32))
+}
+
+// New creates a Process application service instance.
+func New(m Metrics) *Service {
+	return &Service{m: m}
+}
 
 // DStats represents a pair of partition stats and mount point usage stats
 type DStats struct {
@@ -35,7 +59,7 @@ type PInfo struct {
 	IsRunning    bool
 	CPUPercent   float64
 	MemPercent   float32
-	ParentP      process.Process
+	ParentP      int32
 }
 
 // CPUInfo is
@@ -157,7 +181,7 @@ func (s Service) Processes(id ...int32) ([]PInfo, error) {
 	var cFG chan (bool)
 	var cBG chan (bool)
 	var cIR chan (bool)
-	var cP chan (process.Process)
+	var cP chan (int32)
 
 	ps, err := process.Processes()
 	if err != nil {
@@ -165,16 +189,18 @@ func (s Service) Processes(id ...int32) ([]PInfo, error) {
 	}
 
 	pid := int32(-1)
-	if len(id) == 1 && id[0] > 0 {
+	if len(id) == 1 {
 		pid = id[0]
-		cU = make(chan (string))
-		cCL = make(chan (string))
-		cS = make(chan (string))
-		cCT = make(chan (time.Time))
-		cFG = make(chan (bool))
-		cBG = make(chan (bool))
-		cIR = make(chan (bool))
-		cP = make(chan (process.Process))
+		if id[0] > 0 {
+			cU = make(chan (string))
+			cCL = make(chan (string))
+			cS = make(chan (string))
+			cCT = make(chan (time.Time))
+			cFG = make(chan (bool))
+			cBG = make(chan (bool))
+			cIR = make(chan (bool))
+			cP = make(chan (int32))
+		}
 	} else if len(id) > 1 {
 		panic("only one id is authorized")
 	}
@@ -182,21 +208,21 @@ func (s Service) Processes(id ...int32) ([]PInfo, error) {
 	if pid > 0 {
 		for i := range ps {
 			if ps[i].Pid == pid {
-				go PsPID(ps[i], cID)
-				go PsName(ps[i], cName)
-				go PsCPUPer(ps[i], cCPUPer)
-				go PsMemPer(ps[i], cMemPer)
-				go PsUsername(ps[i], cU)
-				go PsCmdLine(ps[i], cCL)
-				go PsStatus(ps[i], cS)
-				go PsCreationTime(ps[i], cCT)
-				go PsForeground(ps[i], cFG)
-				go PsBackground(ps[i], cBG)
-				go PsIsRunning(ps[i], cIR)
-				go PsParent(ps[i], cP)
+				go s.m.PsPID(ps[i], cID)
+				go s.m.PsName(ps[i], cName)
+				go s.m.PsCPUPer(ps[i], cCPUPer)
+				go s.m.PsMemPer(ps[i], cMemPer)
+				go s.m.PsUsername(ps[i], cU)
+				go s.m.PsCmdLine(ps[i], cCL)
+				go s.m.PsStatus(ps[i], cS)
+				go s.m.PsCreationTime(ps[i], cCT)
+				go s.m.PsForeground(ps[i], cFG)
+				go s.m.PsBackground(ps[i], cBG)
+				go s.m.PsIsRunning(ps[i], cIR)
+				go s.m.PsParent(ps[i], cP)
 
-				pinfo = append(pinfo,
-					PInfo{
+				pinfo = []PInfo{
+					{
 						ID:           <-cID,
 						Name:         <-cName,
 						CPUPercent:   <-cCPUPer,
@@ -209,33 +235,43 @@ func (s Service) Processes(id ...int32) ([]PInfo, error) {
 						Background:   <-cBG,
 						IsRunning:    <-cIR,
 						ParentP:      <-cP,
-					})
-				break
+					},
+				}
+
+				close(cID)
+				close(cName)
+				close(cCPUPer)
+				close(cMemPer)
+				close(cU)
+				close(cCL)
+				close(cS)
+				close(cCT)
+				close(cFG)
+				close(cBG)
+				close(cIR)
+				close(cP)
+
+				return pinfo, nil
 			}
 		}
-		close(cU)
-		close(cCL)
-		close(cS)
-		close(cCT)
-		close(cFG)
-		close(cBG)
-		close(cIR)
-		close(cP)
-	} else {
-		for i := range ps {
-			go PsPID(ps[i], cID)
-			go PsName(ps[i], cName)
-			go PsCPUPer(ps[i], cCPUPer)
-			go PsMemPer(ps[i], cMemPer)
+		return nil, errors.New("process not found")
+	} else if pid == 0 {
+		return nil, errors.New("process not found")
+	}
 
-			pinfo = append(pinfo,
-				PInfo{
-					ID:         <-cID,
-					Name:       <-cName,
-					CPUPercent: <-cCPUPer,
-					MemPercent: <-cMemPer,
-				})
-		}
+	for i := range ps {
+		go s.m.PsPID(ps[i], cID)
+		go s.m.PsName(ps[i], cName)
+		go s.m.PsCPUPer(ps[i], cCPUPer)
+		go s.m.PsMemPer(ps[i], cMemPer)
+
+		pinfo = append(pinfo,
+			PInfo{
+				ID:         <-cID,
+				Name:       <-cName,
+				CPUPercent: <-cCPUPer,
+				MemPercent: <-cMemPer,
+			})
 	}
 
 	close(cID)
@@ -247,12 +283,12 @@ func (s Service) Processes(id ...int32) ([]PInfo, error) {
 }
 
 // PsPID is
-func PsPID(p *process.Process, c chan (int32)) {
+func (s Service) PsPID(p *process.Process, c chan (int32)) {
 	c <- p.Pid
 }
 
 // PsName is
-func PsName(p *process.Process, c chan (string)) {
+func (s Service) PsName(p *process.Process, c chan (string)) {
 	name, err := p.Name()
 	if err != nil {
 		log.Error()
@@ -261,7 +297,7 @@ func PsName(p *process.Process, c chan (string)) {
 }
 
 // PsCPUPer is
-func PsCPUPer(p *process.Process, c chan (float64)) {
+func (s Service) PsCPUPer(p *process.Process, c chan (float64)) {
 	cpuper, err := p.CPUPercent()
 	if err != nil {
 		log.Error()
@@ -270,7 +306,7 @@ func PsCPUPer(p *process.Process, c chan (float64)) {
 }
 
 // PsMemPer is
-func PsMemPer(p *process.Process, c chan (float32)) {
+func (s Service) PsMemPer(p *process.Process, c chan (float32)) {
 	memper, err := p.MemoryPercent()
 	if err != nil {
 		log.Error()
@@ -279,7 +315,7 @@ func PsMemPer(p *process.Process, c chan (float32)) {
 }
 
 // PsUsername is
-func PsUsername(p *process.Process, c chan (string)) {
+func (s Service) PsUsername(p *process.Process, c chan (string)) {
 	u, err := p.Username()
 	if err != nil {
 		log.Error()
@@ -288,7 +324,7 @@ func PsUsername(p *process.Process, c chan (string)) {
 }
 
 // PsCmdLine is
-func PsCmdLine(p *process.Process, c chan (string)) {
+func (s Service) PsCmdLine(p *process.Process, c chan (string)) {
 	cl, err := p.Cmdline()
 	if err != nil {
 		log.Error()
@@ -297,7 +333,7 @@ func PsCmdLine(p *process.Process, c chan (string)) {
 }
 
 // PsStatus is
-func PsStatus(p *process.Process, c chan (string)) {
+func (s Service) PsStatus(p *process.Process, c chan (string)) {
 	st, err := p.Status()
 	if err != nil {
 		log.Error()
@@ -306,7 +342,7 @@ func PsStatus(p *process.Process, c chan (string)) {
 }
 
 // PsCreationTime is
-func PsCreationTime(p *process.Process, c chan (time.Time)) {
+func (s Service) PsCreationTime(p *process.Process, c chan (time.Time)) {
 	ct, err := p.CreateTime()
 	if err != nil {
 		log.Error()
@@ -316,7 +352,7 @@ func PsCreationTime(p *process.Process, c chan (time.Time)) {
 }
 
 // PsBackground is
-func PsBackground(p *process.Process, c chan (bool)) {
+func (s Service) PsBackground(p *process.Process, c chan (bool)) {
 	bg, err := p.Background()
 	if err != nil {
 		log.Error()
@@ -325,7 +361,7 @@ func PsBackground(p *process.Process, c chan (bool)) {
 }
 
 // PsForeground is
-func PsForeground(p *process.Process, c chan (bool)) {
+func (s Service) PsForeground(p *process.Process, c chan (bool)) {
 	fg, err := p.Foreground()
 	if err != nil {
 		log.Error()
@@ -334,7 +370,7 @@ func PsForeground(p *process.Process, c chan (bool)) {
 }
 
 // PsIsRunning is
-func PsIsRunning(p *process.Process, c chan (bool)) {
+func (s Service) PsIsRunning(p *process.Process, c chan (bool)) {
 	ir, err := p.IsRunning()
 	if err != nil {
 		log.Error()
@@ -343,10 +379,20 @@ func PsIsRunning(p *process.Process, c chan (bool)) {
 }
 
 // PsParent is
-func PsParent(p *process.Process, c chan (process.Process)) {
-	ppid, err := p.Parent()
+func (s Service) PsParent(p *process.Process, c chan (int32)) {
+	var ppid int32
+
+	ps, err := p.Parent()
+
 	if err != nil {
 		log.Error()
 	}
-	c <- *ppid
+
+	if ps == nil {
+		ppid = -1
+	} else {
+		ppid = ps.Pid
+	}
+
+	c <- ppid
 }

@@ -36,7 +36,9 @@ func Start(cfg *config.Configuration) error {
 	e := server.New()
 	log := zlog.New()
 	v1 := e.Group("/v1")
-	m := metrics.Service{}
+	//m := metrics.Service{}
+
+	m := metrics.New(metrics.Service{})
 
 	ct.NewHTTP(cl.New(cpu.New(cs.CPU{}, m), log).Service, v1)
 	vt.NewHTTP(vl.New(vcore.New(vs.VCore{}, m), log).Service, v1)
