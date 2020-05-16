@@ -482,6 +482,36 @@ func TestView(t *testing.T) {
 			wantedErr:  echo.NewHTTPError(http.StatusNotFound, "parsing id was unsuccessful"),
 		},
 		{
+			name: "error: input device does not exist",
+			dev:  "dev666",
+			dstats: map[string][]metrics.DStats{
+				"/dev1": {
+					{
+						Partition: &dext.PartitionStat{
+							Device:     "/",
+							Mountpoint: "/dev1/mp11",
+							Fstype:     "fs11",
+							Opts:       "rw11",
+						},
+						Mountpoint: &dext.UsageStat{
+							Path:              "/dev1/mp11",
+							Fstype:            "fs11",
+							Total:             1,
+							Free:              2,
+							Used:              3,
+							UsedPercent:       4.4,
+							InodesTotal:       5,
+							InodesUsed:        6,
+							InodesFree:        7,
+							InodesUsedPercent: 8.8,
+						},
+					},
+				},
+			},
+			wantedData: rpi.Disk{},
+			wantedErr:  echo.NewHTTPError(http.StatusNotFound, "dev666 does not exist"),
+		},
+		{
 			name: "success: one device containing one mount point",
 			dev:  "dev1",
 			dstats: map[string][]metrics.DStats{

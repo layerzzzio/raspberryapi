@@ -89,12 +89,9 @@ func TestList(t *testing.T) {
 			defer ts.Close()
 			path := ts.URL + "/processes"
 			res, err := http.Get(path)
-
 			if err != nil {
 				t.Fatal(err)
 			}
-
-			fmt.Println(res)
 
 			defer res.Body.Close()
 
@@ -189,7 +186,6 @@ func TestView(t *testing.T) {
 			defer ts.Close()
 			path := ts.URL + "/processes/" + tc.req
 			res, err := http.Get(path)
-
 			if err != nil {
 				t.Fatal(err)
 			}

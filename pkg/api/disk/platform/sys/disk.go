@@ -1,6 +1,7 @@
 package sys
 
 import (
+	"fmt"
 	"net/http"
 	"regexp"
 
@@ -53,6 +54,8 @@ func (d Disk) List(listDev map[string][]metrics.DStats) ([]rpi.Disk, error) {
 
 		devMP = nil
 	}
+
+	//TODO: make sure the result is ordered in an alphabetical order otherwise the List test can fail
 	return result, nil
 }
 
@@ -60,14 +63,13 @@ func (d Disk) List(listDev map[string][]metrics.DStats) ([]rpi.Disk, error) {
 func (d Disk) View(device string, listDev map[string][]metrics.DStats) (rpi.Disk, error) {
 	var result rpi.Disk
 	var devMP []rpi.MountPoint
+	isDiskFound := false
 
 	for dev, dstats := range listDev {
 		id := extractDeviceID(dev)
 		if len(id) != 1 {
 			return rpi.Disk{}, echo.NewHTTPError(http.StatusNotFound, "parsing id was unsuccessful")
 		}
-
-		//TODO: returns a nice error message if the device does not exists
 
 		if id[0] == device {
 			for _, v := range dstats {
@@ -95,10 +97,15 @@ func (d Disk) View(device string, listDev map[string][]metrics.DStats) (rpi.Disk
 				Fstype:      fsType(devMP),
 				Mountpoints: devMP,
 			}
-
+			isDiskFound = true
 			break
 		}
 	}
+
+	if isDiskFound == false {
+		return rpi.Disk{}, echo.NewHTTPError(http.StatusNotFound, fmt.Sprintf("%v does not exist", device))
+	}
+
 	return result, nil
 }
 
