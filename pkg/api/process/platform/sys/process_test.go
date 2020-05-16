@@ -2,7 +2,6 @@ package sys
 
 import (
 	"testing"
-	"time"
 
 	"github.com/raspibuddy/rpi"
 	"github.com/raspibuddy/rpi/pkg/api/process"
@@ -14,7 +13,7 @@ func TestList(t *testing.T) {
 	cases := []struct {
 		name       string
 		pinfo      []metrics.PInfo
-		wantedData []rpi.ProcessSummary
+		wantedData []rpi.Process
 		wantedErr  error
 	}{
 		{
@@ -33,7 +32,7 @@ func TestList(t *testing.T) {
 					MemPercent: 4.4,
 				},
 			},
-			wantedData: []rpi.ProcessSummary{
+			wantedData: []rpi.Process{
 				{
 					ID:         int32(1),
 					Name:       "process_1",
@@ -66,7 +65,7 @@ func TestView(t *testing.T) {
 		name       string
 		id         int32
 		pinfo      []metrics.PInfo
-		wantedData rpi.ProcessDetails
+		wantedData rpi.Process
 		wantedErr  error
 	}{
 		{
@@ -81,7 +80,7 @@ func TestView(t *testing.T) {
 					Username:     "pi",
 					CommandLine:  "/cmd/text",
 					Status:       "S",
-					CreationTime: time.Time{}.Add(1666666),
+					CreationTime: 1666666,
 					Foreground:   true,
 					Background:   false,
 					IsRunning:    true,
@@ -95,14 +94,14 @@ func TestView(t *testing.T) {
 					Username:     "pi",
 					CommandLine:  "/cmd/text",
 					Status:       "S",
-					CreationTime: time.Time{}.Add(1666666),
+					CreationTime: 1666666,
 					Foreground:   true,
 					Background:   false,
 					IsRunning:    true,
 					ParentP:      int32(1),
 				},
 			},
-			wantedData: rpi.ProcessDetails{
+			wantedData: rpi.Process{
 				ID:           int32(99),
 				Name:         "process_99",
 				CPUPercent:   1.1,
@@ -110,7 +109,7 @@ func TestView(t *testing.T) {
 				Username:     "pi",
 				CommandLine:  "/cmd/text",
 				Status:       "S",
-				CreationTime: time.Time{}.Add(1666666),
+				CreationTime: 1666666,
 				Foreground:   true,
 				Background:   false,
 				IsRunning:    true,

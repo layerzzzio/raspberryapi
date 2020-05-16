@@ -1,8 +1,8 @@
 package metrics_test
 
 import (
+	"errors"
 	"testing"
-	"time"
 
 	"github.com/raspibuddy/rpi/pkg/utl/metrics"
 	"github.com/raspibuddy/rpi/pkg/utl/mock"
@@ -18,6 +18,33 @@ func TestProcesses(t *testing.T) {
 		wantedData metrics.PInfo
 		wantedErr  error
 	}{
+		{
+			name:       "error: process id 0",
+			id:         0,
+			mps:        mock.Metrics{},
+			wantedErr:  errors.New("process not found"),
+			wantedData: metrics.PInfo{},
+		},
+		{
+			name: "error: process not found",
+			id:   66,
+			mps: mock.Metrics{
+				PsPIDFn: func(p *process.Process, c chan (int32)) {
+					c <- 99
+				},
+				PsNameFn: func(p *process.Process, c chan (string)) {
+					c <- "process_99"
+				},
+				PsCPUPerFn: func(p *process.Process, c chan (float64)) {
+					c <- 1.1
+				},
+				PsMemPerFn: func(p *process.Process, c chan (float32)) {
+					c <- 2.2
+				},
+			},
+			wantedErr:  errors.New("process not found"),
+			wantedData: metrics.PInfo{},
+		},
 		{
 			name: "success: without process id",
 			// id -1 simulate a non-existent process id
@@ -44,13 +71,6 @@ func TestProcesses(t *testing.T) {
 			},
 			wantedErr: nil,
 		},
-		// {
-		// 	name:      "error: process id 0",
-		// 	id:        0,
-		// 	mps:       mock.Metrics{},
-		// 	wantedErr: errors.New("process not found"),
-		// 	//wantedErr: errors.Is("process not found"),
-		// },
 		{
 			name: "success: with process id",
 			// make sure to keep id 1 to make this test work
@@ -77,8 +97,8 @@ func TestProcesses(t *testing.T) {
 				PsStatusFn: func(p *process.Process, c chan (string)) {
 					c <- "S"
 				},
-				PsCreationTimeFn: func(p *process.Process, c chan (time.Time)) {
-					c <- time.Time{}.Add(1888)
+				PsCreationTimeFn: func(p *process.Process, c chan (int64)) {
+					c <- 1888
 				},
 				PsForegroundFn: func(p *process.Process, c chan (bool)) {
 					c <- true
@@ -101,7 +121,7 @@ func TestProcesses(t *testing.T) {
 				Username:     "pi",
 				CommandLine:  "/cmd/test",
 				Status:       "S",
-				CreationTime: time.Time{}.Add(1888),
+				CreationTime: 1888,
 				Foreground:   true,
 				Background:   false,
 				IsRunning:    true,
@@ -124,7 +144,9 @@ func TestProcesses(t *testing.T) {
 				ps, err = s.Processes()
 			}
 
-			assert.Equal(t, tc.wantedData, ps[0])
+			if (tc.wantedData != metrics.PInfo{}) {
+				assert.Equal(t, tc.wantedData, ps[0])
+			}
 			assert.Equal(t, tc.wantedErr, err)
 		})
 	}

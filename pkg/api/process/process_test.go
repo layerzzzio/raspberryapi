@@ -4,7 +4,6 @@ import (
 	"errors"
 	"net/http"
 	"testing"
-	"time"
 
 	"github.com/labstack/echo"
 	"github.com/raspibuddy/rpi"
@@ -20,7 +19,7 @@ func TestList(t *testing.T) {
 		name       string
 		metrics    mock.Metrics
 		psys       mocksys.Process
-		wantedData []rpi.ProcessSummary
+		wantedData []rpi.Process
 		wantedErr  error
 	}{
 		{
@@ -54,8 +53,8 @@ func TestList(t *testing.T) {
 				},
 			},
 			psys: mocksys.Process{
-				ListFn: func([]metrics.PInfo) ([]rpi.ProcessSummary, error) {
-					return []rpi.ProcessSummary{
+				ListFn: func([]metrics.PInfo) ([]rpi.Process, error) {
+					return []rpi.Process{
 						{
 							ID:         int32(1),
 							Name:       "process_1",
@@ -71,7 +70,7 @@ func TestList(t *testing.T) {
 					}, nil
 				},
 			},
-			wantedData: []rpi.ProcessSummary{
+			wantedData: []rpi.Process{
 				{
 					ID:         int32(1),
 					Name:       "process_1",
@@ -105,7 +104,7 @@ func TestView(t *testing.T) {
 		id         int32
 		metrics    mock.Metrics
 		psys       mocksys.Process
-		wantedData rpi.ProcessDetails
+		wantedData rpi.Process
 		wantedErr  error
 	}{
 		{
@@ -116,7 +115,7 @@ func TestView(t *testing.T) {
 					return nil, errors.New("test error pinfo")
 				},
 			},
-			wantedData: rpi.ProcessDetails{},
+			wantedData: rpi.Process{},
 			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "could not view the process metrics"),
 		},
 		{
@@ -127,7 +126,7 @@ func TestView(t *testing.T) {
 					return nil, errors.New("process not found")
 				},
 			},
-			wantedData: rpi.ProcessDetails{},
+			wantedData: rpi.Process{},
 			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "process 66 does not exist"),
 		},
 		{
@@ -144,7 +143,7 @@ func TestView(t *testing.T) {
 							Username:     "pi",
 							CommandLine:  "/cmd/text",
 							Status:       "S",
-							CreationTime: time.Time{}.Add(1666666),
+							CreationTime: 1666666,
 							Foreground:   true,
 							Background:   false,
 							IsRunning:    true,
@@ -154,8 +153,8 @@ func TestView(t *testing.T) {
 				},
 			},
 			psys: mocksys.Process{
-				ViewFn: func(int32, []metrics.PInfo) (rpi.ProcessDetails, error) {
-					return rpi.ProcessDetails{
+				ViewFn: func(int32, []metrics.PInfo) (rpi.Process, error) {
+					return rpi.Process{
 						ID:           int32(99),
 						Name:         "process_99",
 						CPUPercent:   1.1,
@@ -163,7 +162,7 @@ func TestView(t *testing.T) {
 						Username:     "pi",
 						CommandLine:  "/cmd/text",
 						Status:       "S",
-						CreationTime: time.Time{}.Add(1666666),
+						CreationTime: 1666666,
 						Foreground:   true,
 						Background:   false,
 						IsRunning:    true,
@@ -171,7 +170,7 @@ func TestView(t *testing.T) {
 					}, nil
 				},
 			},
-			wantedData: rpi.ProcessDetails{
+			wantedData: rpi.Process{
 				ID:           int32(99),
 				Name:         "process_99",
 				CPUPercent:   1.1,
@@ -179,7 +178,7 @@ func TestView(t *testing.T) {
 				Username:     "pi",
 				CommandLine:  "/cmd/text",
 				Status:       "S",
-				CreationTime: time.Time{}.Add(1666666),
+				CreationTime: 1666666,
 				Foreground:   true,
 				Background:   false,
 				IsRunning:    true,

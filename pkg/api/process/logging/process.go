@@ -26,7 +26,7 @@ type LogService struct {
 const name = "process"
 
 // List is the logging function attached to the List process services and responsible for logging it out.
-func (ls *LogService) List(ctx echo.Context) (resp []rpi.ProcessSummary, err error) {
+func (ls *LogService) List(ctx echo.Context) (resp []rpi.Process, err error) {
 	defer func(begin time.Time) {
 		ls.logger.Log(
 			ctx,
@@ -41,7 +41,7 @@ func (ls *LogService) List(ctx echo.Context) (resp []rpi.ProcessSummary, err err
 }
 
 // View is the logging function attached to the View process services and responsible for logging it out.
-func (ls *LogService) View(ctx echo.Context, id int32) (resp rpi.ProcessDetails, err error) {
+func (ls *LogService) View(ctx echo.Context, id int32) (resp rpi.Process, err error) {
 	defer func(begin time.Time) {
 		ls.logger.Log(
 			ctx,

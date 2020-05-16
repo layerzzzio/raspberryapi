@@ -28,7 +28,7 @@ type Metrics interface {
 	PsUsername(p *process.Process, c chan (string))
 	PsCmdLine(p *process.Process, c chan (string))
 	PsStatus(p *process.Process, c chan (string))
-	PsCreationTime(p *process.Process, c chan (time.Time))
+	PsCreationTime(p *process.Process, c chan (int64))
 	PsBackground(p *process.Process, c chan (bool))
 	PsForeground(p *process.Process, c chan (bool))
 	PsIsRunning(p *process.Process, c chan (bool))
@@ -53,7 +53,7 @@ type PInfo struct {
 	Username     string
 	CommandLine  string
 	Status       string
-	CreationTime time.Time
+	CreationTime int64
 	Foreground   bool
 	Background   bool
 	IsRunning    bool
@@ -177,7 +177,7 @@ func (s Service) Processes(id ...int32) ([]PInfo, error) {
 	var cU chan (string)
 	var cCL chan (string)
 	var cS chan (string)
-	var cCT chan (time.Time)
+	var cCT chan (int64)
 	var cFG chan (bool)
 	var cBG chan (bool)
 	var cIR chan (bool)
@@ -195,7 +195,7 @@ func (s Service) Processes(id ...int32) ([]PInfo, error) {
 			cU = make(chan (string))
 			cCL = make(chan (string))
 			cS = make(chan (string))
-			cCT = make(chan (time.Time))
+			cCT = make(chan (int64))
 			cFG = make(chan (bool))
 			cBG = make(chan (bool))
 			cIR = make(chan (bool))
@@ -342,13 +342,13 @@ func (s Service) PsStatus(p *process.Process, c chan (string)) {
 }
 
 // PsCreationTime is
-func (s Service) PsCreationTime(p *process.Process, c chan (time.Time)) {
+func (s Service) PsCreationTime(p *process.Process, c chan (int64)) {
 	ct, err := p.CreateTime()
 	if err != nil {
 		log.Error()
 	}
 
-	c <- time.Unix(ct/1000, 0)
+	c <- ct
 }
 
 // PsBackground is

@@ -19,7 +19,7 @@ import (
 )
 
 func TestList(t *testing.T) {
-	var listResponse rpi.Load
+	var response rpi.Load
 
 	cases := []struct {
 		name         string
@@ -89,7 +89,6 @@ func TestList(t *testing.T) {
 			}
 
 			if (tc.wantedResp != rpi.Load{}) {
-				response := listResponse
 				if err := json.Unmarshal(body, &response); err != nil {
 					t.Fatal(err)
 				}

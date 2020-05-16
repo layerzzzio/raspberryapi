@@ -28,7 +28,7 @@ type Metrics struct {
 	PsUsernameFn     func(p *process.Process, c chan (string))
 	PsCmdLineFn      func(p *process.Process, c chan (string))
 	PsStatusFn       func(p *process.Process, c chan (string))
-	PsCreationTimeFn func(p *process.Process, c chan (time.Time))
+	PsCreationTimeFn func(p *process.Process, c chan (int64))
 	PsBackgroundFn   func(p *process.Process, c chan (bool))
 	PsForegroundFn   func(p *process.Process, c chan (bool))
 	PsIsRunningFn    func(p *process.Process, c chan (bool))
@@ -119,7 +119,7 @@ func (m Metrics) PsStatus(p *process.Process, c chan (string)) {
 }
 
 // PsCreationTime mock
-func (m Metrics) PsCreationTime(p *process.Process, c chan (time.Time)) {
+func (m Metrics) PsCreationTime(p *process.Process, c chan (int64)) {
 	m.PsCreationTimeFn(p, c)
 }
 

@@ -9,13 +9,13 @@ import (
 type Process struct{}
 
 // List returns a list of disk stats
-func (p Process) List(pinfo []metrics.PInfo) ([]rpi.ProcessSummary, error) {
-	var result []rpi.ProcessSummary
+func (p Process) List(pinfo []metrics.PInfo) ([]rpi.Process, error) {
+	var result []rpi.Process
 
 	for i := range pinfo {
 		result = append(
 			result,
-			rpi.ProcessSummary{
+			rpi.Process{
 				ID:         pinfo[i].ID,
 				Name:       pinfo[i].Name,
 				CPUPercent: pinfo[i].CPUPercent,
@@ -27,12 +27,12 @@ func (p Process) List(pinfo []metrics.PInfo) ([]rpi.ProcessSummary, error) {
 }
 
 // View returns a disk stats
-func (p Process) View(id int32, pinfo []metrics.PInfo) (rpi.ProcessDetails, error) {
-	var result rpi.ProcessDetails
+func (p Process) View(id int32, pinfo []metrics.PInfo) (rpi.Process, error) {
+	var result rpi.Process
 
 	for i := range pinfo {
 		if id == pinfo[i].ID {
-			result = rpi.ProcessDetails{
+			result = rpi.Process{
 				ID:           pinfo[i].ID,
 				Name:         pinfo[i].Name,
 				Username:     pinfo[i].Username,

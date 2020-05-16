@@ -19,7 +19,7 @@ import (
 )
 
 func TestList(t *testing.T) {
-	var listResponse []rpi.VCore
+	var response []rpi.VCore
 
 	cases := []struct {
 		name         string
@@ -91,7 +91,6 @@ func TestList(t *testing.T) {
 			}
 
 			if tc.wantedResp != nil {
-				response := listResponse
 				if err := json.Unmarshal(body, &response); err != nil {
 					t.Fatal(err)
 				}
@@ -103,7 +102,7 @@ func TestList(t *testing.T) {
 }
 
 func TestView(t *testing.T) {
-	var listResponse rpi.VCore
+	var response rpi.VCore
 
 	cases := []struct {
 		name         string
@@ -175,7 +174,6 @@ func TestView(t *testing.T) {
 			}
 
 			if tc.wantedResp.ID > 0 {
-				response := listResponse
 				if err := json.Unmarshal(body, &response); err != nil {
 					t.Fatal(err)
 				}

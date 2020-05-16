@@ -7,8 +7,8 @@ import (
 
 // Service represents all process application services.
 type Service interface {
-	List() ([]rpi.ProcessSummary, error)
-	View(int32) (rpi.ProcessDetails, error)
+	List() ([]rpi.Process, error)
+	View(int32) (rpi.Process, error)
 }
 
 // Process represents a process application service.
@@ -19,8 +19,8 @@ type Process struct {
 
 // PSYS represents a process repository service.
 type PSYS interface {
-	List([]metrics.PInfo) ([]rpi.ProcessSummary, error)
-	View(int32, []metrics.PInfo) (rpi.ProcessDetails, error)
+	List([]metrics.PInfo) ([]rpi.Process, error)
+	View(int32, []metrics.PInfo) (rpi.Process, error)
 }
 
 // Metrics represents the system metrics interface

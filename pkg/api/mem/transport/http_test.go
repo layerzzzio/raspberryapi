@@ -19,7 +19,7 @@ import (
 )
 
 func TestList(t *testing.T) {
-	var listResponse rpi.Mem
+	var response rpi.Mem
 
 	cases := []struct {
 		name         string
@@ -93,7 +93,6 @@ func TestList(t *testing.T) {
 			}
 
 			if (tc.wantedResp != rpi.Mem{}) {
-				response := listResponse
 				if err := json.Unmarshal(body, &response); err != nil {
 					t.Fatal(err)
 				}
