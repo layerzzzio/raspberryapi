@@ -3,7 +3,6 @@ package transport_test
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -40,49 +39,50 @@ func TestList(t *testing.T) {
 			},
 			wantedStatus: http.StatusInternalServerError,
 		},
-		// {
-		// 	name: "success",
-		// 	psys: &mocksys.Process{
-		// 		ListFn: func([]metrics.PInfo) ([]rpi.Process, error) {
-		// 			return []rpi.Process{
-		// 				{
-		// 					ID:         1,
-		// 					Name:       "process_1",
-		// 					CPUPercent: 1.1,
-		// 					MemPercent: 2.2,
-		// 				},
-		// 				{
-		// 					ID:         2,
-		// 					Name:       "process_2",
-		// 					CPUPercent: 3.3,
-		// 					MemPercent: 4.4,
-		// 				},
-		// 			}, nil
-		// 		},
-		// 	},
-		// 	wantedStatus: http.StatusOK,
-		// 	wantedResp: []rpi.Process{
-		// 		{
-		// 			ID:         1,
-		// 			Name:       "process_1",
-		// 			CPUPercent: 1.1,
-		// 			MemPercent: 2.2,
-		// 		},
-		// 		{
-		// 			ID:         2,
-		// 			Name:       "process_2",
-		// 			CPUPercent: 3.3,
-		// 			MemPercent: 4.4,
-		// 		},
-		// 	},
-		// },
+		{
+			name: "success",
+			psys: &mocksys.Process{
+				ListFn: func([]metrics.PInfo) ([]rpi.Process, error) {
+					return []rpi.Process{
+						{
+							ID:         1,
+							Name:       "process_1",
+							CPUPercent: 1.1,
+							MemPercent: 2.2,
+						},
+						{
+							ID:         2,
+							Name:       "process_2",
+							CPUPercent: 3.3,
+							MemPercent: 4.4,
+						},
+					}, nil
+				},
+			},
+			wantedStatus: http.StatusOK,
+			wantedResp: []rpi.Process{
+				{
+					ID:         1,
+					Name:       "process_1",
+					CPUPercent: 1.1,
+					MemPercent: 2.2,
+				},
+				{
+					ID:         2,
+					Name:       "process_2",
+					CPUPercent: 3.3,
+					MemPercent: 4.4,
+				},
+			},
+		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			r := server.New()
 			rg := r.Group("")
-			s := process.New(tc.psys, metrics.Service{})
+			m := metrics.New(metrics.Service{})
+			s := process.New(tc.psys, m)
 			transport.NewHTTP(s, rg)
 			ts := httptest.NewServer(r)
 
@@ -126,16 +126,16 @@ func TestView(t *testing.T) {
 			wantedStatus: http.StatusBadRequest,
 			req:          `a`,
 		},
-		// {
-		// 	name: "error: View result is nil",
-		// 	req:  "1",
-		// 	psys: &mocksys.Process{
-		// 		ViewFn: func(int32, []metrics.PInfo) (rpi.Process, error) {
-		// 			return rpi.Process{}, errors.New("test error")
-		// 		},
-		// 	},
-		// 	wantedStatus: http.StatusInternalServerError,
-		// },
+		{
+			name: "error: View result is nil",
+			req:  "1",
+			psys: &mocksys.Process{
+				ViewFn: func(int32, []metrics.PInfo) (rpi.Process, error) {
+					return rpi.Process{}, errors.New("test error")
+				},
+			},
+			wantedStatus: http.StatusInternalServerError,
+		},
 		{
 			name: "success",
 			req:  "99",
@@ -179,7 +179,8 @@ func TestView(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			r := server.New()
 			rg := r.Group("")
-			s := process.New(tc.psys, metrics.Service{})
+			m := metrics.New(metrics.Service{})
+			s := process.New(tc.psys, m)
 			transport.NewHTTP(s, rg)
 			ts := httptest.NewServer(r)
 
@@ -189,8 +190,6 @@ func TestView(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-
-			fmt.Println(res)
 
 			defer res.Body.Close()
 

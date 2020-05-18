@@ -74,7 +74,8 @@ func TestList(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			r := server.New()
 			rg := r.Group("")
-			s := mem.New(tc.msys, metrics.Service{})
+			m := metrics.New(metrics.Service{})
+			s := mem.New(tc.msys, m)
 			transport.NewHTTP(s, rg)
 			ts := httptest.NewServer(r)
 

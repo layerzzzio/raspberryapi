@@ -97,7 +97,8 @@ func TestList(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			r := server.New()
 			rg := r.Group("")
-			s := disk.New(tc.dsys, metrics.Service{})
+			m := metrics.New(metrics.Service{})
+			s := disk.New(tc.dsys, m)
 			transport.NewHTTP(s, rg)
 			ts := httptest.NewServer(r)
 
@@ -201,7 +202,8 @@ func TestView(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			r := server.New()
 			rg := r.Group("")
-			s := disk.New(tc.dsys, metrics.Service{})
+			m := metrics.New(metrics.Service{})
+			s := disk.New(tc.dsys, m)
 			transport.NewHTTP(s, rg)
 			ts := httptest.NewServer(r)
 
