@@ -25,6 +25,10 @@ import (
 	pl "github.com/raspibuddy/rpi/pkg/api/process/logging"
 	ps "github.com/raspibuddy/rpi/pkg/api/process/platform/sys"
 	pt "github.com/raspibuddy/rpi/pkg/api/process/transport"
+	"github.com/raspibuddy/rpi/pkg/api/user"
+	ul "github.com/raspibuddy/rpi/pkg/api/user/logging"
+	us "github.com/raspibuddy/rpi/pkg/api/user/platform/sys"
+	ut "github.com/raspibuddy/rpi/pkg/api/user/transport"
 	"github.com/raspibuddy/rpi/pkg/api/vcore"
 	vl "github.com/raspibuddy/rpi/pkg/api/vcore/logging"
 	vs "github.com/raspibuddy/rpi/pkg/api/vcore/platform/sys"
@@ -50,6 +54,7 @@ func Start(cfg *config.Configuration) error {
 	lt.NewHTTP(ll.New(load.New(ls.Load{}, m), log).Service, v1)
 	pt.NewHTTP(pl.New(process.New(ps.Process{}, m), log).Service, v1)
 	ht.NewHTTP(hl.New(host.New(hs.Host{}, m), log).Service, v1)
+	ut.NewHTTP(ul.New(user.New(us.User{}, m), log).Service, v1)
 
 	server.Start(e, &server.Config{
 		Port:                cfg.Server.Port,
