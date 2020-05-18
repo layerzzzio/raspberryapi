@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"sort"
 
 	"github.com/labstack/echo"
 	"github.com/raspibuddy/rpi"
@@ -55,7 +56,10 @@ func (d Disk) List(listDev map[string][]metrics.DStats) ([]rpi.Disk, error) {
 		devMP = nil
 	}
 
-	//TODO: make sure the result is ordered in an alphabetical order otherwise the List test can fail
+	sort.Slice(result[:], func(i, j int) bool {
+		return result[i].ID < result[j].ID
+	})
+
 	return result, nil
 }
 
