@@ -7,6 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/disk"
+	"github.com/shirou/gopsutil/host"
 	"github.com/shirou/gopsutil/load"
 	"github.com/shirou/gopsutil/mem"
 	"github.com/shirou/gopsutil/process"
@@ -395,4 +396,22 @@ func (s Service) PsParent(p *process.Process, c chan (int32)) {
 	}
 
 	c <- ppid
+}
+
+// HostInfo is
+func (s Service) HostInfo() (host.InfoStat, error) {
+	info, err := host.Info()
+	if err != nil {
+		return host.InfoStat{}, err
+	}
+	return *info, nil
+}
+
+// Users is
+func (s Service) Users() ([]host.UserStat, error) {
+	users, err := host.Users()
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
 }

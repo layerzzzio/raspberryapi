@@ -9,6 +9,10 @@ import (
 	dl "github.com/raspibuddy/rpi/pkg/api/disk/logging"
 	ds "github.com/raspibuddy/rpi/pkg/api/disk/platform/sys"
 	dt "github.com/raspibuddy/rpi/pkg/api/disk/transport"
+	"github.com/raspibuddy/rpi/pkg/api/host"
+	hl "github.com/raspibuddy/rpi/pkg/api/host/logging"
+	hs "github.com/raspibuddy/rpi/pkg/api/host/platform/sys"
+	ht "github.com/raspibuddy/rpi/pkg/api/host/transport"
 	"github.com/raspibuddy/rpi/pkg/api/load"
 	ll "github.com/raspibuddy/rpi/pkg/api/load/logging"
 	ls "github.com/raspibuddy/rpi/pkg/api/load/platform/sys"
@@ -45,6 +49,7 @@ func Start(cfg *config.Configuration) error {
 	dt.NewHTTP(dl.New(disk.New(ds.Disk{}, m), log).Service, v1)
 	lt.NewHTTP(ll.New(load.New(ls.Load{}, m), log).Service, v1)
 	pt.NewHTTP(pl.New(process.New(ps.Process{}, m), log).Service, v1)
+	ht.NewHTTP(hl.New(host.New(hs.Host{}, m), log).Service, v1)
 
 	server.Start(e, &server.Config{
 		Port:                cfg.Server.Port,

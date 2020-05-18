@@ -5,6 +5,7 @@ import (
 
 	"github.com/raspibuddy/rpi/pkg/utl/metrics"
 	"github.com/shirou/gopsutil/cpu"
+	"github.com/shirou/gopsutil/host"
 	"github.com/shirou/gopsutil/load"
 	"github.com/shirou/gopsutil/mem"
 	"github.com/shirou/gopsutil/process"
@@ -33,6 +34,8 @@ type Metrics struct {
 	PsForegroundFn   func(p *process.Process, c chan (bool))
 	PsIsRunningFn    func(p *process.Process, c chan (bool))
 	PsParentFn       func(p *process.Process, c chan (int32))
+	HostInfoFn       func() (host.InfoStat, error)
+	UsersFn          func() ([]host.UserStat, error)
 }
 
 // CPUInfo mock
@@ -141,4 +144,14 @@ func (m Metrics) PsIsRunning(p *process.Process, c chan (bool)) {
 // PsParent mock
 func (m Metrics) PsParent(p *process.Process, c chan (int32)) {
 	m.PsParentFn(p, c)
+}
+
+// HostInfo mock
+func (m Metrics) HostInfo() (host.InfoStat, error) {
+	return m.HostInfoFn()
+}
+
+// Users mock
+func (m Metrics) Users() ([]host.UserStat, error) {
+	return m.UsersFn()
 }
