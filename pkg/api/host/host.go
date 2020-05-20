@@ -15,10 +15,11 @@ func (h *Host) List() (rpi.Host, error) {
 	vcores, errVC := h.mt.CPUPercent(1, true)
 	vMemPer, errV := h.mt.VirtualMemory()
 	sMemPer, errS := h.mt.SwapMemory()
+	temp, stdErr, errT := h.mt.Temperature()
 
-	if errI != nil || errU != nil || errC != nil || errVC != nil || errV != nil || errS != nil {
+	if errI != nil || errU != nil || errC != nil || errVC != nil || errV != nil || errS != nil || (errT != nil && stdErr != "") {
 		return rpi.Host{}, echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the host metrics")
 	}
 
-	return h.hsys.List(info, users, cpus, vcores, vMemPer, sMemPer)
+	return h.hsys.List(info, users, cpus, vcores, vMemPer, sMemPer, temp)
 }

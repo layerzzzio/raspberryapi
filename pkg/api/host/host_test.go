@@ -47,6 +47,37 @@ func TestList(t *testing.T) {
 				SwapMemFn: func() (mext.SwapMemoryStat, error) {
 					return mext.SwapMemoryStat{}, errors.New("test error info")
 				},
+				TemperatureFn: func() (string, string, error) {
+					return "", "", errors.New("test error info")
+				},
+			},
+			wantedData: rpi.Host{},
+			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the host metrics"),
+		},
+		{
+			name: "error: temperature stdErr and err are not nil",
+			metrics: &mock.Metrics{
+				HostInfoFn: func() (hext.InfoStat, error) {
+					return hext.InfoStat{}, nil
+				},
+				UsersFn: func() ([]hext.UserStat, error) {
+					return nil, nil
+				},
+				CPUInfoFn: func() ([]cpu.InfoStat, error) {
+					return nil, nil
+				},
+				CPUPercentFn: func(time.Duration, bool) ([]float64, error) {
+					return nil, nil
+				},
+				VirtualMemFn: func() (mext.VirtualMemoryStat, error) {
+					return mext.VirtualMemoryStat{}, nil
+				},
+				SwapMemFn: func() (mext.SwapMemoryStat, error) {
+					return mext.SwapMemoryStat{}, nil
+				},
+				TemperatureFn: func() (string, string, error) {
+					return "", "error", errors.New("test error info")
+				},
 			},
 			wantedData: rpi.Host{},
 			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the host metrics"),
@@ -84,6 +115,9 @@ func TestList(t *testing.T) {
 						UsedPercent: 1.1,
 					}, nil
 				},
+				TemperatureFn: func() (string, string, error) {
+					return "", "", errors.New("test error info")
+				},
 			},
 			wantedData: rpi.Host{},
 			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the host metrics"),
@@ -119,6 +153,9 @@ func TestList(t *testing.T) {
 						UsedPercent: 1.1,
 					}, nil
 				},
+				TemperatureFn: func() (string, string, error) {
+					return "", "", errors.New("test error info")
+				},
 			},
 			wantedData: rpi.Host{},
 			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the host metrics"),
@@ -149,6 +186,9 @@ func TestList(t *testing.T) {
 					return mext.SwapMemoryStat{
 						UsedPercent: 1.1,
 					}, nil
+				},
+				TemperatureFn: func() (string, string, error) {
+					return "", "", errors.New("test error info")
 				},
 			},
 			wantedData: rpi.Host{},
@@ -202,6 +242,9 @@ func TestList(t *testing.T) {
 						UsedPercent: 0.9,
 					}, nil
 				},
+				TemperatureFn: func() (string, string, error) {
+					return "", "", errors.New("test error info")
+				},
 			},
 			hsys: &mocksys.Host{
 				ListFn: func(
@@ -210,7 +253,8 @@ func TestList(t *testing.T) {
 					[]cpu.InfoStat,
 					[]float64,
 					mem.VirtualMemoryStat,
-					mem.SwapMemoryStat) (rpi.Host, error) {
+					mem.SwapMemoryStat,
+					string) (rpi.Host, error) {
 					return rpi.Host{
 						ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
 						Hostname:           "hostname_test",

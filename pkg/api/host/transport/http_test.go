@@ -42,7 +42,8 @@ func TestList(t *testing.T) {
 					[]cpu.InfoStat,
 					[]float64,
 					mem.VirtualMemoryStat,
-					mem.SwapMemoryStat) (rpi.Host, error) {
+					mem.SwapMemoryStat,
+					string) (rpi.Host, error) {
 					return rpi.Host{}, errors.New("test error")
 				},
 			},
@@ -57,7 +58,8 @@ func TestList(t *testing.T) {
 					[]cpu.InfoStat,
 					[]float64,
 					mem.VirtualMemoryStat,
-					mem.SwapMemoryStat) (rpi.Host, error) {
+					mem.SwapMemoryStat,
+					string) (rpi.Host, error) {
 					return rpi.Host{
 						ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
 						Hostname:           "hostname_test",
@@ -76,11 +78,31 @@ func TestList(t *testing.T) {
 						SUsedPercent:       0.9,
 						Processes:          400,
 						ActiveVirtualUsers: 2,
+						Temperature:        20.9,
 					}, nil
 				},
 			},
 			wantedStatus: http.StatusOK,
-			wantedResp:   rpi.Host{},
+			wantedResp: rpi.Host{
+				ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
+				Hostname:           "hostname_test",
+				Uptime:             540165,
+				BootTime:           1589223156,
+				OS:                 "raspbian",
+				Platform:           "plat_1",
+				PlatformFamily:     "plat_1_1",
+				PlatformVersion:    "1.1",
+				KernelArch:         "arch_A",
+				KernelVersion:      "A",
+				CPU:                1,
+				VCore:              3,
+				CPUUsedPercent:     2.0,
+				VUsedPercent:       99.9,
+				SUsedPercent:       0.9,
+				Processes:          400,
+				ActiveVirtualUsers: 2,
+				Temperature:        20.9,
+			},
 		},
 	}
 

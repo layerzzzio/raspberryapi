@@ -36,6 +36,7 @@ type Metrics struct {
 	PsParentFn       func(p *process.Process, c chan (int32))
 	HostInfoFn       func() (host.InfoStat, error)
 	UsersFn          func() ([]host.UserStat, error)
+	TemperatureFn    func() (string, string, error)
 }
 
 // CPUInfo mock
@@ -154,4 +155,9 @@ func (m Metrics) HostInfo() (host.InfoStat, error) {
 // Users mock
 func (m Metrics) Users() ([]host.UserStat, error) {
 	return m.UsersFn()
+}
+
+// Temperature mock
+func (m Metrics) Temperature() (string, string, error) {
+	return m.TemperatureFn()
 }

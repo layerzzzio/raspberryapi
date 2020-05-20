@@ -1,17 +1,47 @@
-package sys_test
+package sys
 
 import (
 	"testing"
 
 	"github.com/raspibuddy/rpi"
 	"github.com/raspibuddy/rpi/pkg/api/host"
-	"github.com/raspibuddy/rpi/pkg/api/host/platform/sys"
 	"github.com/shirou/gopsutil/cpu"
 	hext "github.com/shirou/gopsutil/host"
 	"github.com/shirou/gopsutil/mem"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestExtractTemp(t *testing.T) {
+	cases := []struct {
+		name       string
+		input      string
+		wantedData float32
+	}{
+		{
+			name:       "error: no numerical characters",
+			input:      "temp=AB.CD",
+			wantedData: -1,
+		},
+		{
+			name:       "success: dirty temp string",
+			input:      "temp=20.CD",
+			wantedData: 20.0,
+		},
+		{
+			name:       "success: clean temp string",
+			input:      "temp=20.9C",
+			wantedData: 20.9,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			temp := extractTemp(tc.input)
+			assert.Equal(t, tc.wantedData, temp)
+		})
+	}
+}
 
 func TestList(t *testing.T) {
 	cases := []struct {
@@ -22,6 +52,7 @@ func TestList(t *testing.T) {
 		vcores     []float64
 		vMemPer    mem.VirtualMemoryStat
 		sMemPer    mem.SwapMemoryStat
+		temp       string
 		wantedData rpi.Host
 		wantedErr  error
 	}{
@@ -52,6 +83,7 @@ func TestList(t *testing.T) {
 			sMemPer: mem.SwapMemoryStat{
 				UsedPercent: 0.9,
 			},
+			temp: "temp=20.9.C",
 			wantedData: rpi.Host{
 				ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
 				Hostname:           "hostname_test",
@@ -70,6 +102,7 @@ func TestList(t *testing.T) {
 				SUsedPercent:       0.9,
 				Processes:          400,
 				ActiveVirtualUsers: 0,
+				Temperature:        20.9,
 			},
 			wantedErr: nil,
 		},
@@ -103,6 +136,7 @@ func TestList(t *testing.T) {
 			sMemPer: mem.SwapMemoryStat{
 				UsedPercent: 0.9,
 			},
+			temp: "temp=20.9.C",
 			wantedData: rpi.Host{
 				ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
 				Hostname:           "hostname_test",
@@ -121,6 +155,7 @@ func TestList(t *testing.T) {
 				SUsedPercent:       0.9,
 				Processes:          400,
 				ActiveVirtualUsers: 2,
+				Temperature:        20.9,
 			},
 			wantedErr: nil,
 		},
@@ -158,6 +193,7 @@ func TestList(t *testing.T) {
 			sMemPer: mem.SwapMemoryStat{
 				UsedPercent: 0.9,
 			},
+			temp: "temp=20.9.C",
 			wantedData: rpi.Host{
 				ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
 				Hostname:           "hostname_test",
@@ -176,6 +212,7 @@ func TestList(t *testing.T) {
 				SUsedPercent:       0.9,
 				Processes:          400,
 				ActiveVirtualUsers: 2,
+				Temperature:        20.9,
 			},
 			wantedErr: nil,
 		},
@@ -211,6 +248,7 @@ func TestList(t *testing.T) {
 			sMemPer: mem.SwapMemoryStat{
 				UsedPercent: 0.9,
 			},
+			temp: "temp=20.9.C",
 			wantedData: rpi.Host{
 				ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
 				Hostname:           "hostname_test",
@@ -229,6 +267,7 @@ func TestList(t *testing.T) {
 				SUsedPercent:       0.9,
 				Processes:          400,
 				ActiveVirtualUsers: 2,
+				Temperature:        20.9,
 			},
 			wantedErr: nil,
 		},
@@ -264,6 +303,7 @@ func TestList(t *testing.T) {
 			vMemPer: mem.VirtualMemoryStat{
 				UsedPercent: 99.9,
 			},
+			temp: "temp=20.9.C",
 			wantedData: rpi.Host{
 				ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
 				Hostname:           "hostname_test",
@@ -282,6 +322,7 @@ func TestList(t *testing.T) {
 				SUsedPercent:       0,
 				Processes:          400,
 				ActiveVirtualUsers: 2,
+				Temperature:        20.9,
 			},
 			wantedErr: nil,
 		},
@@ -307,6 +348,7 @@ func TestList(t *testing.T) {
 			sMemPer: mem.SwapMemoryStat{
 				UsedPercent: 0.9,
 			},
+			temp: "temp=20.9.C",
 			wantedData: rpi.Host{
 				ID:                 "",
 				Hostname:           "",
@@ -325,6 +367,64 @@ func TestList(t *testing.T) {
 				SUsedPercent:       0.9,
 				Processes:          0,
 				ActiveVirtualUsers: 2,
+				Temperature:        20.9,
+			},
+			wantedErr: nil,
+		},
+		{
+			name: "success: temperature is nil",
+			users: []hext.UserStat{
+				{
+					User: "U1",
+				},
+				{
+					User: "U2",
+				},
+			},
+			info: hext.InfoStat{
+				HostID:          "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
+				Hostname:        "hostname_test",
+				Uptime:          540165,
+				BootTime:        1589223156,
+				OS:              "raspbian",
+				Procs:           400,
+				Platform:        "plat_1",
+				PlatformFamily:  "plat_1_1",
+				PlatformVersion: "1.1",
+				KernelArch:      "arch_A",
+				KernelVersion:   "A",
+			},
+			cpus: []cpu.InfoStat{
+				{
+					CPU: 1,
+				},
+			},
+			vcores: []float64{1.0, 2.0, 3.0},
+			vMemPer: mem.VirtualMemoryStat{
+				UsedPercent: 99.9,
+			},
+			sMemPer: mem.SwapMemoryStat{
+				UsedPercent: 0.9,
+			},
+			wantedData: rpi.Host{
+				ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
+				Hostname:           "hostname_test",
+				Uptime:             540165,
+				BootTime:           1589223156,
+				OS:                 "raspbian",
+				Platform:           "plat_1",
+				PlatformFamily:     "plat_1_1",
+				PlatformVersion:    "1.1",
+				KernelArch:         "arch_A",
+				KernelVersion:      "A",
+				CPU:                1,
+				VCore:              3,
+				CPUUsedPercent:     2.0,
+				VUsedPercent:       99.9,
+				SUsedPercent:       0.9,
+				Processes:          400,
+				ActiveVirtualUsers: 2,
+				Temperature:        -1,
 			},
 			wantedErr: nil,
 		},
@@ -363,6 +463,7 @@ func TestList(t *testing.T) {
 			sMemPer: mem.SwapMemoryStat{
 				UsedPercent: 0.9,
 			},
+			temp: "temp=20.9.C",
 			wantedData: rpi.Host{
 				ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
 				Hostname:           "hostname_test",
@@ -381,6 +482,7 @@ func TestList(t *testing.T) {
 				SUsedPercent:       0.9,
 				Processes:          400,
 				ActiveVirtualUsers: 2,
+				Temperature:        20.9,
 			},
 			wantedErr: nil,
 		},
@@ -388,7 +490,7 @@ func TestList(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			s := host.HSYS(sys.Host{})
+			s := host.HSYS(Host{})
 
 			hosts, err := s.List(
 				tc.info,
@@ -396,7 +498,8 @@ func TestList(t *testing.T) {
 				tc.cpus,
 				tc.vcores,
 				tc.vMemPer,
-				tc.sMemPer)
+				tc.sMemPer,
+				tc.temp)
 
 			assert.Equal(t, tc.wantedData, hosts)
 			assert.Equal(t, tc.wantedErr, err)

@@ -15,7 +15,8 @@ type Host struct {
 		[]cpu.InfoStat,
 		[]float64,
 		mem.VirtualMemoryStat,
-		mem.SwapMemoryStat) (rpi.Host, error)
+		mem.SwapMemoryStat,
+		string) (rpi.Host, error)
 }
 
 // List mock
@@ -24,6 +25,7 @@ func (h Host) List(infos host.InfoStat,
 	cpus []cpu.InfoStat,
 	vcores []float64,
 	vmem mem.VirtualMemoryStat,
-	smem mem.SwapMemoryStat) (rpi.Host, error) {
-	return h.ListFn(infos, users, cpus, vcores, vmem, smem)
+	smem mem.SwapMemoryStat,
+	temp string) (rpi.Host, error) {
+	return h.ListFn(infos, users, cpus, vcores, vmem, smem, temp)
 }

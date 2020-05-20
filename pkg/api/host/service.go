@@ -27,7 +27,8 @@ type HSYS interface {
 		[]cpu.InfoStat,
 		[]float64,
 		mem.VirtualMemoryStat,
-		mem.SwapMemoryStat) (rpi.Host, error)
+		mem.SwapMemoryStat,
+		string) (rpi.Host, error)
 }
 
 // Metrics represents the system metrics interface
@@ -38,6 +39,7 @@ type Metrics interface {
 	CPUPercent(interval time.Duration, perVCore bool) ([]float64, error)
 	VirtualMemory() (mem.VirtualMemoryStat, error)
 	SwapMemory() (mem.SwapMemoryStat, error)
+	Temperature() (string, string, error)
 }
 
 // New creates a Host application service instance.

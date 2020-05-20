@@ -1,7 +1,9 @@
 package metrics
 
 import (
+	"bytes"
 	"errors"
+	"os/exec"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -414,4 +416,18 @@ func (s Service) Users() ([]host.UserStat, error) {
 		return nil, err
 	}
 	return users, nil
+}
+
+// Temperature is
+func (s Service) Temperature() (string, string, error) {
+	cmd := exec.Command("sh", "-c", "vcgencmd measure_temp")
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	if err != nil {
+		log.Error()
+	}
+	outStr, errStr := string(stdout.Bytes()), string(stderr.Bytes())
+	return outStr, errStr, nil
 }

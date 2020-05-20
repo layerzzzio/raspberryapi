@@ -1,6 +1,10 @@
 package sys
 
 import (
+	"regexp"
+	"strconv"
+	"strings"
+
 	"github.com/raspibuddy/rpi"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/host"
@@ -16,7 +20,8 @@ func (h Host) List(info host.InfoStat,
 	cpus []cpu.InfoStat,
 	vcores []float64,
 	vMemPer mem.VirtualMemoryStat,
-	sMemPer mem.SwapMemoryStat) (rpi.Host, error) {
+	sMemPer mem.SwapMemoryStat,
+	temp string) (rpi.Host, error) {
 
 	virtualUsers := uint16(len(users))
 	cpuCount := uint8(len(cpus))
@@ -54,6 +59,20 @@ func (h Host) List(info host.InfoStat,
 		SUsedPercent:       smenPer,
 		Processes:          info.Procs,
 		ActiveVirtualUsers: virtualUsers,
+		Temperature:        extractTemp(temp),
 	}
 	return result, nil
+}
+
+func extractTemp(s string) float32 {
+	r := regexp.MustCompile("[" + strconv.Itoa(0) + "-" + strconv.Itoa(9) + "]+")
+	num := r.FindAllString(s, -1)
+	temp := strings.Join(num[:], ".")
+
+	res, err := strconv.ParseFloat(temp, 16)
+	if err != nil {
+		return -1
+	}
+
+	return float32(res)
 }
