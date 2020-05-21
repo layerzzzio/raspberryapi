@@ -8,6 +8,7 @@ import (
 	"github.com/shirou/gopsutil/host"
 	"github.com/shirou/gopsutil/load"
 	"github.com/shirou/gopsutil/mem"
+	"github.com/shirou/gopsutil/net"
 	"github.com/shirou/gopsutil/process"
 )
 
@@ -37,6 +38,8 @@ type Metrics struct {
 	HostInfoFn       func() (host.InfoStat, error)
 	UsersFn          func() ([]host.UserStat, error)
 	TemperatureFn    func() (string, string, error)
+	NetInfoFn        func() ([]net.InterfaceStat, error)
+	NetStatsFn       func() ([]net.IOCountersStat, error)
 }
 
 // CPUInfo mock
@@ -160,4 +163,14 @@ func (m Metrics) Users() ([]host.UserStat, error) {
 // Temperature mock
 func (m Metrics) Temperature() (string, string, error) {
 	return m.TemperatureFn()
+}
+
+// NetInfo mock
+func (m Metrics) NetInfo() ([]net.InterfaceStat, error) {
+	return m.NetInfoFn()
+}
+
+// NetStats mock
+func (m Metrics) NetStats() ([]net.IOCountersStat, error) {
+	return m.NetStatsFn()
 }

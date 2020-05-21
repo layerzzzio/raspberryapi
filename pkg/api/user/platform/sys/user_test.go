@@ -21,13 +21,13 @@ func TestList(t *testing.T) {
 		wantedErr  error
 	}{
 		{
-			name:       "success: users array is nil",
-			users:      nil,
+			name:       "success: users array is empty",
+			users:      []host.UserStat{},
 			wantedData: nil,
 			wantedErr:  nil,
 		},
 		{
-			name: "success: users array not nil",
+			name: "success: users array not empty",
 			users: []host.UserStat{
 				{
 					User:     "U1",

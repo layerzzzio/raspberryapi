@@ -17,6 +17,12 @@ func TestList(t *testing.T) {
 		wantedErr  error
 	}{
 		{
+			name:       "success: pinfo is empty",
+			pinfo:      []metrics.PInfo{},
+			wantedData: nil,
+			wantedErr:  nil,
+		},
+		{
 			name: "success",
 			pinfo: []metrics.PInfo{
 				{

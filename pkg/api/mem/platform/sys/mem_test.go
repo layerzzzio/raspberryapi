@@ -20,6 +20,22 @@ func TestList(t *testing.T) {
 		wantedErr  error
 	}{
 		{
+			name:       "success: virtualMem and swapMem are empty",
+			swapMem:    mext.SwapMemoryStat{},
+			virtualMem: mext.VirtualMemoryStat{},
+			wantedData: rpi.Mem{
+				STotal:       0,
+				SUsed:        0,
+				SFree:        0,
+				SUsedPercent: 0,
+				VTotal:       0,
+				VUsed:        0,
+				VAvailable:   0,
+				VUsedPercent: 0,
+			},
+			wantedErr: nil,
+		},
+		{
 			name:    "success: swapMem is empty",
 			swapMem: mext.SwapMemoryStat{},
 			virtualMem: mext.VirtualMemoryStat{

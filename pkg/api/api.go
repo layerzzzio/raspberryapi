@@ -17,6 +17,12 @@ import (
 	ll "github.com/raspibuddy/rpi/pkg/api/load/logging"
 	ls "github.com/raspibuddy/rpi/pkg/api/load/platform/sys"
 	lt "github.com/raspibuddy/rpi/pkg/api/load/transport"
+	"github.com/raspibuddy/rpi/pkg/api/net"
+
+	nl "github.com/raspibuddy/rpi/pkg/api/net/logging"
+	ns "github.com/raspibuddy/rpi/pkg/api/net/platform/sys"
+	nt "github.com/raspibuddy/rpi/pkg/api/net/transport"
+
 	"github.com/raspibuddy/rpi/pkg/api/mem"
 	ml "github.com/raspibuddy/rpi/pkg/api/mem/logging"
 	ms "github.com/raspibuddy/rpi/pkg/api/mem/platform/sys"
@@ -55,6 +61,7 @@ func Start(cfg *config.Configuration) error {
 	pt.NewHTTP(pl.New(process.New(ps.Process{}, m), log).Service, v1)
 	ht.NewHTTP(hl.New(host.New(hs.Host{}, m), log).Service, v1)
 	ut.NewHTTP(ul.New(user.New(us.User{}, m), log).Service, v1)
+	nt.NewHTTP(nl.New(net.New(ns.Net{}, m), log).Service, v1)
 
 	server.Start(e, &server.Config{
 		Port:                cfg.Server.Port,

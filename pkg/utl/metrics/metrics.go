@@ -12,6 +12,7 @@ import (
 	"github.com/shirou/gopsutil/host"
 	"github.com/shirou/gopsutil/load"
 	"github.com/shirou/gopsutil/mem"
+	"github.com/shirou/gopsutil/net"
 	"github.com/shirou/gopsutil/process"
 )
 
@@ -430,4 +431,22 @@ func (s Service) Temperature() (string, string, error) {
 	}
 	outStr, errStr := string(stdout.Bytes()), string(stderr.Bytes())
 	return outStr, errStr, nil
+}
+
+// NetInfo is
+func (s Service) NetInfo() ([]net.InterfaceStat, error) {
+	netInfo, err := net.Interfaces()
+	if err != nil {
+		return nil, err
+	}
+	return netInfo, nil
+}
+
+// NetStats is
+func (s Service) NetStats() ([]net.IOCountersStat, error) {
+	netStats, err := net.IOCounters(true)
+	if err != nil {
+		return nil, err
+	}
+	return netStats, nil
 }
