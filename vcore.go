@@ -1,6 +1,6 @@
 package rpi
 
-// VCore represents a current system vCore.
+// VCore represents a current host virtual core.
 type VCore struct {
 	ID     int     `json:"id"`
 	Used   float64 `json:"percentUsed"`

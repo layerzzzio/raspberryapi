@@ -1,6 +1,6 @@
 package rpi
 
-// Disk represents the current system disk.
+// Disk represents a current host disk.
 type Disk struct {
 	ID          string       `json:"id"`
 	Filesystem  string       `json:"filesystem"`
@@ -8,7 +8,7 @@ type Disk struct {
 	Mountpoints []MountPoint `json:"mountpoints"`
 }
 
-// MountPoint is
+// MountPoint represents a current host mountpoint stats.
 type MountPoint struct {
 	Mountpoint        string  `json:"mountpoint"`
 	Fstype            string  `json:"fstype"`

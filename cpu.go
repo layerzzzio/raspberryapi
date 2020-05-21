@@ -1,6 +1,6 @@
 package rpi
 
-// CPU represents the current system CPU.
+// CPU represents a current host cpu.
 type CPU struct {
 	ID        int      `json:"id"`
 	Cores     int32    `json:"cores"`
@@ -9,7 +9,7 @@ type CPU struct {
 	Stats     CPUStats `json:"stats"`
 }
 
-// CPUStats represents the current system CPU statistics.
+// CPUStats represents a current host cpu stats.
 type CPUStats struct {
 	Used   float64 `json:"percentUsed"`
 	User   float64 `json:"user"`

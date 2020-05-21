@@ -17,16 +17,14 @@ import (
 	ll "github.com/raspibuddy/rpi/pkg/api/load/logging"
 	ls "github.com/raspibuddy/rpi/pkg/api/load/platform/sys"
 	lt "github.com/raspibuddy/rpi/pkg/api/load/transport"
-	"github.com/raspibuddy/rpi/pkg/api/net"
-
-	nl "github.com/raspibuddy/rpi/pkg/api/net/logging"
-	ns "github.com/raspibuddy/rpi/pkg/api/net/platform/sys"
-	nt "github.com/raspibuddy/rpi/pkg/api/net/transport"
-
 	"github.com/raspibuddy/rpi/pkg/api/mem"
 	ml "github.com/raspibuddy/rpi/pkg/api/mem/logging"
 	ms "github.com/raspibuddy/rpi/pkg/api/mem/platform/sys"
 	mt "github.com/raspibuddy/rpi/pkg/api/mem/transport"
+	"github.com/raspibuddy/rpi/pkg/api/net"
+	nl "github.com/raspibuddy/rpi/pkg/api/net/logging"
+	ns "github.com/raspibuddy/rpi/pkg/api/net/platform/sys"
+	nt "github.com/raspibuddy/rpi/pkg/api/net/transport"
 	"github.com/raspibuddy/rpi/pkg/api/process"
 	pl "github.com/raspibuddy/rpi/pkg/api/process/logging"
 	ps "github.com/raspibuddy/rpi/pkg/api/process/platform/sys"
@@ -50,7 +48,6 @@ func Start(cfg *config.Configuration) error {
 	e := server.New()
 	log := zlog.New()
 	v1 := e.Group("/v1")
-
 	m := metrics.New(metrics.Service{})
 
 	ct.NewHTTP(cl.New(cpu.New(cs.CPU{}, m), log).Service, v1)

@@ -8,7 +8,7 @@ import (
 	"github.com/shirou/gopsutil/cpu"
 )
 
-// CPU represents an empty CPU entity on the current system.
+// CPU represents a CPU entity on the current system.
 type CPU struct{}
 
 // List returns a list of CPU stats including some info about it and the percent & time usage per workload (in USER_HZ or Jiffies)

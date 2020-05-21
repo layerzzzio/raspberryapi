@@ -1,6 +1,6 @@
 package rpi
 
-// Mem represents the current system swap memory usage.
+// Mem represents the current host memory stats.
 type Mem struct {
 	STotal       uint64  `json:"swapMemTotal"`
 	SUsed        uint64  `json:"swapMemUsed"`

@@ -1,6 +1,6 @@
 package rpi
 
-// Process is
+// Process represents the current host active processes.
 type Process struct {
 	ID           int32   `json:"id"`
 	Name         string  `json:"name"`

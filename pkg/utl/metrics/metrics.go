@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -18,12 +19,12 @@ import (
 
 // TODO: to test this method by simulating different OS scenarios in a Docker container (raspbian/strech)
 
-// Service is
+// Service represents several system scripts.
 type Service struct {
 	m Metrics
 }
 
-// Metrics is
+// Metrics represents multiple system related scripts.
 type Metrics interface {
 	PsPID(p *process.Process, c chan (int32))
 	PsName(p *process.Process, c chan (string))
@@ -39,18 +40,18 @@ type Metrics interface {
 	PsParent(p *process.Process, c chan (int32))
 }
 
-// New creates a Process application service instance.
+// New creates a service instance.
 func New(m Metrics) *Service {
 	return &Service{m: m}
 }
 
-// DStats represents a pair of partition stats and mount point usage stats
+// DStats represents a tuple composed of a partition and a mountpoint stats.
 type DStats struct {
 	Partition  *disk.PartitionStat
 	Mountpoint *disk.UsageStat
 }
 
-// PInfo represents multiple aspects of a process
+// PInfo represents several process key attributes.
 type PInfo struct {
 	ID           int32
 	Name         string
@@ -66,7 +67,7 @@ type PInfo struct {
 	ParentP      int32
 }
 
-// CPUInfo is
+// CPUInfo returns several cpu key attributes.
 func (s Service) CPUInfo() ([]cpu.InfoStat, error) {
 	info, err := cpu.Info()
 	if err != nil {
@@ -75,7 +76,7 @@ func (s Service) CPUInfo() ([]cpu.InfoStat, error) {
 	return info, nil
 }
 
-// CPUPercent is
+// CPUPercent returns the cpu percentage usage stats.
 func (s Service) CPUPercent(interval time.Duration, perVCore bool) ([]float64, error) {
 	percent, err := cpu.Percent(interval, perVCore)
 	if err != nil {
@@ -84,7 +85,7 @@ func (s Service) CPUPercent(interval time.Duration, perVCore bool) ([]float64, e
 	return percent, nil
 }
 
-// CPUTimes is
+// CPUTimes returns some cpu times usage stats.
 func (s Service) CPUTimes(perVCore bool) ([]cpu.TimesStat, error) {
 	times, err := cpu.Times(perVCore)
 	if err != nil {
@@ -93,7 +94,7 @@ func (s Service) CPUTimes(perVCore bool) ([]cpu.TimesStat, error) {
 	return times, nil
 }
 
-// SwapMemory is
+// SwapMemory returns the swap memory usage.
 func (s Service) SwapMemory() (mem.SwapMemoryStat, error) {
 	smem, err := mem.SwapMemory()
 	if err != nil {
@@ -102,7 +103,7 @@ func (s Service) SwapMemory() (mem.SwapMemoryStat, error) {
 	return *smem, nil
 }
 
-// VirtualMemory is
+// VirtualMemory returns the virtual memory usage.
 func (s Service) VirtualMemory() (mem.VirtualMemoryStat, error) {
 	vmem, err := mem.VirtualMemory()
 	if err != nil {
@@ -111,7 +112,7 @@ func (s Service) VirtualMemory() (mem.VirtualMemoryStat, error) {
 	return *vmem, nil
 }
 
-// DiskStats is
+// DiskStats returns some disk usage stats.
 func (s Service) DiskStats(all bool) (map[string][]DStats, error) {
 	dstats := make(map[string][]DStats)
 
@@ -153,7 +154,7 @@ func (s Service) DiskStats(all bool) (map[string][]DStats, error) {
 	return dstats, nil
 }
 
-// LoadAvg is
+// LoadAvg returns some host load stats.
 func (s Service) LoadAvg() (load.AvgStat, error) {
 	temp, err := load.Avg()
 	if err != nil {
@@ -162,7 +163,7 @@ func (s Service) LoadAvg() (load.AvgStat, error) {
 	return *temp, nil
 }
 
-// LoadProcs is
+// LoadProcs returns some host procs stats.
 func (s Service) LoadProcs() (load.MiscStat, error) {
 	procs, err := load.Misc()
 	if err != nil {
@@ -171,7 +172,7 @@ func (s Service) LoadProcs() (load.MiscStat, error) {
 	return *procs, nil
 }
 
-//Processes is
+//Processes returns some host process related stats.
 func (s Service) Processes(id ...int32) ([]PInfo, error) {
 	var pinfo []PInfo
 	cID := make(chan (int32))
@@ -286,12 +287,12 @@ func (s Service) Processes(id ...int32) ([]PInfo, error) {
 	return pinfo, nil
 }
 
-// PsPID is
+// PsPID feeds a channel with a process id.
 func (s Service) PsPID(p *process.Process, c chan (int32)) {
 	c <- p.Pid
 }
 
-// PsName is
+// PsName feeds a channel with a process name.
 func (s Service) PsName(p *process.Process, c chan (string)) {
 	name, err := p.Name()
 	if err != nil {
@@ -300,7 +301,7 @@ func (s Service) PsName(p *process.Process, c chan (string)) {
 	c <- name
 }
 
-// PsCPUPer is
+// PsCPUPer feeds a channel with a process cpu usage.
 func (s Service) PsCPUPer(p *process.Process, c chan (float64)) {
 	cpuper, err := p.CPUPercent()
 	if err != nil {
@@ -309,7 +310,7 @@ func (s Service) PsCPUPer(p *process.Process, c chan (float64)) {
 	c <- cpuper
 }
 
-// PsMemPer is
+// PsMemPer feeds a channel with a process memory usage.
 func (s Service) PsMemPer(p *process.Process, c chan (float32)) {
 	memper, err := p.MemoryPercent()
 	if err != nil {
@@ -318,7 +319,7 @@ func (s Service) PsMemPer(p *process.Process, c chan (float32)) {
 	c <- memper
 }
 
-// PsUsername is
+// PsUsername feeds a channel with a process username.
 func (s Service) PsUsername(p *process.Process, c chan (string)) {
 	u, err := p.Username()
 	if err != nil {
@@ -327,7 +328,7 @@ func (s Service) PsUsername(p *process.Process, c chan (string)) {
 	c <- u
 }
 
-// PsCmdLine is
+// PsCmdLine feeds a channel with a process command line.
 func (s Service) PsCmdLine(p *process.Process, c chan (string)) {
 	cl, err := p.Cmdline()
 	if err != nil {
@@ -336,7 +337,7 @@ func (s Service) PsCmdLine(p *process.Process, c chan (string)) {
 	c <- cl
 }
 
-// PsStatus is
+// PsStatus feeds a channel with a process status.
 func (s Service) PsStatus(p *process.Process, c chan (string)) {
 	st, err := p.Status()
 	if err != nil {
@@ -345,7 +346,7 @@ func (s Service) PsStatus(p *process.Process, c chan (string)) {
 	c <- st
 }
 
-// PsCreationTime is
+// PsCreationTime feeds a channel with a process creation time.
 func (s Service) PsCreationTime(p *process.Process, c chan (int64)) {
 	ct, err := p.CreateTime()
 	if err != nil {
@@ -355,7 +356,7 @@ func (s Service) PsCreationTime(p *process.Process, c chan (int64)) {
 	c <- ct
 }
 
-// PsBackground is
+// PsBackground feeds a channel with a process background value.
 func (s Service) PsBackground(p *process.Process, c chan (bool)) {
 	bg, err := p.Background()
 	if err != nil {
@@ -364,7 +365,7 @@ func (s Service) PsBackground(p *process.Process, c chan (bool)) {
 	c <- bg
 }
 
-// PsForeground is
+// PsForeground feeds a channel with a process foreground value.
 func (s Service) PsForeground(p *process.Process, c chan (bool)) {
 	fg, err := p.Foreground()
 	if err != nil {
@@ -373,7 +374,7 @@ func (s Service) PsForeground(p *process.Process, c chan (bool)) {
 	c <- fg
 }
 
-// PsIsRunning is
+// PsIsRunning feeds a channel with a process running status value.
 func (s Service) PsIsRunning(p *process.Process, c chan (bool)) {
 	ir, err := p.IsRunning()
 	if err != nil {
@@ -382,7 +383,7 @@ func (s Service) PsIsRunning(p *process.Process, c chan (bool)) {
 	c <- ir
 }
 
-// PsParent is
+// PsParent feeds a channel with a process parent id.
 func (s Service) PsParent(p *process.Process, c chan (int32)) {
 	var ppid int32
 
@@ -401,7 +402,7 @@ func (s Service) PsParent(p *process.Process, c chan (int32)) {
 	c <- ppid
 }
 
-// HostInfo is
+// HostInfo returns some host stats.
 func (s Service) HostInfo() (host.InfoStat, error) {
 	info, err := host.Info()
 	if err != nil {
@@ -410,7 +411,7 @@ func (s Service) HostInfo() (host.InfoStat, error) {
 	return *info, nil
 }
 
-// Users is
+// Users returns some host users stats.
 func (s Service) Users() ([]host.UserStat, error) {
 	users, err := host.Users()
 	if err != nil {
@@ -419,7 +420,7 @@ func (s Service) Users() ([]host.UserStat, error) {
 	return users, nil
 }
 
-// Temperature is
+// Temperature returns the host temperature.
 func (s Service) Temperature() (string, string, error) {
 	cmd := exec.Command("sh", "-c", "vcgencmd measure_temp")
 	var stdout, stderr bytes.Buffer
@@ -433,7 +434,7 @@ func (s Service) Temperature() (string, string, error) {
 	return outStr, errStr, nil
 }
 
-// RaspModel is
+// RaspModel returns the host Raspberry Model.
 func (s Service) RaspModel() (string, string, error) {
 	cmd := exec.Command("cat", "/sys/firmware/devicetree/base/model")
 	var stdout, stderr bytes.Buffer
@@ -443,11 +444,11 @@ func (s Service) RaspModel() (string, string, error) {
 	if err != nil {
 		log.Error()
 	}
-	outStr, errStr := string(stdout.Bytes()), string(stderr.Bytes())
+	outStr, errStr := strings.TrimSpace(string(stdout.Bytes())), string(stderr.Bytes())
 	return outStr, errStr, nil
 }
 
-// NetInfo is
+// NetInfo returns the host net interface info.
 func (s Service) NetInfo() ([]net.InterfaceStat, error) {
 	netInfo, err := net.Interfaces()
 	if err != nil {
@@ -456,7 +457,7 @@ func (s Service) NetInfo() ([]net.InterfaceStat, error) {
 	return netInfo, nil
 }
 
-// NetStats is
+// NetStats returns the host net interface stats.
 func (s Service) NetStats() ([]net.IOCountersStat, error) {
 	netStats, err := net.IOCounters(true)
 	if err != nil {

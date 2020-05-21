@@ -1,6 +1,6 @@
 package rpi
 
-// User represents the virtual users connected to the system
+// User represents the current host active virtual users.
 type User struct {
 	User     string `json:"user"`
 	Terminal string `json:"terminal"`

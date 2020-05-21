@@ -1,6 +1,6 @@
 package rpi
 
-// Host represents the current system host specifications.
+// Host represents the current host specifications.
 type Host struct {
 	ID                 string  `json:"id"`
 	RaspModel          string  `json:"raspModel"`

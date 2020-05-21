@@ -1,6 +1,6 @@
 package rpi
 
-// Load represents the current system disk.
+// Load represents the current host load stats.
 type Load struct {
 	Load1        float64 `json:"load1"`
 	Load5        float64 `json:"load5"`

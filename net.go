@@ -1,6 +1,6 @@
 package rpi
 
-// Net represents a system net interface.
+// Net represents a current host net interface.
 type Net struct {
 	ID          int      `json:"id"`
 	Name        string   `json:"name"`
