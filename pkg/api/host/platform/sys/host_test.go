@@ -75,6 +75,9 @@ func TestList(t *testing.T) {
 				{
 					CPU: 1,
 				},
+				{
+					CPU: 2,
+				},
 			},
 			vcores: []float64{1.0, 2.0, 3.0},
 			vMemPer: mem.VirtualMemoryStat{
@@ -95,7 +98,8 @@ func TestList(t *testing.T) {
 				PlatformVersion:    "1.1",
 				KernelArch:         "arch_A",
 				KernelVersion:      "A",
-				CPU:                1,
+				CPU:                2,
+				HyperThreading:     true,
 				VCore:              3,
 				CPUUsedPercent:     2.0,
 				VUsedPercent:       99.9,
@@ -149,6 +153,7 @@ func TestList(t *testing.T) {
 				KernelArch:         "arch_A",
 				KernelVersion:      "A",
 				CPU:                0,
+				HyperThreading:     false,
 				VCore:              3,
 				CPUUsedPercent:     2.0,
 				VUsedPercent:       99.9,

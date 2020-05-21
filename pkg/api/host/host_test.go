@@ -227,6 +227,9 @@ func TestList(t *testing.T) {
 						{
 							CPU: 1,
 						},
+						{
+							CPU: 2,
+						},
 					}, nil
 				},
 				CPUPercentFn: func(time.Duration, bool) ([]float64, error) {
@@ -266,7 +269,8 @@ func TestList(t *testing.T) {
 						PlatformVersion:    "1.1",
 						KernelArch:         "arch_A",
 						KernelVersion:      "A",
-						CPU:                1,
+						CPU:                2,
+						HyperThreading:     true,
 						VCore:              3,
 						CPUUsedPercent:     2.0,
 						VUsedPercent:       99.9,
@@ -287,7 +291,8 @@ func TestList(t *testing.T) {
 				PlatformVersion:    "1.1",
 				KernelArch:         "arch_A",
 				KernelVersion:      "A",
-				CPU:                1,
+				CPU:                2,
+				HyperThreading:     true,
 				VCore:              3,
 				CPUUsedPercent:     2.0,
 				VUsedPercent:       99.9,

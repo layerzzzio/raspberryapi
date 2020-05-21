@@ -22,9 +22,13 @@ func (h Host) List(info host.InfoStat,
 	vMemPer mem.VirtualMemoryStat,
 	sMemPer mem.SwapMemoryStat,
 	temp string) (rpi.Host, error) {
-
+	hyperThreading := false
 	virtualUsers := uint16(len(users))
 	cpuCount := uint8(len(cpus))
+	if cpuCount > 1 {
+		hyperThreading = true
+	}
+
 	vCoresCount := uint8(len(vcores))
 
 	var cpuPer float64
@@ -53,6 +57,7 @@ func (h Host) List(info host.InfoStat,
 		KernelArch:         info.KernelArch,
 		KernelVersion:      info.KernelVersion,
 		CPU:                cpuCount,
+		HyperThreading:     hyperThreading,
 		VCore:              vCoresCount,
 		CPUUsedPercent:     cpuPer,
 		VUsedPercent:       vmemPer,
