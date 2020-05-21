@@ -43,6 +43,7 @@ func TestList(t *testing.T) {
 					[]float64,
 					mem.VirtualMemoryStat,
 					mem.SwapMemoryStat,
+					string,
 					string) (rpi.Host, error) {
 					return rpi.Host{}, errors.New("test error")
 				},
@@ -59,6 +60,7 @@ func TestList(t *testing.T) {
 					[]float64,
 					mem.VirtualMemoryStat,
 					mem.SwapMemoryStat,
+					string,
 					string) (rpi.Host, error) {
 					return rpi.Host{
 						ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
@@ -80,6 +82,7 @@ func TestList(t *testing.T) {
 						Processes:          400,
 						ActiveVirtualUsers: 2,
 						Temperature:        20.9,
+						RaspModel:          "pi zero",
 					}, nil
 				},
 			},
@@ -104,6 +107,7 @@ func TestList(t *testing.T) {
 				Processes:          400,
 				ActiveVirtualUsers: 2,
 				Temperature:        20.9,
+				RaspModel:          "pi zero",
 			},
 		},
 	}

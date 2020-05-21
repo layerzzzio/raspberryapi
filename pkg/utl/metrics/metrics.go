@@ -433,6 +433,20 @@ func (s Service) Temperature() (string, string, error) {
 	return outStr, errStr, nil
 }
 
+// RaspModel is
+func (s Service) RaspModel() (string, string, error) {
+	cmd := exec.Command("cat", "/sys/firmware/devicetree/base/model")
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	if err != nil {
+		log.Error()
+	}
+	outStr, errStr := string(stdout.Bytes()), string(stderr.Bytes())
+	return outStr, errStr, nil
+}
+
 // NetInfo is
 func (s Service) NetInfo() ([]net.InterfaceStat, error) {
 	netInfo, err := net.Interfaces()

@@ -53,6 +53,7 @@ func TestList(t *testing.T) {
 		vMemPer    mem.VirtualMemoryStat
 		sMemPer    mem.SwapMemoryStat
 		temp       string
+		rpiv       string
 		wantedData rpi.Host
 		wantedErr  error
 	}{
@@ -87,6 +88,7 @@ func TestList(t *testing.T) {
 				UsedPercent: 0.9,
 			},
 			temp: "temp=20.9.C",
+			rpiv: "pi zero",
 			wantedData: rpi.Host{
 				ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
 				Hostname:           "hostname_test",
@@ -107,6 +109,7 @@ func TestList(t *testing.T) {
 				Processes:          400,
 				ActiveVirtualUsers: 0,
 				Temperature:        20.9,
+				RaspModel:          "pi zero",
 			},
 			wantedErr: nil,
 		},
@@ -504,7 +507,8 @@ func TestList(t *testing.T) {
 				tc.vcores,
 				tc.vMemPer,
 				tc.sMemPer,
-				tc.temp)
+				tc.temp,
+				tc.rpiv)
 
 			assert.Equal(t, tc.wantedData, hosts)
 			assert.Equal(t, tc.wantedErr, err)

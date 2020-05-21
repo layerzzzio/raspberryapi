@@ -50,6 +50,9 @@ func TestList(t *testing.T) {
 				TemperatureFn: func() (string, string, error) {
 					return "", "", errors.New("test error info")
 				},
+				RaspModelFn: func() (string, string, error) {
+					return "", "", errors.New("test error info")
+				},
 			},
 			wantedData: rpi.Host{},
 			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the host metrics"),
@@ -77,6 +80,40 @@ func TestList(t *testing.T) {
 				},
 				TemperatureFn: func() (string, string, error) {
 					return "", "error", errors.New("test error info")
+				},
+				RaspModelFn: func() (string, string, error) {
+					return "pi zero", "", errors.New("test error info")
+				},
+			},
+			wantedData: rpi.Host{},
+			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the host metrics"),
+		},
+		{
+			name: "error: rpiv stdErr and err are not nil",
+			metrics: &mock.Metrics{
+				HostInfoFn: func() (hext.InfoStat, error) {
+					return hext.InfoStat{}, nil
+				},
+				UsersFn: func() ([]hext.UserStat, error) {
+					return nil, nil
+				},
+				CPUInfoFn: func() ([]cpu.InfoStat, error) {
+					return nil, nil
+				},
+				CPUPercentFn: func(time.Duration, bool) ([]float64, error) {
+					return nil, nil
+				},
+				VirtualMemFn: func() (mext.VirtualMemoryStat, error) {
+					return mext.VirtualMemoryStat{}, nil
+				},
+				SwapMemFn: func() (mext.SwapMemoryStat, error) {
+					return mext.SwapMemoryStat{}, nil
+				},
+				TemperatureFn: func() (string, string, error) {
+					return "temp=20.9", "error", errors.New("test error info")
+				},
+				RaspModelFn: func() (string, string, error) {
+					return "", "", errors.New("test error info")
 				},
 			},
 			wantedData: rpi.Host{},
@@ -118,6 +155,9 @@ func TestList(t *testing.T) {
 				TemperatureFn: func() (string, string, error) {
 					return "", "", errors.New("test error info")
 				},
+				RaspModelFn: func() (string, string, error) {
+					return "", "", errors.New("test error info")
+				},
 			},
 			wantedData: rpi.Host{},
 			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the host metrics"),
@@ -156,6 +196,9 @@ func TestList(t *testing.T) {
 				TemperatureFn: func() (string, string, error) {
 					return "", "", errors.New("test error info")
 				},
+				RaspModelFn: func() (string, string, error) {
+					return "", "", errors.New("test error info")
+				},
 			},
 			wantedData: rpi.Host{},
 			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the host metrics"),
@@ -188,6 +231,9 @@ func TestList(t *testing.T) {
 					}, nil
 				},
 				TemperatureFn: func() (string, string, error) {
+					return "", "", errors.New("test error info")
+				},
+				RaspModelFn: func() (string, string, error) {
 					return "", "", errors.New("test error info")
 				},
 			},
@@ -246,7 +292,10 @@ func TestList(t *testing.T) {
 					}, nil
 				},
 				TemperatureFn: func() (string, string, error) {
-					return "", "", errors.New("test error info")
+					return "temp=20.9", "", errors.New("test error info")
+				},
+				RaspModelFn: func() (string, string, error) {
+					return "pi zero", "", errors.New("test error info")
 				},
 			},
 			hsys: &mocksys.Host{
@@ -257,6 +306,7 @@ func TestList(t *testing.T) {
 					[]float64,
 					mem.VirtualMemoryStat,
 					mem.SwapMemoryStat,
+					string,
 					string) (rpi.Host, error) {
 					return rpi.Host{
 						ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
@@ -277,6 +327,8 @@ func TestList(t *testing.T) {
 						SUsedPercent:       0.9,
 						Processes:          400,
 						ActiveVirtualUsers: 2,
+						Temperature:        20.9,
+						RaspModel:          "pi zero",
 					}, nil
 				},
 			},
@@ -299,6 +351,8 @@ func TestList(t *testing.T) {
 				SUsedPercent:       0.9,
 				Processes:          400,
 				ActiveVirtualUsers: 2,
+				Temperature:        20.9,
+				RaspModel:          "pi zero",
 			},
 			wantedErr: nil,
 		},

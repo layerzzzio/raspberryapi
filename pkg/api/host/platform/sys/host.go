@@ -21,7 +21,8 @@ func (h Host) List(info host.InfoStat,
 	vcores []float64,
 	vMemPer mem.VirtualMemoryStat,
 	sMemPer mem.SwapMemoryStat,
-	temp string) (rpi.Host, error) {
+	temp string,
+	rpiv string) (rpi.Host, error) {
 	hyperThreading := false
 	virtualUsers := uint16(len(users))
 	cpuCount := uint8(len(cpus))
@@ -47,6 +48,7 @@ func (h Host) List(info host.InfoStat,
 
 	result := rpi.Host{
 		ID:                 info.HostID,
+		RaspModel:          rpiv,
 		Hostname:           info.Hostname,
 		Uptime:             info.Uptime,
 		BootTime:           info.BootTime,

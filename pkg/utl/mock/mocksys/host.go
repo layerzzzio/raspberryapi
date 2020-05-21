@@ -16,6 +16,7 @@ type Host struct {
 		[]float64,
 		mem.VirtualMemoryStat,
 		mem.SwapMemoryStat,
+		string,
 		string) (rpi.Host, error)
 }
 
@@ -26,6 +27,7 @@ func (h Host) List(infos host.InfoStat,
 	vcores []float64,
 	vmem mem.VirtualMemoryStat,
 	smem mem.SwapMemoryStat,
-	temp string) (rpi.Host, error) {
-	return h.ListFn(infos, users, cpus, vcores, vmem, smem, temp)
+	temp string,
+	rpiv string) (rpi.Host, error) {
+	return h.ListFn(infos, users, cpus, vcores, vmem, smem, temp, rpiv)
 }

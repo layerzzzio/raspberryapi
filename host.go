@@ -3,6 +3,7 @@ package rpi
 // Host represents the current system host specifications.
 type Host struct {
 	ID                 string  `json:"id"`
+	RaspModel          string  `json:"raspModel"`
 	Hostname           string  `json:"hostname"`
 	Uptime             uint64  `json:"uptime"`
 	BootTime           uint64  `json:"bootTime"`

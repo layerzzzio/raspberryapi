@@ -28,6 +28,7 @@ type HSYS interface {
 		[]float64,
 		mem.VirtualMemoryStat,
 		mem.SwapMemoryStat,
+		string,
 		string) (rpi.Host, error)
 }
 
@@ -40,6 +41,7 @@ type Metrics interface {
 	VirtualMemory() (mem.VirtualMemoryStat, error)
 	SwapMemory() (mem.SwapMemoryStat, error)
 	Temperature() (string, string, error)
+	RaspModel() (string, string, error)
 }
 
 // New creates a Host application service instance.
