@@ -11,7 +11,7 @@ import (
 	"github.com/raspibuddy/rpi/pkg/utl/metrics"
 )
 
-// Disk represents an empty disk entity on the current system.
+// Disk represents a disk entity on the current host.
 type Disk struct{}
 
 // List returns a list of disk stats
@@ -63,7 +63,7 @@ func (d Disk) List(listDev map[string][]metrics.DStats) ([]rpi.Disk, error) {
 	return result, nil
 }
 
-// View returns a disk stats
+// View returns some disk stats
 func (d Disk) View(device string, listDev map[string][]metrics.DStats) (rpi.Disk, error) {
 	var result rpi.Disk
 	var devMP []rpi.MountPoint

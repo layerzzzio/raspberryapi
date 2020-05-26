@@ -92,7 +92,7 @@ func TestList(t *testing.T) {
 			wantedData: rpi.Host{
 				ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
 				Hostname:           "hostname_test",
-				Uptime:             540165,
+				UpTime:             540165,
 				BootTime:           1589223156,
 				OS:                 "raspbian",
 				Platform:           "plat_1",
@@ -147,7 +147,7 @@ func TestList(t *testing.T) {
 			wantedData: rpi.Host{
 				ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
 				Hostname:           "hostname_test",
-				Uptime:             540165,
+				UpTime:             540165,
 				BootTime:           1589223156,
 				OS:                 "raspbian",
 				Platform:           "plat_1",
@@ -205,7 +205,7 @@ func TestList(t *testing.T) {
 			wantedData: rpi.Host{
 				ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
 				Hostname:           "hostname_test",
-				Uptime:             540165,
+				UpTime:             540165,
 				BootTime:           1589223156,
 				OS:                 "raspbian",
 				Platform:           "plat_1",
@@ -260,7 +260,7 @@ func TestList(t *testing.T) {
 			wantedData: rpi.Host{
 				ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
 				Hostname:           "hostname_test",
-				Uptime:             540165,
+				UpTime:             540165,
 				BootTime:           1589223156,
 				OS:                 "raspbian",
 				Platform:           "plat_1",
@@ -315,7 +315,7 @@ func TestList(t *testing.T) {
 			wantedData: rpi.Host{
 				ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
 				Hostname:           "hostname_test",
-				Uptime:             540165,
+				UpTime:             540165,
 				BootTime:           1589223156,
 				OS:                 "raspbian",
 				Platform:           "plat_1",
@@ -360,7 +360,7 @@ func TestList(t *testing.T) {
 			wantedData: rpi.Host{
 				ID:                 "",
 				Hostname:           "",
-				Uptime:             0,
+				UpTime:             0,
 				BootTime:           0,
 				OS:                 "",
 				Platform:           "",
@@ -417,7 +417,7 @@ func TestList(t *testing.T) {
 			wantedData: rpi.Host{
 				ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
 				Hostname:           "hostname_test",
-				Uptime:             540165,
+				UpTime:             540165,
 				BootTime:           1589223156,
 				OS:                 "raspbian",
 				Platform:           "plat_1",
@@ -475,7 +475,7 @@ func TestList(t *testing.T) {
 			wantedData: rpi.Host{
 				ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
 				Hostname:           "hostname_test",
-				Uptime:             540165,
+				UpTime:             540165,
 				BootTime:           1589223156,
 				OS:                 "raspbian",
 				Platform:           "plat_1",

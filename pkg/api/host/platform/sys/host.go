@@ -11,7 +11,7 @@ import (
 	"github.com/shirou/gopsutil/mem"
 )
 
-// Host represents an empty Host entity on the current system.
+// Host represents a host entity.
 type Host struct{}
 
 // List returns a list of Host info
@@ -50,7 +50,7 @@ func (h Host) List(info host.InfoStat,
 		ID:                 info.HostID,
 		RaspModel:          rpiv,
 		Hostname:           info.Hostname,
-		Uptime:             info.Uptime,
+		UpTime:             info.Uptime,
 		BootTime:           info.BootTime,
 		OS:                 info.OS,
 		Platform:           info.Platform,

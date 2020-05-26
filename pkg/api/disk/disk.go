@@ -18,7 +18,7 @@ func (d *Disk) List() ([]rpi.Disk, error) {
 	return d.dsys.List(dstats)
 }
 
-//View populates and returns a Disk models.
+//View populates and returns a Disk model.
 func (d *Disk) View(dev string) (rpi.Disk, error) {
 	dstats, err := d.m.DiskStats(false)
 

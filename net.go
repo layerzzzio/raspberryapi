@@ -8,6 +8,6 @@ type Net struct {
 	IPv4        string   `json:"ipv4"`
 	BytesSent   uint64   `json:"bytesSent,omitempty"`
 	BytesRecv   uint64   `json:"bytesRecv,omitempty"`
-	PacketsSent uint64   `json:"packaetsSent,omitempty"`
-	PacketsRecv uint64   `json:"packaetsRecv,omitempty"`
+	PacketsSent uint64   `json:"packetsSent,omitempty"`
+	PacketsRecv uint64   `json:"packetsRecv,omitempty"`
 }

@@ -7,7 +7,7 @@ type Mem struct {
 	SFree        uint64  `json:"swapMemFree"`
 	SUsedPercent float64 `json:"swapMemUsedPercent"`
 	VTotal       uint64  `json:"virtMemTotal"`
-	VAvailable   uint64  `json:"virtMemAvailable"`
+	VAvailable   uint64  `json:"virtMemFree"`
 	VUsed        uint64  `json:"virtMemUsed"`
 	VUsedPercent float64 `json:"virtMemUsedPercent"`
 }

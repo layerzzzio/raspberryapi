@@ -5,7 +5,7 @@ type Host struct {
 	ID                 string  `json:"id"`
 	RaspModel          string  `json:"raspModel"`
 	Hostname           string  `json:"hostname"`
-	Uptime             uint64  `json:"uptime"`
+	UpTime             uint64  `json:"upTime"`
 	BootTime           uint64  `json:"bootTime"`
 	OS                 string  `json:"os"`
 	Platform           string  `json:"platform"`
