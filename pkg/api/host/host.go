@@ -2,6 +2,7 @@ package host
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo"
 	"github.com/raspibuddy/rpi"
@@ -12,7 +13,7 @@ func (h *Host) List() (rpi.Host, error) {
 	info, errI := h.mt.HostInfo()
 	users, errU := h.mt.Users()
 	cpus, errC := h.mt.CPUInfo()
-	vcores, errVC := h.mt.CPUPercent(1, true)
+	vcores, errVC := h.mt.CPUPercent(300*time.Second, true)
 	vMemPer, errV := h.mt.VirtualMemory()
 	sMemPer, errS := h.mt.SwapMemory()
 	temp, stdErrT, errT := h.mt.Temperature()
