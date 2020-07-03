@@ -13,7 +13,7 @@ func (h *Host) List() (rpi.Host, error) {
 	users, errU := h.mt.Users()
 	cpus, errC := h.mt.CPUInfo()
 	vcores, errVC := h.mt.CPUPercent(5000000, true)
-	vMemPer, errV := h.mt.VirtualMemory()
+	vMem, errV := h.mt.VirtualMemory()
 	sMemPer, errS := h.mt.SwapMemory()
 	temp, stdErrT, errT := h.mt.Temperature()
 	rpiv, stdErrR, errR := h.mt.RaspModel()
@@ -22,5 +22,5 @@ func (h *Host) List() (rpi.Host, error) {
 		return rpi.Host{}, echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the host metrics")
 	}
 
-	return h.hsys.List(info, users, cpus, vcores, vMemPer, sMemPer, temp, rpiv)
+	return h.hsys.List(info, users, cpus, vcores, vMem, sMemPer, temp, rpiv)
 }

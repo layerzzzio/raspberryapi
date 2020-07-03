@@ -410,6 +410,7 @@ func TestList(t *testing.T) {
 			vcores: []float64{1.0, 2.0, 3.0},
 			vMemPer: mem.VirtualMemoryStat{
 				UsedPercent: 99.9,
+				Total:       450,
 			},
 			sMemPer: mem.SwapMemoryStat{
 				UsedPercent: 0.9,
@@ -485,6 +486,7 @@ func TestList(t *testing.T) {
 				KernelVersion:      "A",
 				CPU:                1,
 				VCore:              3,
+				VTotal:             450,
 				CPUUsedPercent:     2.0,
 				VUsedPercent:       99.9,
 				SUsedPercent:       0.9,

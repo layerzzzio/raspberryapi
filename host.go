@@ -16,6 +16,7 @@ type Host struct {
 	CPU                uint8   `json:"cpus"`
 	HyperThreading     bool    `json:"hyperThreading"`
 	VCore              uint8   `json:"vcores"`
+	VTotal             uint64  `json:"virtMemTotal"`
 	CPUUsedPercent     float64 `json:"cpuPercent"`
 	VUsedPercent       float64 `json:"virtMemUsedPercent"`
 	SUsedPercent       float64 `json:"swapMemUsedPercent"`

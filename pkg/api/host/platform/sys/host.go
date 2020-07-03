@@ -19,7 +19,7 @@ func (h Host) List(info host.InfoStat,
 	users []host.UserStat,
 	cpus []cpu.InfoStat,
 	vcores []float64,
-	vMemPer mem.VirtualMemoryStat,
+	vMem mem.VirtualMemoryStat,
 	sMemPer mem.SwapMemoryStat,
 	temp string,
 	rpiv string) (rpi.Host, error) {
@@ -43,7 +43,8 @@ func (h Host) List(info host.InfoStat,
 		cpuPer = 0
 	}
 
-	vmemPer := vMemPer.UsedPercent
+	vTot := vMem.Total
+	vmemPer := vMem.UsedPercent
 	smenPer := sMemPer.UsedPercent
 
 	result := rpi.Host{
@@ -61,6 +62,7 @@ func (h Host) List(info host.InfoStat,
 		CPU:                cpuCount,
 		HyperThreading:     hyperThreading,
 		VCore:              vCoresCount,
+		VTotal:             vTot,
 		CPUUsedPercent:     cpuPer,
 		VUsedPercent:       vmemPer,
 		SUsedPercent:       smenPer,
