@@ -9,10 +9,13 @@ import (
 	"github.com/labstack/echo"
 	"github.com/raspibuddy/rpi"
 	"github.com/raspibuddy/rpi/pkg/api/host"
+	"github.com/raspibuddy/rpi/pkg/utl/metrics"
 	"github.com/raspibuddy/rpi/pkg/utl/mock"
 	"github.com/raspibuddy/rpi/pkg/utl/mock/mocksys"
 	"github.com/shirou/gopsutil/cpu"
+	dext "github.com/shirou/gopsutil/disk"
 	hext "github.com/shirou/gopsutil/host"
+	"github.com/shirou/gopsutil/load"
 	"github.com/shirou/gopsutil/mem"
 	mext "github.com/shirou/gopsutil/mem"
 	"github.com/stretchr/testify/assert"
@@ -47,42 +50,17 @@ func TestList(t *testing.T) {
 				SwapMemFn: func() (mext.SwapMemoryStat, error) {
 					return mext.SwapMemoryStat{}, errors.New("test error info")
 				},
+				LoadAvgFn: func() (load.AvgStat, error) {
+					return load.AvgStat{}, errors.New("test error info")
+				},
 				TemperatureFn: func() (string, string, error) {
 					return "", "", errors.New("test error info")
 				},
 				RaspModelFn: func() (string, string, error) {
 					return "", "", errors.New("test error info")
 				},
-			},
-			wantedData: rpi.Host{},
-			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the host metrics"),
-		},
-		{
-			name: "error: temperature stdErr and err are not nil",
-			metrics: &mock.Metrics{
-				HostInfoFn: func() (hext.InfoStat, error) {
-					return hext.InfoStat{}, nil
-				},
-				UsersFn: func() ([]hext.UserStat, error) {
-					return nil, nil
-				},
-				CPUInfoFn: func() ([]cpu.InfoStat, error) {
-					return nil, nil
-				},
-				CPUPercentFn: func(time.Duration, bool) ([]float64, error) {
-					return nil, nil
-				},
-				VirtualMemFn: func() (mext.VirtualMemoryStat, error) {
-					return mext.VirtualMemoryStat{}, nil
-				},
-				SwapMemFn: func() (mext.SwapMemoryStat, error) {
-					return mext.SwapMemoryStat{}, nil
-				},
-				TemperatureFn: func() (string, string, error) {
-					return "", "error", errors.New("test error info")
-				},
-				RaspModelFn: func() (string, string, error) {
-					return "pi zero", "", errors.New("test error info")
+				DiskStatsFn: func(bool) (map[string][]metrics.DStats, error) {
+					return nil, errors.New("test error dstats")
 				},
 			},
 			wantedData: rpi.Host{},
@@ -109,11 +87,54 @@ func TestList(t *testing.T) {
 				SwapMemFn: func() (mext.SwapMemoryStat, error) {
 					return mext.SwapMemoryStat{}, nil
 				},
+				LoadAvgFn: func() (load.AvgStat, error) {
+					return load.AvgStat{}, errors.New("test error info")
+				},
+				TemperatureFn: func() (string, string, error) {
+					return "", "error", errors.New("test error info")
+				},
+				RaspModelFn: func() (string, string, error) {
+					return "pi zero", "", errors.New("test error info")
+				},
+				DiskStatsFn: func(bool) (map[string][]metrics.DStats, error) {
+					return nil, errors.New("test error dstats")
+				},
+			},
+			wantedData: rpi.Host{},
+			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the host metrics"),
+		},
+		{
+			name: "error: temp stdErr and err are not nil",
+			metrics: &mock.Metrics{
+				HostInfoFn: func() (hext.InfoStat, error) {
+					return hext.InfoStat{}, nil
+				},
+				UsersFn: func() ([]hext.UserStat, error) {
+					return nil, nil
+				},
+				CPUInfoFn: func() ([]cpu.InfoStat, error) {
+					return nil, nil
+				},
+				CPUPercentFn: func(time.Duration, bool) ([]float64, error) {
+					return nil, nil
+				},
+				VirtualMemFn: func() (mext.VirtualMemoryStat, error) {
+					return mext.VirtualMemoryStat{}, nil
+				},
+				SwapMemFn: func() (mext.SwapMemoryStat, error) {
+					return mext.SwapMemoryStat{}, nil
+				},
+				LoadAvgFn: func() (load.AvgStat, error) {
+					return load.AvgStat{}, errors.New("test error info")
+				},
 				TemperatureFn: func() (string, string, error) {
 					return "temp=20.9", "error", errors.New("test error info")
 				},
 				RaspModelFn: func() (string, string, error) {
 					return "", "", errors.New("test error info")
+				},
+				DiskStatsFn: func(bool) (map[string][]metrics.DStats, error) {
+					return nil, errors.New("test error dstats")
 				},
 			},
 			wantedData: rpi.Host{},
@@ -152,11 +173,17 @@ func TestList(t *testing.T) {
 						UsedPercent: 1.1,
 					}, nil
 				},
+				LoadAvgFn: func() (load.AvgStat, error) {
+					return load.AvgStat{}, errors.New("test error info")
+				},
 				TemperatureFn: func() (string, string, error) {
 					return "", "", errors.New("test error info")
 				},
 				RaspModelFn: func() (string, string, error) {
 					return "", "", errors.New("test error info")
+				},
+				DiskStatsFn: func(bool) (map[string][]metrics.DStats, error) {
+					return nil, errors.New("test error dstats")
 				},
 			},
 			wantedData: rpi.Host{},
@@ -193,11 +220,17 @@ func TestList(t *testing.T) {
 						UsedPercent: 1.1,
 					}, nil
 				},
+				LoadAvgFn: func() (load.AvgStat, error) {
+					return load.AvgStat{}, errors.New("test error info")
+				},
 				TemperatureFn: func() (string, string, error) {
 					return "", "", errors.New("test error info")
 				},
 				RaspModelFn: func() (string, string, error) {
 					return "", "", errors.New("test error info")
+				},
+				DiskStatsFn: func(bool) (map[string][]metrics.DStats, error) {
+					return nil, errors.New("test error dstats")
 				},
 			},
 			wantedData: rpi.Host{},
@@ -230,11 +263,17 @@ func TestList(t *testing.T) {
 						UsedPercent: 1.1,
 					}, nil
 				},
+				LoadAvgFn: func() (load.AvgStat, error) {
+					return load.AvgStat{}, errors.New("test error info")
+				},
 				TemperatureFn: func() (string, string, error) {
 					return "", "", errors.New("test error info")
 				},
 				RaspModelFn: func() (string, string, error) {
 					return "", "", errors.New("test error info")
+				},
+				DiskStatsFn: func(bool) (map[string][]metrics.DStats, error) {
+					return nil, errors.New("test error dstats")
 				},
 			},
 			wantedData: rpi.Host{},
@@ -291,11 +330,44 @@ func TestList(t *testing.T) {
 						UsedPercent: 0.9,
 					}, nil
 				},
+				LoadAvgFn: func() (load.AvgStat, error) {
+					return load.AvgStat{
+						Load1:  1,
+						Load5:  5,
+						Load15: 15,
+					}, nil
+				},
 				TemperatureFn: func() (string, string, error) {
 					return "temp=20.9", "", errors.New("test error info")
 				},
 				RaspModelFn: func() (string, string, error) {
 					return "pi zero", "", errors.New("test error info")
+				},
+				DiskStatsFn: func(bool) (map[string][]metrics.DStats, error) {
+					return map[string][]metrics.DStats{
+						"/dev1": {
+							{
+								Partition: &dext.PartitionStat{
+									Device:     "/dev1",
+									Mountpoint: "/dev1/mp11",
+									Fstype:     "fs11",
+									Opts:       "rw11",
+								},
+								Mountpoint: &dext.UsageStat{
+									Path:              "/dev1/mp11",
+									Fstype:            "fs11",
+									Total:             1,
+									Free:              2,
+									Used:              3,
+									UsedPercent:       4.4,
+									InodesTotal:       5,
+									InodesUsed:        6,
+									InodesFree:        7,
+									InodesUsedPercent: 8.8,
+								},
+							},
+						},
+					}, nil
 				},
 			},
 			hsys: &mocksys.Host{
@@ -306,8 +378,10 @@ func TestList(t *testing.T) {
 					[]float64,
 					mem.VirtualMemoryStat,
 					mem.SwapMemoryStat,
+					load.AvgStat,
 					string,
-					string) (rpi.Host, error) {
+					string,
+					map[string][]metrics.DStats) (rpi.Host, error) {
 					return rpi.Host{
 						ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
 						Hostname:           "hostname_test",
@@ -325,10 +399,35 @@ func TestList(t *testing.T) {
 						CPUUsedPercent:     2.0,
 						VUsedPercent:       99.9,
 						SUsedPercent:       0.9,
+						Load1:              1,
+						Load5:              5,
+						Load15:             15,
 						Processes:          400,
 						ActiveVirtualUsers: 2,
 						Temperature:        20.9,
 						RaspModel:          "pi zero",
+						Disks: []rpi.Disk{
+							{
+								ID:         "dev1",
+								Filesystem: "/dev1",
+								Fstype:     "fs11",
+								Mountpoints: []rpi.MountPoint{
+									{
+										Mountpoint:        "/dev1/mp11",
+										Fstype:            "fs11",
+										Opts:              "rw11",
+										Total:             1,
+										Free:              2,
+										Used:              3,
+										UsedPercent:       4.4,
+										InodesTotal:       5,
+										InodesUsed:        6,
+										InodesFree:        7,
+										InodesUsedPercent: 8.8,
+									},
+								},
+							},
+						},
 					}, nil
 				},
 			},
@@ -349,10 +448,35 @@ func TestList(t *testing.T) {
 				CPUUsedPercent:     2.0,
 				VUsedPercent:       99.9,
 				SUsedPercent:       0.9,
+				Load1:              1,
+				Load5:              5,
+				Load15:             15,
 				Processes:          400,
 				ActiveVirtualUsers: 2,
 				Temperature:        20.9,
 				RaspModel:          "pi zero",
+				Disks: []rpi.Disk{
+					{
+						ID:         "dev1",
+						Filesystem: "/dev1",
+						Fstype:     "fs11",
+						Mountpoints: []rpi.MountPoint{
+							{
+								Mountpoint:        "/dev1/mp11",
+								Fstype:            "fs11",
+								Opts:              "rw11",
+								Total:             1,
+								Free:              2,
+								Used:              3,
+								UsedPercent:       4.4,
+								InodesTotal:       5,
+								InodesUsed:        6,
+								InodesFree:        7,
+								InodesUsedPercent: 8.8,
+							},
+						},
+					},
+				},
 			},
 			wantedErr: nil,
 		},

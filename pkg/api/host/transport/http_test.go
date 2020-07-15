@@ -16,6 +16,7 @@ import (
 	"github.com/raspibuddy/rpi/pkg/utl/server"
 	"github.com/shirou/gopsutil/cpu"
 	hext "github.com/shirou/gopsutil/host"
+	"github.com/shirou/gopsutil/load"
 	"github.com/shirou/gopsutil/mem"
 	"github.com/stretchr/testify/assert"
 )
@@ -43,8 +44,10 @@ func TestList(t *testing.T) {
 					[]float64,
 					mem.VirtualMemoryStat,
 					mem.SwapMemoryStat,
+					load.AvgStat,
 					string,
-					string) (rpi.Host, error) {
+					string,
+					map[string][]metrics.DStats) (rpi.Host, error) {
 					return rpi.Host{}, errors.New("test error")
 				},
 			},
@@ -60,8 +63,10 @@ func TestList(t *testing.T) {
 					[]float64,
 					mem.VirtualMemoryStat,
 					mem.SwapMemoryStat,
+					load.AvgStat,
 					string,
-					string) (rpi.Host, error) {
+					string,
+					map[string][]metrics.DStats) (rpi.Host, error) {
 					return rpi.Host{
 						ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
 						Hostname:           "hostname_test",
@@ -79,10 +84,68 @@ func TestList(t *testing.T) {
 						CPUUsedPercent:     2.0,
 						VUsedPercent:       99.9,
 						SUsedPercent:       0.9,
+						Load1:              1,
+						Load5:              5,
+						Load15:             15,
 						Processes:          400,
 						ActiveVirtualUsers: 2,
 						Temperature:        20.9,
 						RaspModel:          "pi zero",
+						Disks: []rpi.Disk{
+							{
+								ID:         "dev1",
+								Filesystem: "/dev1",
+								Fstype:     "multi_fstype",
+								Mountpoints: []rpi.MountPoint{
+									{
+										Mountpoint:        "/dev1/mp11",
+										Fstype:            "fs11",
+										Opts:              "rw11",
+										Total:             1,
+										Free:              2,
+										Used:              3,
+										UsedPercent:       4.4,
+										InodesTotal:       5,
+										InodesUsed:        6,
+										InodesFree:        7,
+										InodesUsedPercent: 8.8,
+									},
+									{
+										Mountpoint:        "/dev1/mp12",
+										Fstype:            "fs12",
+										Opts:              "rw12",
+										Total:             1,
+										Free:              2,
+										Used:              3,
+										UsedPercent:       4.4,
+										InodesTotal:       5,
+										InodesUsed:        6,
+										InodesFree:        7,
+										InodesUsedPercent: 8.8,
+									},
+								},
+							},
+							{
+								ID:         "dev2",
+								Filesystem: "/dev2",
+								Fstype:     "fs21",
+								Mountpoints: []rpi.MountPoint{
+									{
+										Mountpoint:        "/dev2/mp21",
+										Fstype:            "fs21",
+										Opts:              "rw21",
+										Total:             11,
+										Free:              22,
+										Used:              33,
+										UsedPercent:       44.4,
+										InodesTotal:       55,
+										InodesUsed:        66,
+										InodesFree:        77,
+										InodesUsedPercent: 88.8,
+									},
+								},
+							},
+						},
 					}, nil
 				},
 			},
@@ -104,10 +167,68 @@ func TestList(t *testing.T) {
 				CPUUsedPercent:     2.0,
 				VUsedPercent:       99.9,
 				SUsedPercent:       0.9,
+				Load1:              1,
+				Load5:              5,
+				Load15:             15,
 				Processes:          400,
 				ActiveVirtualUsers: 2,
 				Temperature:        20.9,
 				RaspModel:          "pi zero",
+				Disks: []rpi.Disk{
+					{
+						ID:         "dev1",
+						Filesystem: "/dev1",
+						Fstype:     "multi_fstype",
+						Mountpoints: []rpi.MountPoint{
+							{
+								Mountpoint:        "/dev1/mp11",
+								Fstype:            "fs11",
+								Opts:              "rw11",
+								Total:             1,
+								Free:              2,
+								Used:              3,
+								UsedPercent:       4.4,
+								InodesTotal:       5,
+								InodesUsed:        6,
+								InodesFree:        7,
+								InodesUsedPercent: 8.8,
+							},
+							{
+								Mountpoint:        "/dev1/mp12",
+								Fstype:            "fs12",
+								Opts:              "rw12",
+								Total:             1,
+								Free:              2,
+								Used:              3,
+								UsedPercent:       4.4,
+								InodesTotal:       5,
+								InodesUsed:        6,
+								InodesFree:        7,
+								InodesUsedPercent: 8.8,
+							},
+						},
+					},
+					{
+						ID:         "dev2",
+						Filesystem: "/dev2",
+						Fstype:     "fs21",
+						Mountpoints: []rpi.MountPoint{
+							{
+								Mountpoint:        "/dev2/mp21",
+								Fstype:            "fs21",
+								Opts:              "rw21",
+								Total:             11,
+								Free:              22,
+								Used:              33,
+								UsedPercent:       44.4,
+								InodesTotal:       55,
+								InodesUsed:        66,
+								InodesFree:        77,
+								InodesUsedPercent: 88.8,
+							},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -135,7 +256,7 @@ func TestList(t *testing.T) {
 				panic(err)
 			}
 
-			if (tc.wantedResp != rpi.Host{}) {
+			if tc.wantedResp.ID != "" {
 				if err := json.Unmarshal(body, &response); err != nil {
 					t.Fatal(err)
 				}

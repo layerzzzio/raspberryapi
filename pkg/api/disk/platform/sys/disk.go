@@ -39,7 +39,7 @@ func (d Disk) List(listDev map[string][]metrics.DStats) ([]rpi.Disk, error) {
 			)
 		}
 
-		id := extractDeviceID(dev)
+		id := ExtractDeviceID(dev)
 		if len(id) != 1 {
 			return nil, echo.NewHTTPError(http.StatusNotFound, "parsing id was unsuccessful")
 		}
@@ -49,7 +49,7 @@ func (d Disk) List(listDev map[string][]metrics.DStats) ([]rpi.Disk, error) {
 			rpi.Disk{
 				ID:          id[0],
 				Filesystem:  dev,
-				Fstype:      fsType(devMP),
+				Fstype:      FsType(devMP),
 				Mountpoints: devMP,
 			})
 
@@ -70,7 +70,7 @@ func (d Disk) View(device string, listDev map[string][]metrics.DStats) (rpi.Disk
 	isDiskFound := false
 
 	for dev, dstats := range listDev {
-		id := extractDeviceID(dev)
+		id := ExtractDeviceID(dev)
 		if len(id) != 1 {
 			return rpi.Disk{}, echo.NewHTTPError(http.StatusNotFound, "parsing id was unsuccessful")
 		}
@@ -98,7 +98,7 @@ func (d Disk) View(device string, listDev map[string][]metrics.DStats) (rpi.Disk
 			result = rpi.Disk{
 				ID:          id[0],
 				Filesystem:  dev,
-				Fstype:      fsType(devMP),
+				Fstype:      FsType(devMP),
 				Mountpoints: devMP,
 			}
 			isDiskFound = true
@@ -113,13 +113,15 @@ func (d Disk) View(device string, listDev map[string][]metrics.DStats) (rpi.Disk
 	return result, nil
 }
 
-func extractDeviceID(dev string) []string {
+// ExtractDeviceID extracts the disk ID from a string
+func ExtractDeviceID(dev string) []string {
 	r := regexp.MustCompile("[^\"/]+$")
 	res := r.FindAllString(dev, -1)
 	return res
 }
 
-func fsType(mp []rpi.MountPoint) string {
+// FsType extracts the fs type from a MountPoint object
+func FsType(mp []rpi.MountPoint) string {
 	var fstypes []string
 
 	for i := range mp {

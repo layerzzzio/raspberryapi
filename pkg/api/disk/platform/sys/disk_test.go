@@ -43,7 +43,7 @@ func TestExtractDeviceID(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			id := extractDeviceID(tc.dev)
+			id := ExtractDeviceID(tc.dev)
 			assert.Equal(t, tc.wantedData, id)
 		})
 	}
@@ -123,7 +123,7 @@ func TestFsType(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			id := fsType(tc.mp)
+			id := FsType(tc.mp)
 			assert.Equal(t, tc.wantedData, id)
 		})
 	}
@@ -138,6 +138,9 @@ func TestList(t *testing.T) {
 	}{
 		{
 			name: "error: parsing id was unsuccessful",
+			// DStats map keys are device name
+			// A device name cannot be only a '/'
+			// A device name is a '/' + a string
 			dstats: map[string][]metrics.DStats{
 				"/": {
 					{

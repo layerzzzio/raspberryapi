@@ -4,8 +4,10 @@ import (
 	"time"
 
 	"github.com/raspibuddy/rpi"
+	"github.com/raspibuddy/rpi/pkg/utl/metrics"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/host"
+	"github.com/shirou/gopsutil/load"
 	"github.com/shirou/gopsutil/mem"
 )
 
@@ -28,8 +30,10 @@ type HSYS interface {
 		[]float64,
 		mem.VirtualMemoryStat,
 		mem.SwapMemoryStat,
+		load.AvgStat,
 		string,
-		string) (rpi.Host, error)
+		string,
+		map[string][]metrics.DStats) (rpi.Host, error)
 }
 
 // Metrics represents the system metrics interface
@@ -40,8 +44,10 @@ type Metrics interface {
 	CPUPercent(interval time.Duration, perVCore bool) ([]float64, error)
 	VirtualMemory() (mem.VirtualMemoryStat, error)
 	SwapMemory() (mem.SwapMemoryStat, error)
+	LoadAvg() (load.AvgStat, error)
 	Temperature() (string, string, error)
 	RaspModel() (string, string, error)
+	DiskStats(bool) (map[string][]metrics.DStats, error)
 }
 
 // New creates a Host application service instance.

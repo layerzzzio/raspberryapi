@@ -20,7 +20,11 @@ type Host struct {
 	CPUUsedPercent     float64 `json:"cpuPercent"`
 	VUsedPercent       float64 `json:"virtMemUsedPercent"`
 	SUsedPercent       float64 `json:"swapMemUsedPercent"`
+	Load1              float64 `json:"load1"`
+	Load5              float64 `json:"load5"`
+	Load15             float64 `json:"load15"`
 	Processes          uint64  `json:"processes"`
 	ActiveVirtualUsers uint16  `json:"activeVirtualUsers"`
 	Temperature        float32 `json:"temperature"`
+	Disks              []Disk  `json:"disks"`
 }
