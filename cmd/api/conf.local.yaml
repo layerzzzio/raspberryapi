@@ -1,5 +1,5 @@
 server:
   port: :8080
   debug: true
-  read_timeout_seconds: 10
-  write_timeout_seconds: 5
+  read_timeout_seconds: 30
+  write_timeout_seconds: 15

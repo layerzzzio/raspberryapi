@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 
@@ -49,6 +50,12 @@ func New(m Metrics) *Service {
 type DStats struct {
 	Partition  *disk.PartitionStat
 	Mountpoint *disk.UsageStat
+}
+
+// PathSize represents a tuple composed of a file path and a file size
+type PathSize struct {
+	Path string
+	Size int
 }
 
 // PInfo represents several process key attributes.
@@ -430,8 +437,8 @@ func (s Service) Temperature() (string, string, error) {
 	if err != nil {
 		log.Error()
 	}
-	outStr, errStr := string(stdout.Bytes()), string(stderr.Bytes())
-	return outStr, errStr, nil
+	outStd, errStd := string(stdout.Bytes()), string(stderr.Bytes())
+	return outStd, errStd, nil
 }
 
 // RaspModel returns the host Raspberry Model.
@@ -444,8 +451,8 @@ func (s Service) RaspModel() (string, string, error) {
 	if err != nil {
 		log.Error()
 	}
-	outStr, errStr := strings.TrimSpace(string(stdout.Bytes())), string(stderr.Bytes())
-	return outStr, errStr, nil
+	outStd, errStd := strings.TrimSpace(string(stdout.Bytes())), string(stderr.Bytes())
+	return outStd, errStd, nil
 }
 
 // NetInfo returns the host net interface info.
@@ -464,4 +471,36 @@ func (s Service) NetStats() ([]net.IOCountersStat, error) {
 		return nil, err
 	}
 	return netStats, nil
+}
+
+// Top100Files returns the host temperature.
+func (s Service) Top100Files() ([]PathSize, string, error) {
+	cmd := exec.Command("sh", "-c", "sudo find / -type f -printf '%s<sep>%p<end>\n' | sort -n -r | head -100")
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+
+	if err != nil {
+		log.Error()
+	}
+
+	var allFiles []PathSize
+	allFiles = make([]PathSize, 100)
+	allFilesWithSep := strings.Split(strings.TrimSpace(string(stdout.Bytes())), "<end>\n")
+
+	for index, file := range allFilesWithSep {
+		sizePath := strings.Split(file, "<sep>")
+		allFiles[index].Path = strings.ReplaceAll(sizePath[1], "<end>", "")
+
+		size, err := strconv.Atoi(sizePath[0])
+		if err != nil {
+			size = -1
+		}
+
+		allFiles[index].Size = size
+	}
+
+	outStd, errStd := allFiles, string(stderr.Bytes())
+	return outStd, errStd, nil
 }
