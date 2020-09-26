@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"crypto/tls"
 	"net/http"
 	"os"
 	"os/signal"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	"golang.org/x/crypto/acme"
 )
 
 // New instantiates a new Echo server.
@@ -29,6 +31,15 @@ type Config struct {
 	ReadTimeoutSeconds  int
 	WriteTimeoutSeconds int
 	Debug               bool
+}
+
+// StartAutoTLS starts an HTTPS server using certificates automatically installed from https://letsencrypt.org.
+func StartAutoTLS(e *echo.Echo, address string) error {
+	s := e.TLSServer
+	s.TLSConfig = new(tls.Config)
+	s.TLSConfig.GetCertificate = e.AutoTLSManager.GetCertificate
+	s.TLSConfig.NextProtos = append(s.TLSConfig.NextProtos, acme.ALPNProto)
+	return e.StartAutoTLS(address)
 }
 
 // Start starts an echo server.

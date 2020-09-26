@@ -23,7 +23,7 @@ func (n Net) List(netInfo []net.InterfaceStat) ([]rpi.Net, error) {
 			ID:    netInfo[i].Index,
 			Name:  netInfo[i].Name,
 			Flags: netInfo[i].Flags,
-			IPv4:  extractIPv4(netInfo[i].Addrs),
+			IPv4:  ExtractIPv4(netInfo[i].Addrs),
 		}
 		result = append(result, data)
 	}
@@ -45,7 +45,7 @@ func (n Net) View(id int, netInfo []net.InterfaceStat, netStats []net.IOCounters
 							ID:          netInfo[i].Index,
 							Name:        netInfo[i].Name,
 							Flags:       netInfo[i].Flags,
-							IPv4:        extractIPv4(netInfo[i].Addrs),
+							IPv4:        ExtractIPv4(netInfo[i].Addrs),
 							BytesSent:   netStats[i].BytesSent,
 							BytesRecv:   netStats[i].BytesRecv,
 							PacketsSent: netStats[i].PacketsSent,
@@ -58,7 +58,7 @@ func (n Net) View(id int, netInfo []net.InterfaceStat, netStats []net.IOCounters
 							ID:    netInfo[i].Index,
 							Name:  netInfo[i].Name,
 							Flags: netInfo[i].Flags,
-							IPv4:  extractIPv4(netInfo[i].Addrs),
+							IPv4:  ExtractIPv4(netInfo[i].Addrs),
 						}
 						isIDFound = true
 						break
@@ -73,7 +73,7 @@ func (n Net) View(id int, netInfo []net.InterfaceStat, netStats []net.IOCounters
 					ID:    netInfo[i].Index,
 					Name:  netInfo[i].Name,
 					Flags: netInfo[i].Flags,
-					IPv4:  extractIPv4(netInfo[i].Addrs),
+					IPv4:  ExtractIPv4(netInfo[i].Addrs),
 				}
 				isIDFound = true
 				break
@@ -88,7 +88,8 @@ func (n Net) View(id int, netInfo []net.InterfaceStat, netStats []net.IOCounters
 	return result, nil
 }
 
-func extractIPv4(addrs []net.InterfaceAddr) string {
+// ExtractIPv4 extracts IP from string
+func ExtractIPv4(addrs []net.InterfaceAddr) string {
 	var ip string
 	reNum := regexp.MustCompile("[^\"/,]{10,}")
 	rev4 := regexp.MustCompile(`(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}`)

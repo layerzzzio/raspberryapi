@@ -104,7 +104,7 @@ func TestExtractIPv4(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			ipv4 := extractIPv4(tc.addrs)
+			ipv4 := ExtractIPv4(tc.addrs)
 			assert.Equal(t, tc.wantedData, ipv4)
 		})
 	}

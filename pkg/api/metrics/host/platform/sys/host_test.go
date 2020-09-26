@@ -13,6 +13,7 @@ import (
 	hext "github.com/shirou/gopsutil/host"
 	"github.com/shirou/gopsutil/load"
 	"github.com/shirou/gopsutil/mem"
+	"github.com/shirou/gopsutil/net"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -61,11 +62,27 @@ func TestList(t *testing.T) {
 		temp       string
 		rpiv       string
 		listDev    map[string][]metrics.DStats
+		netInfo    []net.InterfaceStat
 		wantedData rpi.Host
 		wantedErr  error
 	}{
 		{
 			name: "parsing disk id unsuccessful",
+			netInfo: []net.InterfaceStat{
+				{
+					Index: 1,
+					Name:  "interface1",
+					Flags: []string{
+						"flag1",
+						"flag2",
+					},
+					Addrs: []net.InterfaceAddr{
+						{
+							Addr: "192.168.11.58",
+						},
+					},
+				},
+			},
 			load: load.AvgStat{
 				Load1:  1,
 				Load5:  5,
@@ -203,6 +220,21 @@ func TestList(t *testing.T) {
 					},
 				},
 			},
+			netInfo: []net.InterfaceStat{
+				{
+					Index: 1,
+					Name:  "interface1",
+					Flags: []string{
+						"flag1",
+						"flag2",
+					},
+					Addrs: []net.InterfaceAddr{
+						{
+							Addr: "192.168.11.58",
+						},
+					},
+				},
+			},
 			wantedData: rpi.Host{
 				ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
 				Hostname:           "hostname_test",
@@ -227,6 +259,17 @@ func TestList(t *testing.T) {
 				ActiveVirtualUsers: 0,
 				Temperature:        20.9,
 				RaspModel:          "pi zero",
+				Nets: []rpi.Net{
+					{
+						ID:   1,
+						Name: "interface1",
+						Flags: []string{
+							"flag1",
+							"flag2",
+						},
+						IPv4: "192.168.11.58",
+					},
+				},
 				Disks: []rpi.Disk{
 					{
 						ID:         "dev1",
@@ -300,6 +343,21 @@ func TestList(t *testing.T) {
 				KernelArch:      "arch_A",
 				KernelVersion:   "A",
 			},
+			netInfo: []net.InterfaceStat{
+				{
+					Index: 1,
+					Name:  "interface1",
+					Flags: []string{
+						"flag1",
+						"flag2",
+					},
+					Addrs: []net.InterfaceAddr{
+						{
+							Addr: "192.168.11.58",
+						},
+					},
+				},
+			},
 			cpus: []cpu.InfoStat{
 				{
 					CPU: 1,
@@ -346,6 +404,17 @@ func TestList(t *testing.T) {
 				ActiveVirtualUsers: 0,
 				Temperature:        20.9,
 				RaspModel:          "pi zero",
+				Nets: []rpi.Net{
+					{
+						ID:   1,
+						Name: "interface1",
+						Flags: []string{
+							"flag1",
+							"flag2",
+						},
+						IPv4: "192.168.11.58",
+					},
+				},
 			},
 			wantedErr: nil,
 		},
@@ -407,7 +476,15 @@ func TestList(t *testing.T) {
 				Load15:             15,
 				Processes:          400,
 				ActiveVirtualUsers: 2,
-				Temperature:        20.9,
+				Users: []rpi.User{
+					{
+						User: "U1",
+					},
+					{
+						User: "U2",
+					},
+				},
+				Temperature: 20.9,
 			},
 			wantedErr: nil,
 		},
@@ -473,6 +550,14 @@ func TestList(t *testing.T) {
 				Processes:          400,
 				ActiveVirtualUsers: 2,
 				Temperature:        20.9,
+				Users: []rpi.User{
+					{
+						User: "U1",
+					},
+					{
+						User: "U2",
+					},
+				},
 			},
 			wantedErr: nil,
 		},
@@ -536,6 +621,14 @@ func TestList(t *testing.T) {
 				Processes:          400,
 				ActiveVirtualUsers: 2,
 				Temperature:        20.9,
+				Users: []rpi.User{
+					{
+						User: "U1",
+					},
+					{
+						User: "U2",
+					},
+				},
 			},
 			wantedErr: nil,
 		},
@@ -599,6 +692,14 @@ func TestList(t *testing.T) {
 				Processes:          400,
 				ActiveVirtualUsers: 2,
 				Temperature:        20.9,
+				Users: []rpi.User{
+					{
+						User: "U1",
+					},
+					{
+						User: "U2",
+					},
+				},
 			},
 			wantedErr: nil,
 		},
@@ -652,6 +753,14 @@ func TestList(t *testing.T) {
 				Processes:          0,
 				ActiveVirtualUsers: 2,
 				Temperature:        20.9,
+				Users: []rpi.User{
+					{
+						User: "U1",
+					},
+					{
+						User: "U2",
+					},
+				},
 			},
 			wantedErr: nil,
 		},
@@ -719,6 +828,14 @@ func TestList(t *testing.T) {
 				Processes:          400,
 				ActiveVirtualUsers: 2,
 				Temperature:        -1,
+				Users: []rpi.User{
+					{
+						User: "U1",
+					},
+					{
+						User: "U2",
+					},
+				},
 			},
 			wantedErr: nil,
 		},
@@ -787,6 +904,14 @@ func TestList(t *testing.T) {
 				Processes:          400,
 				ActiveVirtualUsers: 2,
 				Temperature:        20.9,
+				Users: []rpi.User{
+					{
+						User: "U1",
+					},
+					{
+						User: "U2",
+					},
+				},
 			},
 			wantedErr: nil,
 		},
@@ -806,7 +931,8 @@ func TestList(t *testing.T) {
 				tc.load,
 				tc.temp,
 				tc.rpiv,
-				tc.listDev)
+				tc.listDev,
+				tc.netInfo)
 
 			assert.Equal(t, tc.wantedData, hosts)
 			assert.Equal(t, tc.wantedErr, err)

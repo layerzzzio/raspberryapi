@@ -10,11 +10,13 @@ import (
 	"github.com/labstack/echo"
 	"github.com/raspibuddy/rpi"
 	disksys "github.com/raspibuddy/rpi/pkg/api/metrics/disk/platform/sys"
+	netsys "github.com/raspibuddy/rpi/pkg/api/metrics/net/platform/sys"
 	"github.com/raspibuddy/rpi/pkg/utl/metrics"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/host"
 	"github.com/shirou/gopsutil/load"
 	"github.com/shirou/gopsutil/mem"
+	"github.com/shirou/gopsutil/net"
 )
 
 // Host represents a host entity.
@@ -30,7 +32,8 @@ func (h Host) List(info host.InfoStat,
 	load load.AvgStat,
 	temp string,
 	rpiv string,
-	listDev map[string][]metrics.DStats) (rpi.Host, error) {
+	listDev map[string][]metrics.DStats,
+	netInfo []net.InterfaceStat) (rpi.Host, error) {
 	hyperThreading := false
 	virtualUsers := uint16(len(users))
 	cpuCount := uint8(len(cpus))
@@ -39,9 +42,7 @@ func (h Host) List(info host.InfoStat,
 	}
 
 	vCoresCount := uint8(len(vcores))
-
 	var cpuPer float64
-
 	if vcores != nil {
 		for i := range vcores {
 			cpuPer += vcores[i]
@@ -55,7 +56,7 @@ func (h Host) List(info host.InfoStat,
 	vmemPer := vMem.UsedPercent
 	smenPer := sMemPer.UsedPercent
 
-	var disk []rpi.Disk
+	var disks []rpi.Disk
 	var devMP []rpi.MountPoint
 
 	for dev, dstats := range listDev {
@@ -83,8 +84,8 @@ func (h Host) List(info host.InfoStat,
 			return rpi.Host{}, echo.NewHTTPError(http.StatusNotFound, "parsing id was unsuccessful")
 		}
 
-		disk = append(
-			disk,
+		disks = append(
+			disks,
 			rpi.Disk{
 				ID:          id[0],
 				Filesystem:  dev,
@@ -95,9 +96,30 @@ func (h Host) List(info host.InfoStat,
 		devMP = nil
 	}
 
-	sort.Slice(disk[:], func(i, j int) bool {
-		return disk[i].ID < disk[j].ID
+	sort.Slice(disks[:], func(i, j int) bool {
+		return disks[i].ID < disks[j].ID
 	})
+
+	var nets []rpi.Net
+	for i := range netInfo {
+		data := rpi.Net{
+			ID:    netInfo[i].Index,
+			Name:  netInfo[i].Name,
+			Flags: netInfo[i].Flags,
+			IPv4:  netsys.ExtractIPv4(netInfo[i].Addrs),
+		}
+		nets = append(nets, data)
+	}
+
+	var allUsers []rpi.User
+	for i := range users {
+		data := rpi.User{
+			User:     users[i].User,
+			Terminal: users[i].Terminal,
+			Started:  users[i].Started,
+		}
+		allUsers = append(allUsers, data)
+	}
 
 	result := rpi.Host{
 		ID:                 info.HostID,
@@ -123,8 +145,10 @@ func (h Host) List(info host.InfoStat,
 		Load15:             load.Load15,
 		Processes:          info.Procs,
 		ActiveVirtualUsers: virtualUsers,
+		Users:              allUsers,
 		Temperature:        extractTemp(temp),
-		Disks:              disk,
+		Disks:              disks,
+		Nets:               nets,
 	}
 	return result, nil
 }
@@ -138,6 +162,5 @@ func extractTemp(s string) float32 {
 	if err != nil {
 		return -1
 	}
-
 	return float32(res)
 }

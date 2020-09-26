@@ -92,18 +92,21 @@ func TestList(t *testing.T) {
 			wantedData: []rpi.LargestFile{
 				{
 					Path:                "/bin/file1",
+					Name:                "file1",
 					Size:                11,
 					Category:            "/bin",
 					CategoryDescription: "represents some essential user command binaries",
 				},
 				{
 					Path:                "/usr/include/file2",
+					Name:                "file2",
 					Size:                22,
 					Category:            "/usr/include",
 					CategoryDescription: "contains system general-use include files for the C programming language",
 				},
 				{
 					Path:                "/usr/dummy/file3",
+					Name:                "file3",
 					Size:                33,
 					Category:            "/usr",
 					CategoryDescription: "contains shareable and read-only data",

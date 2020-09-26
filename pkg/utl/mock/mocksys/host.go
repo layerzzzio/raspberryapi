@@ -7,6 +7,7 @@ import (
 	"github.com/shirou/gopsutil/host"
 	"github.com/shirou/gopsutil/load"
 	"github.com/shirou/gopsutil/mem"
+	"github.com/shirou/gopsutil/net"
 )
 
 // Host mock
@@ -21,7 +22,8 @@ type Host struct {
 		load.AvgStat,
 		string,
 		string,
-		map[string][]metrics.DStats) (rpi.Host, error)
+		map[string][]metrics.DStats,
+		[]net.InterfaceStat) (rpi.Host, error)
 }
 
 // List mock
@@ -34,6 +36,7 @@ func (h Host) List(infos host.InfoStat,
 	load load.AvgStat,
 	temp string,
 	rpiv string,
-	listDev map[string][]metrics.DStats) (rpi.Host, error) {
-	return h.ListFn(infos, users, cpus, vcores, vmem, smem, load, temp, rpiv, listDev)
+	listDev map[string][]metrics.DStats,
+	netInfo []net.InterfaceStat) (rpi.Host, error) {
+	return h.ListFn(infos, users, cpus, vcores, vmem, smem, load, temp, rpiv, listDev, netInfo)
 }

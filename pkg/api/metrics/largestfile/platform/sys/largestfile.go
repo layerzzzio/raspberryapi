@@ -3,6 +3,8 @@ package sys
 import (
 	"strings"
 
+	"path/filepath"
+
 	"github.com/raspibuddy/rpi"
 	"github.com/raspibuddy/rpi/pkg/utl/metrics"
 )
@@ -18,6 +20,7 @@ func (lf LargestFile) List(top100files []metrics.PathSize) ([]rpi.LargestFile, e
 		fileCat := FileCategory(top100files[i].Path)
 		result = append(result, rpi.LargestFile{
 			Size:                top100files[i].Size,
+			Name:                filepath.Base(top100files[i].Path),
 			Path:                top100files[i].Path,
 			Category:            strings.TrimSuffix(fileCat.category, "/"),
 			CategoryDescription: fileCat.description,
@@ -166,6 +169,6 @@ var lfc = []LinuxFilesCategories{
 			"/var/spool/": "contains application spool data",
 			"/var/tmp/":   "contains temporary files preserved between system reboots",
 		},
-		DefaultDescription: "contains variable data files. This includes spool directories and files, administrative and logging data, and transient and temporary files.",
+		DefaultDescription: "contains variable data files including includes spool directories, administrative and logging data, and transient and temporary files",
 	},
 }
