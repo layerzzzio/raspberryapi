@@ -7,7 +7,7 @@ import (
 
 // Service represents all LargestFile application services.
 type Service interface {
-	List() ([]rpi.LargestFile, error)
+	View(path string) ([]rpi.LargestFile, error)
 }
 
 // LargestFile represents a LargestFile application service.
@@ -18,12 +18,12 @@ type LargestFile struct {
 
 // LFSYS represents a LargestFile repository service.
 type LFSYS interface {
-	List([]metrics.PathSize) ([]rpi.LargestFile, error)
+	View([]metrics.PathSize) ([]rpi.LargestFile, error)
 }
 
 // Metrics represents the system metrics interface
 type Metrics interface {
-	Top100Files() ([]metrics.PathSize, string, error)
+	Top100Files(path string) ([]metrics.PathSize, string, error)
 }
 
 // New creates a LargestFile application service instance.

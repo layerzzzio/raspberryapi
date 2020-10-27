@@ -27,7 +27,7 @@ func TestExtractTemp(t *testing.T) {
 		{
 			name:       "error: no numerical characters",
 			input:      "temp=AB.CD",
-			wantedData: -1,
+			wantedData: -100,
 		},
 		{
 			name:       "success: dirty temp string",
@@ -827,7 +827,7 @@ func TestList(t *testing.T) {
 				Load15:             15,
 				Processes:          400,
 				ActiveVirtualUsers: 2,
-				Temperature:        -1,
+				Temperature:        -100,
 				Users: []rpi.User{
 					{
 						User: "U1",

@@ -160,7 +160,7 @@ func extractTemp(s string) float32 {
 
 	res, err := strconv.ParseFloat(temp, 16)
 	if err != nil {
-		return -1
+		return -100
 	}
 	return float32(res)
 }

@@ -1,6 +1,7 @@
 package transport
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -44,6 +45,7 @@ func (h *HTTP) listws(ctx echo.Context) error {
 	defer ws.Close()
 
 	for {
+		fmt.Print(time.Now().Date())
 		// Write data to client
 		msg, errR := h.svc.List()
 		if errR != nil {
@@ -51,14 +53,19 @@ func (h *HTTP) listws(ctx echo.Context) error {
 			break
 		}
 
+		fmt.Print(" ---> process data in \n")
+
 		err := ws.WriteJSON(msg)
+
+		fmt.Print("process data out \n")
 
 		if err != nil {
 			ctx.Logger().Error(err)
 			break
 		}
 
-		time.Sleep(10 * time.Second)
+		time.Sleep(15 * time.Second)
+		fmt.Print("process sleep 60 sec")
 	}
 	return nil
 }

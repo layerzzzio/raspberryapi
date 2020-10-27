@@ -17,6 +17,7 @@ import (
 func TestList(t *testing.T) {
 	cases := []struct {
 		name       string
+		path       string
 		metrics    *mock.Metrics
 		lfsys      mocksys.LargestFile
 		wantedData []rpi.LargestFile
@@ -25,7 +26,7 @@ func TestList(t *testing.T) {
 		{
 			name: "error: top100files array is nil",
 			metrics: &mock.Metrics{
-				Top100FilesFn: func() ([]metrics.PathSize, string, error) {
+				Top100FilesFn: func(path string) ([]metrics.PathSize, string, error) {
 					return nil, "", errors.New("test error info")
 				},
 			},
@@ -34,8 +35,9 @@ func TestList(t *testing.T) {
 		},
 		{
 			name: "success",
+			path: "/System/Volumes/Data",
 			metrics: &mock.Metrics{
-				Top100FilesFn: func() ([]metrics.PathSize, string, error) {
+				Top100FilesFn: func(path string) ([]metrics.PathSize, string, error) {
 					return []metrics.PathSize{
 						{
 							Path: "/bin/file1",
@@ -109,7 +111,7 @@ func TestList(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			s := largestfile.New(tc.lfsys, tc.metrics)
-			users, err := s.List()
+			users, err := s.View(tc.path)
 			assert.Equal(t, tc.wantedData, users)
 			assert.Equal(t, tc.wantedErr, err)
 		})

@@ -12,8 +12,8 @@ import (
 // LargestFile represents an empty LargestFile entity on the current system.
 type LargestFile struct{}
 
-// List returns a list of LargestFile stats
-func (lf LargestFile) List(top100files []metrics.PathSize) ([]rpi.LargestFile, error) {
+// View returns a list of LargestFile stats
+func (lf LargestFile) View(top100files []metrics.PathSize) ([]rpi.LargestFile, error) {
 	var result []rpi.LargestFile
 
 	for i := range top100files {

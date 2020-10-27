@@ -10,7 +10,7 @@ type LargestFile struct {
 	ListFn func([]metrics.PathSize) ([]rpi.LargestFile, error)
 }
 
-// List mock
-func (lf LargestFile) List(top100files []metrics.PathSize) ([]rpi.LargestFile, error) {
+// View mock
+func (lf LargestFile) View(top100files []metrics.PathSize) ([]rpi.LargestFile, error) {
 	return lf.ListFn(top100files)
 }

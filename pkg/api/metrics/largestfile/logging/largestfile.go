@@ -24,17 +24,18 @@ type LogService struct {
 
 const name = "largestfile"
 
-// List is the logging function attached to the List largest files services and responsible for logging it out.
-func (ls *LogService) List(ctx echo.Context) (resp []rpi.LargestFile, err error) {
+// View is the logging function attached to the List largest files services and responsible for logging it out.
+func (ls *LogService) View(ctx echo.Context, path string) (resp []rpi.LargestFile, err error) {
 	defer func(begin time.Time) {
 		ls.logger.Log(
 			ctx,
-			name, "request: listing largestfile", err,
+			name, "request: viewing largestfiles", err,
 			map[string]interface{}{
 				"resp": resp,
 				"took": time.Since(begin),
+				"path": path,
 			},
 		)
 	}(time.Now())
-	return ls.Service.List()
+	return ls.Service.View(path)
 }

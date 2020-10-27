@@ -66,7 +66,7 @@ func TestFileCategory(t *testing.T) {
 	}
 }
 
-func TestList(t *testing.T) {
+func TestView(t *testing.T) {
 	cases := []struct {
 		name        string
 		top100files []metrics.PathSize
@@ -119,7 +119,7 @@ func TestList(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			s := largestfile.LFSYS(LargestFile{})
-			users, err := s.List(tc.top100files)
+			users, err := s.View(tc.top100files)
 			assert.Equal(t, tc.wantedData, users)
 			assert.Equal(t, tc.wantedErr, err)
 		})
