@@ -22,7 +22,12 @@ var (
 )
 
 // Service represents several system scripts.
-type Service struct{}
+type Service struct {
+	a Actions
+}
+
+// Actions represents multiple system related action scripts.
+type Actions interface{}
 
 // New creates a service instance.
 func New() *Service {
@@ -48,7 +53,7 @@ func (s Service) DeleteFile(path string) rpi.Exec {
 	var stdErr string
 	e := os.Remove(path)
 	if e != nil {
-		exitStatus = -1
+		exitStatus = 1
 		stdErr = fmt.Sprint(e)
 	}
 
