@@ -2,6 +2,7 @@ package deletefile_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/raspibuddy/rpi"
 	"github.com/raspibuddy/rpi/pkg/api/actions/deletefile"
@@ -14,25 +15,23 @@ import (
 func TestExecute(t *testing.T) {
 	cases := []struct {
 		name       string
-		actionName string
 		path       string
-		startTime  uint64
-		endTime    uint64
-		steps      map[int]string
+		execs      map[int]rpi.Exec
 		actions    *mock.Actions
 		delsys     *mocksys.Action
 		wantedData rpi.Action
 		wantedErr  error
 	}{
 		{
-			name:       "execs count different from steps count",
-			actionName: actions.DeleteFile,
-			path:       "/dummy",
-			startTime:  1,
-			endTime:    4,
-			steps: map[int]string{
-				1: "dummy_step_1",
-				2: "dummy_step_2",
+			name: "success",
+			path: "/dummy",
+			execs: map[int]rpi.Exec{
+				1: {
+					Name:       actions.DeleteFile,
+					StartTime:  2,
+					EndTime:    3,
+					ExitStatus: 0,
+				},
 			},
 			actions: &mock.Actions{
 				DeleteFileFn: func(path string) rpi.Exec {
@@ -45,65 +44,44 @@ func TestExecute(t *testing.T) {
 				},
 			},
 			delsys: &mocksys.Action{
-				ExecuteFn: func(string, map[int]string, []rpi.Exec, uint64, uint64) (rpi.Action, error) {
-					return rpi.Action{}, nil
-				},
-			},
-			wantedData: rpi.Action{},
-			wantedErr:  nil,
-		},
-		{
-			name:       "deletefile returns 0",
-			actionName: actions.DeleteFile,
-			path:       "/dummy",
-			startTime:  1,
-			endTime:    4,
-			steps: map[int]string{
-				1: actions.DeleteFile,
-			},
-			actions: &mock.Actions{
-				DeleteFileFn: func(path string) rpi.Exec {
-					return rpi.Exec{
-						Name:       actions.DeleteFile,
-						StartTime:  2,
-						EndTime:    3,
-						ExitStatus: 0,
-					}
-				},
-			},
-			delsys: &mocksys.Action{
-				ExecuteFn: func(string, map[int]string, []rpi.Exec, uint64, uint64) (rpi.Action, error) {
+				ExecuteFn: func(map[int]rpi.Exec) (rpi.Action, error) {
 					return rpi.Action{
-						Name:          "delete_file",
-						Steps:         map[int]string{1: actions.DeleteFile},
+						Name: actions.DeleteFile,
+						Steps: map[int]string{
+							1: actions.DeleteFile,
+						},
 						NumberOfSteps: 1,
-						Executions: []rpi.Exec{
-							{
-								Name:       "delete_file",
+						Executions: map[int]rpi.Exec{
+							1: {
+								Name:       actions.DeleteFile,
 								StartTime:  2,
 								EndTime:    3,
 								ExitStatus: 0,
-							}},
+							},
+						},
 						ExitStatus: 0,
-						StartTime:  1,
-						EndTime:    4,
+						StartTime:  2,
+						EndTime:    uint64(time.Now().Unix()),
 					}, nil
 				},
 			},
 			wantedData: rpi.Action{
-				Name:          "delete_file",
-				Steps:         map[int]string{1: actions.DeleteFile},
+				Name: actions.DeleteFile,
+				Steps: map[int]string{
+					1: actions.DeleteFile,
+				},
 				NumberOfSteps: 1,
-				Executions: []rpi.Exec{
-					{
-						Name:       "delete_file",
+				Executions: map[int]rpi.Exec{
+					1: {
+						Name:       actions.DeleteFile,
 						StartTime:  2,
 						EndTime:    3,
 						ExitStatus: 0,
-					}},
+					},
+				},
 				ExitStatus: 0,
-				StartTime:  1,
-				EndTime:    4,
+				StartTime:  2,
+				EndTime:    uint64(time.Now().Unix()),
 			},
 			wantedErr: nil,
 		},

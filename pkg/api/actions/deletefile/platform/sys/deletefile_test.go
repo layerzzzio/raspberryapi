@@ -1,8 +1,11 @@
 package sys
 
 import (
+	"net/http"
 	"testing"
+	"time"
 
+	"github.com/labstack/echo"
 	"github.com/raspibuddy/rpi"
 	"github.com/raspibuddy/rpi/pkg/api/actions/deletefile"
 	"github.com/raspibuddy/rpi/pkg/utl/actions"
@@ -13,42 +16,53 @@ import (
 func TestExecute(t *testing.T) {
 	cases := []struct {
 		name       string
-		actionName string
-		steps      map[int]string
-		execs      []rpi.Exec
-		startTime  uint64
-		endTime    uint64
+		execs      map[int]rpi.Exec
 		wantedData rpi.Action
 		wantedErr  error
 	}{
 		{
-			name:       "success",
-			actionName: actions.DeleteFile,
-			steps:      map[int]string{1: actions.DeleteFile},
-			execs: []rpi.Exec{
-				{
+			name:       "length steps & execs are different",
+			execs:      map[int]rpi.Exec{},
+			wantedData: rpi.Action{},
+			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "length steps & execs are different"),
+		},
+		{
+			name: "length steps & execs are different",
+			execs: map[int]rpi.Exec{
+				0: {
 					Name:       actions.DeleteFile,
 					StartTime:  2,
 					EndTime:    3,
 					ExitStatus: 0,
 				},
 			},
-			startTime: 1,
-			endTime:   4,
+			wantedData: rpi.Action{},
+			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "first key in execs map is not equal 1"),
+		},
+		{
+			name: "success",
+			execs: map[int]rpi.Exec{
+				1: {
+					Name:       actions.DeleteFile,
+					StartTime:  2,
+					EndTime:    3,
+					ExitStatus: 0,
+				},
+			},
 			wantedData: rpi.Action{
-				Name:          "delete_file",
+				Name:          actions.DeleteFile,
 				Steps:         map[int]string{1: actions.DeleteFile},
 				NumberOfSteps: 1,
-				Executions: []rpi.Exec{
-					{
+				Executions: map[int]rpi.Exec{
+					1: {
 						Name:       actions.DeleteFile,
 						StartTime:  2,
 						EndTime:    3,
 						ExitStatus: 0,
 					}},
 				ExitStatus: 0,
-				StartTime:  1,
-				EndTime:    4,
+				StartTime:  2,
+				EndTime:    uint64(time.Now().Unix()),
 			},
 			wantedErr: nil,
 		},
@@ -57,7 +71,7 @@ func TestExecute(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			s := deletefile.DELSYS(DeleteFile{})
-			deletefile, err := s.Execute(tc.actionName, tc.steps, tc.execs, tc.startTime, tc.endTime)
+			deletefile, err := s.Execute(tc.execs)
 			assert.Equal(t, tc.wantedData, deletefile)
 			assert.Equal(t, tc.wantedErr, err)
 		})

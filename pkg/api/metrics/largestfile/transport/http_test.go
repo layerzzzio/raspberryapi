@@ -17,22 +17,26 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestList(t *testing.T) {
+func TestView(t *testing.T) {
 	var response []rpi.LargestFile
+
 	cases := []struct {
 		name         string
+		req          string
 		lfsys        *mocksys.LargestFile
 		wantedStatus int
 		wantedResp   []rpi.LargestFile
 	}{
 		{
 			name:         "error: invalid request response",
-			wantedStatus: http.StatusInternalServerError,
+			wantedStatus: http.StatusNotFound,
+			req:          "",
 		},
 		{
-			name: "error: List result is nil",
+			name: "error: View result is nil",
+			req:  "a",
 			lfsys: &mocksys.LargestFile{
-				ListFn: func([]metrics.PathSize) ([]rpi.LargestFile, error) {
+				ViewFn: func([]metrics.PathSize) ([]rpi.LargestFile, error) {
 					return nil, errors.New("test error")
 				},
 			},
@@ -40,23 +44,27 @@ func TestList(t *testing.T) {
 		},
 		// {
 		// 	name: "success",
+		// 	req:  "_dummy_path",
 		// 	lfsys: &mocksys.LargestFile{
-		// 		ListFn: func([]metrics.PathSize) ([]rpi.LargestFile, error) {
+		// 		ViewFn: func([]metrics.PathSize) ([]rpi.LargestFile, error) {
 		// 			return []rpi.LargestFile{
 		// 				{
 		// 					Path:                "/bin/file1",
+		// 					Name:                "file1",
 		// 					Size:                11,
 		// 					Category:            "/bin",
 		// 					CategoryDescription: "represents some essential user command binaries",
 		// 				},
 		// 				{
 		// 					Path:                "/usr/include/file2",
+		// 					Name:                "file2",
 		// 					Size:                22,
 		// 					Category:            "/usr/include",
 		// 					CategoryDescription: "contains system general-use include files for the C programming language",
 		// 				},
 		// 				{
 		// 					Path:                "/usr/dummy/file3",
+		// 					Name:                "file3",
 		// 					Size:                33,
 		// 					Category:            "/usr",
 		// 					CategoryDescription: "contains shareable and read-only data",
@@ -68,18 +76,21 @@ func TestList(t *testing.T) {
 		// 	wantedResp: []rpi.LargestFile{
 		// 		{
 		// 			Size:                11,
+		// 			Name:                "file1",
 		// 			Path:                "/bin/file1",
 		// 			Category:            "/bin",
 		// 			CategoryDescription: "represents some essential user command binaries",
 		// 		},
 		// 		{
 		// 			Size:                22,
+		// 			Name:                "file2",
 		// 			Path:                "/usr/include/file2",
 		// 			Category:            "/usr/include",
 		// 			CategoryDescription: "contains system general-use include files for the C programming language",
 		// 		},
 		// 		{
 		// 			Size:                33,
+		// 			Name:                "file3",
 		// 			Path:                "/usr/dummy/file3",
 		// 			Category:            "/usr",
 		// 			CategoryDescription: "contains shareable and read-only data",
@@ -98,7 +109,7 @@ func TestList(t *testing.T) {
 			ts := httptest.NewServer(r)
 
 			defer ts.Close()
-			path := ts.URL + "/largestfiles"
+			path := ts.URL + "/largestfiles/" + tc.req
 			res, err := http.Get(path)
 			if err != nil {
 				t.Fatal(err)

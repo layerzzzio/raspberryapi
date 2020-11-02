@@ -35,7 +35,7 @@ func TestList(t *testing.T) {
 		},
 		{
 			name: "success",
-			path: "/System/Volumes/Data",
+			path: "_System_Volumes_Data",
 			metrics: &mock.Metrics{
 				Top100FilesFn: func(path string) ([]metrics.PathSize, string, error) {
 					return []metrics.PathSize{
@@ -55,7 +55,7 @@ func TestList(t *testing.T) {
 				},
 			},
 			lfsys: mocksys.LargestFile{
-				ListFn: func([]metrics.PathSize) ([]rpi.LargestFile, error) {
+				ViewFn: func([]metrics.PathSize) ([]rpi.LargestFile, error) {
 					return []rpi.LargestFile{
 						{
 							Path:                "/bin/file1",

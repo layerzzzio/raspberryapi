@@ -17,7 +17,7 @@ type DeleteFile struct {
 
 // DELSYS represents a DeleteFile repository service.
 type DELSYS interface {
-	Execute(string, map[int]string, []rpi.Exec, uint64, uint64) (rpi.Action, error)
+	Execute(map[int]rpi.Exec) (rpi.Action, error)
 }
 
 // Actions represents the system metrics interface

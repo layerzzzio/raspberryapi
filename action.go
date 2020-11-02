@@ -5,7 +5,7 @@ type Action struct {
 	Name          string         `json:"name"`
 	Steps         map[int]string `json:"steps"`
 	NumberOfSteps uint16         `json:"numberOfSteps"`
-	Executions    []Exec         `json:"executions"`
+	Executions    map[int]Exec   `json:"executions"`
 	ExitStatus    uint8          `json:"exitStatus"`
 	StartTime     uint64         `json:"startTime"`
 	EndTime       uint64         `json:"endTime"`

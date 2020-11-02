@@ -22,10 +22,6 @@ func NewHTTP(svc largestfile.Service, r *echo.Group) {
 
 func (h *HTTP) view(ctx echo.Context) error {
 	path := strings.Replace(ctx.Param("path"), "_", "/", -1)
-	if path == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request due to an null path")
-	}
-
 	result, err := h.svc.View(path)
 	if err != nil {
 		return err

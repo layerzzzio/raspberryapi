@@ -22,9 +22,7 @@ func NewHTTP(svc deletefile.Service, r *echo.Group) {
 
 func (h *HTTP) execute(ctx echo.Context) error {
 	path := strings.Replace(ctx.Param("path"), "_", "/", -1)
-	if path == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request due to an null path")
-	}
+
 	result, err := h.svc.Execute(path)
 	if err != nil {
 		return err

@@ -7,10 +7,10 @@ import (
 
 // LargestFile mock
 type LargestFile struct {
-	ListFn func([]metrics.PathSize) ([]rpi.LargestFile, error)
+	ViewFn func([]metrics.PathSize) ([]rpi.LargestFile, error)
 }
 
 // View mock
 func (lf LargestFile) View(top100files []metrics.PathSize) ([]rpi.LargestFile, error) {
-	return lf.ListFn(top100files)
+	return lf.ViewFn(top100files)
 }

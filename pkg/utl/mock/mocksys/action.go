@@ -6,10 +6,10 @@ import (
 
 // Action mock
 type Action struct {
-	ExecuteFn func(string, map[int]string, []rpi.Exec, uint64, uint64) (rpi.Action, error)
+	ExecuteFn func(map[int]rpi.Exec) (rpi.Action, error)
 }
 
 // Execute mock
-func (a *Action) Execute(name string, steps map[int]string, execs []rpi.Exec, startTime uint64, endTime uint64) (rpi.Action, error) {
-	return a.ExecuteFn(name, steps, execs, startTime, endTime)
+func (a *Action) Execute(execs map[int]rpi.Exec) (rpi.Action, error) {
+	return a.ExecuteFn(execs)
 }
