@@ -9,15 +9,15 @@ import (
 	"testing"
 
 	"github.com/raspibuddy/rpi"
-	"github.com/raspibuddy/rpi/pkg/api/actions/deletefile"
-	"github.com/raspibuddy/rpi/pkg/api/actions/deletefile/transport"
+	"github.com/raspibuddy/rpi/pkg/api/actions/destroy"
+	"github.com/raspibuddy/rpi/pkg/api/actions/destroy/transport"
 	"github.com/raspibuddy/rpi/pkg/utl/actions"
 	"github.com/raspibuddy/rpi/pkg/utl/mock/mocksys"
 	"github.com/raspibuddy/rpi/pkg/utl/server"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestExecute(t *testing.T) {
+func TestExecuteDF(t *testing.T) {
 	var response rpi.Action
 
 	cases := []struct {
@@ -36,7 +36,7 @@ func TestExecute(t *testing.T) {
 			name: "error: result nil",
 			req:  "_dummy",
 			delsys: &mocksys.Action{
-				ExecuteFn: func(map[int]rpi.Exec) (rpi.Action, error) {
+				ExecuteDFFn: func(map[int]rpi.Exec) (rpi.Action, error) {
 					return rpi.Action{}, errors.New("test error")
 				},
 			},
@@ -47,7 +47,7 @@ func TestExecute(t *testing.T) {
 			wantedStatus: http.StatusOK,
 			req:          "_dummy",
 			delsys: &mocksys.Action{
-				ExecuteFn: func(map[int]rpi.Exec) (rpi.Action, error) {
+				ExecuteDFFn: func(map[int]rpi.Exec) (rpi.Action, error) {
 					return rpi.Action{
 						Name: actions.DeleteFile,
 						Steps: map[int]string{
@@ -79,12 +79,12 @@ func TestExecute(t *testing.T) {
 			r := server.New()
 			rg := r.Group("")
 			a := actions.New()
-			s := deletefile.New(tc.delsys, a)
+			s := destroy.New(tc.delsys, a)
 			transport.NewHTTP(s, rg)
 			ts := httptest.NewServer(r)
 
 			defer ts.Close()
-			path := ts.URL + "/deletefile/" + tc.req
+			path := ts.URL + "/destroy/deletefile/" + tc.req
 			res, err := http.Get(path)
 			if err != nil {
 				t.Fatal(err)

@@ -7,13 +7,13 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/raspibuddy/rpi"
-	"github.com/raspibuddy/rpi/pkg/api/actions/deletefile"
+	"github.com/raspibuddy/rpi/pkg/api/actions/destroy"
 	"github.com/raspibuddy/rpi/pkg/utl/actions"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestExecute(t *testing.T) {
+func TestExecuteDF(t *testing.T) {
 	cases := []struct {
 		name       string
 		execs      map[int]rpi.Exec
@@ -70,8 +70,8 @@ func TestExecute(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			s := deletefile.DELSYS(DeleteFile{})
-			deletefile, err := s.Execute(tc.execs)
+			s := destroy.DESSYS(Destroy{})
+			deletefile, err := s.ExecuteDF(tc.execs)
 			assert.Equal(t, tc.wantedData, deletefile)
 			assert.Equal(t, tc.wantedErr, err)
 		})

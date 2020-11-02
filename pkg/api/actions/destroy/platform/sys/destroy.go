@@ -9,11 +9,11 @@ import (
 	"github.com/raspibuddy/rpi/pkg/utl/actions"
 )
 
-// DeleteFile represents an empty DeleteFile entity on the current system.
-type DeleteFile struct{}
+// Destroy represents an empty Destroy entity on the current system.
+type Destroy struct{}
 
-// Execute returns a DeleteFile execution response
-func (d DeleteFile) Execute(execs map[int]rpi.Exec) (rpi.Action, error) {
+// ExecuteDF returns an action response
+func (d Destroy) ExecuteDF(execs map[int]rpi.Exec) (rpi.Action, error) {
 	// redefine the steps for this actions
 	steps := map[int]string{
 		1: actions.DeleteFile,

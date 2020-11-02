@@ -5,25 +5,25 @@ import (
 	"strings"
 
 	"github.com/labstack/echo"
-	"github.com/raspibuddy/rpi/pkg/api/actions/deletefile"
+	"github.com/raspibuddy/rpi/pkg/api/actions/destroy"
 )
 
 // HTTP is a struct implementing a core application service.
 type HTTP struct {
-	svc deletefile.Service
+	svc destroy.Service
 }
 
 // NewHTTP creates new user http service
-func NewHTTP(svc deletefile.Service, r *echo.Group) {
+func NewHTTP(svc destroy.Service, r *echo.Group) {
 	h := HTTP{svc}
-	cr := r.Group("/deletefile")
-	cr.GET("/:path", h.execute)
+	cr := r.Group("/destroy")
+	cr.GET("/deletefile/:path", h.deletefile)
 }
 
-func (h *HTTP) execute(ctx echo.Context) error {
+func (h *HTTP) deletefile(ctx echo.Context) error {
 	path := strings.Replace(ctx.Param("path"), "_", "/", -1)
 
-	result, err := h.svc.Execute(path)
+	result, err := h.svc.ExecuteDF(path)
 	if err != nil {
 		return err
 	}

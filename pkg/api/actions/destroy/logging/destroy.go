@@ -1,4 +1,4 @@
-package deletefile
+package destroy
 
 import (
 	"fmt"
@@ -6,11 +6,11 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/raspibuddy/rpi"
-	"github.com/raspibuddy/rpi/pkg/api/actions/deletefile"
+	"github.com/raspibuddy/rpi/pkg/api/actions/destroy"
 )
 
 // New creates a new DeleteFile logging service instance.
-func New(svc deletefile.Service, logger rpi.Logger) *LogService {
+func New(svc destroy.Service, logger rpi.Logger) *LogService {
 	return &LogService{
 		Service: svc,
 		logger:  logger,
@@ -19,14 +19,14 @@ func New(svc deletefile.Service, logger rpi.Logger) *LogService {
 
 // LogService represents a DeleteFile logging service.
 type LogService struct {
-	deletefile.Service
+	destroy.Service
 	logger rpi.Logger
 }
 
-const name = "deletefile"
+const name = "destroy"
 
-// Execute is the logging function attached to the Execute deletefile services and responsible for logging it out.
-func (ls *LogService) Execute(ctx echo.Context, path string) (resp rpi.Action, err error) {
+// ExecuteDF is the logging function attached to the Execute delete file destroy services and responsible for logging it out.
+func (ls *LogService) ExecuteDF(ctx echo.Context, path string) (resp rpi.Action, err error) {
 	defer func(begin time.Time) {
 		ls.logger.Log(
 			ctx,
@@ -37,5 +37,5 @@ func (ls *LogService) Execute(ctx echo.Context, path string) (resp rpi.Action, e
 			},
 		)
 	}(time.Now())
-	return ls.Service.Execute(path)
+	return ls.Service.ExecuteDF(path)
 }

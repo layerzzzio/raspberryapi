@@ -1,11 +1,11 @@
-package deletefile_test
+package destroy_test
 
 import (
 	"testing"
 	"time"
 
 	"github.com/raspibuddy/rpi"
-	"github.com/raspibuddy/rpi/pkg/api/actions/deletefile"
+	"github.com/raspibuddy/rpi/pkg/api/actions/destroy"
 	"github.com/raspibuddy/rpi/pkg/utl/actions"
 	"github.com/raspibuddy/rpi/pkg/utl/mock"
 	"github.com/raspibuddy/rpi/pkg/utl/mock/mocksys"
@@ -18,7 +18,7 @@ func TestExecute(t *testing.T) {
 		path       string
 		execs      map[int]rpi.Exec
 		actions    *mock.Actions
-		delsys     *mocksys.Action
+		dessys     *mocksys.Action
 		wantedData rpi.Action
 		wantedErr  error
 	}{
@@ -43,8 +43,8 @@ func TestExecute(t *testing.T) {
 					}
 				},
 			},
-			delsys: &mocksys.Action{
-				ExecuteFn: func(map[int]rpi.Exec) (rpi.Action, error) {
+			dessys: &mocksys.Action{
+				ExecuteDFFn: func(map[int]rpi.Exec) (rpi.Action, error) {
 					return rpi.Action{
 						Name: actions.DeleteFile,
 						Steps: map[int]string{
@@ -89,8 +89,8 @@ func TestExecute(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			s := deletefile.New(tc.delsys, tc.actions)
-			deletefile, err := s.Execute(tc.path)
+			s := destroy.New(tc.dessys, tc.actions)
+			deletefile, err := s.ExecuteDF(tc.path)
 			assert.Equal(t, tc.wantedData, deletefile)
 			assert.Equal(t, tc.wantedErr, err)
 		})
