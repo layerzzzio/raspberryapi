@@ -437,7 +437,7 @@ func (s Service) Temperature() (string, string, error) {
 	if err != nil {
 		log.Error()
 	}
-	outStd, errStd := string(stdout.Bytes()), string(stderr.Bytes())
+	outStd, errStd := stdout.String(), stderr.String()
 	return outStd, errStd, nil
 }
 
@@ -451,7 +451,7 @@ func (s Service) RaspModel() (string, string, error) {
 	if err != nil {
 		log.Error()
 	}
-	outStd, errStd := strings.TrimSpace(string(stdout.Bytes())), string(stderr.Bytes())
+	outStd, errStd := strings.TrimSpace(stdout.String()), stderr.String()
 	return outStd, errStd, nil
 }
 
@@ -487,9 +487,8 @@ func (s Service) Top100Files(path string) ([]PathSize, string, error) {
 		log.Error()
 	}
 
-	var allFiles []PathSize
-	allFiles = make([]PathSize, 100)
-	allFilesWithSep := strings.Split(strings.TrimSpace(string(stdout.Bytes())), "<end>\n")
+	allFiles := make([]PathSize, 100)
+	allFilesWithSep := strings.Split(strings.TrimSpace(stdout.String()), "<end>\n")
 
 	for index, file := range allFilesWithSep {
 		sizePath := strings.Split(file, "<sep>")
@@ -503,6 +502,6 @@ func (s Service) Top100Files(path string) ([]PathSize, string, error) {
 		allFiles[index].Size = size
 	}
 
-	outStd, errStd := allFiles, string(stderr.Bytes())
+	outStd, errStd := allFiles, stderr.String()
 	return outStd, errStd, nil
 }
