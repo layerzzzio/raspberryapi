@@ -81,7 +81,7 @@ func (n Net) View(id int, netInfo []net.InterfaceStat, netStats []net.IOCounters
 		}
 	}
 
-	if isIDFound == false {
+	if !isIDFound {
 		return rpi.Net{}, echo.NewHTTPError(http.StatusNotFound, fmt.Sprintf("net interface %v does not exist", id))
 	}
 
