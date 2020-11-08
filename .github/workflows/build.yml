@@ -36,7 +36,7 @@ jobs:
         uses: actions/checkout@v1
 
       - name: Run Unit tests.
-        run: go test ./...
+        run: go test ./... -coverprofile=coverage.txt -covermode=atomic
       
       - name: Upload Coverage report to CodeCov
         uses: codecov/codecov-action@v1
