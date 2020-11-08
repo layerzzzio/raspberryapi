@@ -44,7 +44,7 @@ func (u User) View(terminal string, users []host.UserStat) (rpi.User, error) {
 		}
 	}
 
-	if isTerminalFound == false {
+	if !isTerminalFound {
 		return rpi.User{}, echo.NewHTTPError(http.StatusNotFound, fmt.Sprintf("%v does not exist", terminal))
 	}
 

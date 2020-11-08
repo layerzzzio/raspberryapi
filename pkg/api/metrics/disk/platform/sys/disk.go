@@ -106,7 +106,7 @@ func (d Disk) View(device string, listDev map[string][]metrics.DStats) (rpi.Disk
 		}
 	}
 
-	if isDiskFound == false {
+	if !isDiskFound {
 		return rpi.Disk{}, echo.NewHTTPError(http.StatusNotFound, fmt.Sprintf("%v does not exist", device))
 	}
 
