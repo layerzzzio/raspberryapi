@@ -5,12 +5,12 @@ import (
 	"github.com/raspibuddy/rpi/pkg/utl/metrics"
 )
 
-// LargestFiles mock
-type LargestFiles struct {
-	ListFn func([]metrics.PathSize) ([]rpi.LargestFiles, error)
+// LargestFile mock
+type LargestFile struct {
+	ViewFn func([]metrics.PathSize) ([]rpi.LargestFile, error)
 }
 
-// List mock
-func (lf LargestFiles) List(top100files []metrics.PathSize) ([]rpi.LargestFiles, error) {
-	return lf.ListFn(top100files)
+// View mock
+func (lf LargestFile) View(top100files []metrics.PathSize) ([]rpi.LargestFile, error) {
+	return lf.ViewFn(top100files)
 }

@@ -473,9 +473,11 @@ func (s Service) NetStats() ([]net.IOCountersStat, error) {
 	return netStats, nil
 }
 
-// Top100Files returns the host temperature.
-func (s Service) Top100Files() ([]PathSize, string, error) {
-	cmd := exec.Command("sh", "-c", "sudo find / -type f -printf '%s<sep>%p<end>\n' | sort -n -r | head -100")
+// Top100Files returns the top 100 largest files in path.
+func (s Service) Top100Files(path string) ([]PathSize, string, error) {
+	cmd := exec.Command("sh", "-c", "find "+path+" -type f -printf '%s<sep>%p<end>\n' | sort -n -r | head -100")
+	// on mac with zsh and gfind installed
+	// cmd := exec.Command("zsh", "-c", "gfind "+path+" -type f -printf '%s<sep>%p<end>\n' | sort -n -r | head -100")
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr

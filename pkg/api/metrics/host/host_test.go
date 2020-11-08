@@ -18,6 +18,7 @@ import (
 	"github.com/shirou/gopsutil/load"
 	"github.com/shirou/gopsutil/mem"
 	mext "github.com/shirou/gopsutil/mem"
+	"github.com/shirou/gopsutil/net"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -62,6 +63,9 @@ func TestList(t *testing.T) {
 				DiskStatsFn: func(bool) (map[string][]metrics.DStats, error) {
 					return nil, errors.New("test error dstats")
 				},
+				NetInfoFn: func() ([]net.InterfaceStat, error) {
+					return nil, errors.New("test error netinfo")
+				},
 			},
 			wantedData: rpi.Host{},
 			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the host metrics"),
@@ -99,6 +103,9 @@ func TestList(t *testing.T) {
 				DiskStatsFn: func(bool) (map[string][]metrics.DStats, error) {
 					return nil, errors.New("test error dstats")
 				},
+				NetInfoFn: func() ([]net.InterfaceStat, error) {
+					return nil, errors.New("test error netinfo")
+				},
 			},
 			wantedData: rpi.Host{},
 			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the host metrics"),
@@ -135,6 +142,9 @@ func TestList(t *testing.T) {
 				},
 				DiskStatsFn: func(bool) (map[string][]metrics.DStats, error) {
 					return nil, errors.New("test error dstats")
+				},
+				NetInfoFn: func() ([]net.InterfaceStat, error) {
+					return nil, errors.New("test error netinfo")
 				},
 			},
 			wantedData: rpi.Host{},
@@ -185,6 +195,9 @@ func TestList(t *testing.T) {
 				DiskStatsFn: func(bool) (map[string][]metrics.DStats, error) {
 					return nil, errors.New("test error dstats")
 				},
+				NetInfoFn: func() ([]net.InterfaceStat, error) {
+					return nil, errors.New("test error netinfo")
+				},
 			},
 			wantedData: rpi.Host{},
 			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the host metrics"),
@@ -232,6 +245,9 @@ func TestList(t *testing.T) {
 				DiskStatsFn: func(bool) (map[string][]metrics.DStats, error) {
 					return nil, errors.New("test error dstats")
 				},
+				NetInfoFn: func() ([]net.InterfaceStat, error) {
+					return nil, errors.New("test error netinfo")
+				},
 			},
 			wantedData: rpi.Host{},
 			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the host metrics"),
@@ -274,6 +290,9 @@ func TestList(t *testing.T) {
 				},
 				DiskStatsFn: func(bool) (map[string][]metrics.DStats, error) {
 					return nil, errors.New("test error dstats")
+				},
+				NetInfoFn: func() ([]net.InterfaceStat, error) {
+					return nil, errors.New("test error netinfo")
 				},
 			},
 			wantedData: rpi.Host{},
@@ -369,6 +388,33 @@ func TestList(t *testing.T) {
 						},
 					}, nil
 				},
+				NetInfoFn: func() ([]net.InterfaceStat, error) {
+					return []net.InterfaceStat{
+						{
+							Index: 1,
+							Name:  "lo0",
+							Flags: []string{
+								"up",
+								"loopback",
+								"multicast",
+							},
+							Addrs: []net.InterfaceAddr{
+								{Addr: "127.0.0.1"},
+							},
+						},
+						{
+							Index: 2,
+							Name:  "gif0",
+							Flags: []string{
+								"pointtopoint",
+								"multicast",
+							},
+							Addrs: []net.InterfaceAddr{
+								{Addr: "210.0.0.1"},
+							},
+						},
+					}, nil
+				},
 			},
 			hsys: &mocksys.Host{
 				ListFn: func(
@@ -381,7 +427,8 @@ func TestList(t *testing.T) {
 					load.AvgStat,
 					string,
 					string,
-					map[string][]metrics.DStats) (rpi.Host, error) {
+					map[string][]metrics.DStats,
+					[]net.InterfaceStat) (rpi.Host, error) {
 					return rpi.Host{
 						ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
 						Hostname:           "hostname_test",
@@ -428,6 +475,25 @@ func TestList(t *testing.T) {
 								},
 							},
 						},
+						Nets: []rpi.Net{
+							{
+								ID:   1,
+								Name: "lo0",
+								Flags: []string{
+									"up",
+									"loopback",
+									"multicast",
+								},
+								IPv4: "127.0.0.1"},
+							{
+								ID:   2,
+								Name: "gif0",
+								Flags: []string{
+									"pointtopoint",
+									"multicast",
+								},
+								IPv4: "210.0.0.1",
+							}},
 					}, nil
 				},
 			},
@@ -455,6 +521,25 @@ func TestList(t *testing.T) {
 				ActiveVirtualUsers: 2,
 				Temperature:        20.9,
 				RaspModel:          "pi zero",
+				Nets: []rpi.Net{
+					{
+						ID:   1,
+						Name: "lo0",
+						Flags: []string{
+							"up",
+							"loopback",
+							"multicast",
+						},
+						IPv4: "127.0.0.1"},
+					{
+						ID:   2,
+						Name: "gif0",
+						Flags: []string{
+							"pointtopoint",
+							"multicast",
+						},
+						IPv4: "210.0.0.1",
+					}},
 				Disks: []rpi.Disk{
 					{
 						ID:         "dev1",

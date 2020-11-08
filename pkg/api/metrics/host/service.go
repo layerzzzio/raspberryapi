@@ -9,6 +9,7 @@ import (
 	"github.com/shirou/gopsutil/host"
 	"github.com/shirou/gopsutil/load"
 	"github.com/shirou/gopsutil/mem"
+	"github.com/shirou/gopsutil/net"
 )
 
 // Service represents all Host application services.
@@ -33,7 +34,8 @@ type HSYS interface {
 		load.AvgStat,
 		string,
 		string,
-		map[string][]metrics.DStats) (rpi.Host, error)
+		map[string][]metrics.DStats,
+		[]net.InterfaceStat) (rpi.Host, error)
 }
 
 // Metrics represents the system metrics interface
@@ -48,6 +50,7 @@ type Metrics interface {
 	Temperature() (string, string, error)
 	RaspModel() (string, string, error)
 	DiskStats(bool) (map[string][]metrics.DStats, error)
+	NetInfo() ([]net.InterfaceStat, error)
 }
 
 // New creates a Host application service instance.

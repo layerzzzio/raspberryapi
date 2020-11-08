@@ -27,4 +27,6 @@ type Host struct {
 	ActiveVirtualUsers uint16  `json:"activeVirtualUsers"`
 	Temperature        float32 `json:"temperature"`
 	Disks              []Disk  `json:"disks"`
+	Nets               []Net   `json:"nets"`
+	Users              []User  `json:"users"`
 }

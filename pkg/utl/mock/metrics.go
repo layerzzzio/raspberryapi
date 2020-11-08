@@ -41,7 +41,7 @@ type Metrics struct {
 	RaspModelFn      func() (string, string, error)
 	NetInfoFn        func() ([]net.InterfaceStat, error)
 	NetStatsFn       func() ([]net.IOCountersStat, error)
-	Top100FilesFn    func() ([]metrics.PathSize, string, error)
+	Top100FilesFn    func(path string) ([]metrics.PathSize, string, error)
 }
 
 // CPUInfo mock
@@ -183,6 +183,6 @@ func (m Metrics) NetStats() ([]net.IOCountersStat, error) {
 }
 
 // Top100Files mock
-func (m Metrics) Top100Files() ([]metrics.PathSize, string, error) {
-	return m.Top100FilesFn()
+func (m Metrics) Top100Files(path string) ([]metrics.PathSize, string, error) {
+	return m.Top100FilesFn(path)
 }
