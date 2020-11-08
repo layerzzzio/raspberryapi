@@ -39,3 +39,33 @@ func (ls *LogService) ExecuteDF(ctx echo.Context, path string) (resp rpi.Action,
 	}(time.Now())
 	return ls.Service.ExecuteDF(path)
 }
+
+// ExecuteDU is the logging function attached to the Execute delete file destroy services and responsible for logging it out.
+func (ls *LogService) ExecuteDU(ctx echo.Context, terminal string, username string) (resp rpi.Action, err error) {
+	defer func(begin time.Time) {
+		ls.logger.Log(
+			ctx,
+			name, fmt.Sprintf("request: execute disconnect user %v from terminal %v", terminal, username), err,
+			map[string]interface{}{
+				"resp": resp,
+				"took": time.Since(begin),
+			},
+		)
+	}(time.Now())
+	return ls.Service.ExecuteDU(terminal, username)
+}
+
+// ExecuteKP is the logging function attached to the Execute kill process destroy services and responsible for logging it out.
+func (ls *LogService) ExecuteKP(ctx echo.Context, pid int) (resp rpi.Action, err error) {
+	defer func(begin time.Time) {
+		ls.logger.Log(
+			ctx,
+			name, fmt.Sprintf("request: kill process %v", pid), err,
+			map[string]interface{}{
+				"resp": resp,
+				"took": time.Since(begin),
+			},
+		)
+	}(time.Now())
+	return ls.Service.ExecuteKP(pid)
+}

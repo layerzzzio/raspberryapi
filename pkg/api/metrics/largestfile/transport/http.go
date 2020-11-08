@@ -2,7 +2,6 @@ package transport
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/labstack/echo"
 	"github.com/raspibuddy/rpi/pkg/api/metrics/largestfile"
@@ -17,12 +16,16 @@ type HTTP struct {
 func NewHTTP(svc largestfile.Service, r *echo.Group) {
 	h := HTTP{svc}
 	cr := r.Group("/largestfiles")
-	cr.GET("/:path", h.view)
+	cr.GET("", h.view)
 }
 
 func (h *HTTP) view(ctx echo.Context) error {
-	path := strings.Replace(ctx.Param("path"), "_", "/", -1)
-	result, err := h.svc.View(path)
+	directorypath := ctx.QueryParam("directorypath")
+	if directorypath == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - directory path is null")
+	}
+
+	result, err := h.svc.View(directorypath)
 	if err != nil {
 		return err
 	}

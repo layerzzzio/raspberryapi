@@ -44,7 +44,6 @@ func (h *HTTP) listws(ctx echo.Context) error {
 	defer ws.Close()
 
 	for {
-		fmt.Print(time.Now().Date())
 		// Write data to client
 		msg, errR := h.svc.List()
 		if errR != nil {
@@ -52,11 +51,7 @@ func (h *HTTP) listws(ctx echo.Context) error {
 			break
 		}
 
-		fmt.Print(" ---> host data in \n")
-
 		err := ws.WriteJSON(msg)
-
-		fmt.Print("host data out \n")
 
 		if err != nil {
 			ctx.Logger().Error(err)
@@ -64,7 +59,7 @@ func (h *HTTP) listws(ctx echo.Context) error {
 		}
 
 		time.Sleep(15 * time.Second)
-		fmt.Print("process sleep 15 sec")
+		fmt.Println(fmt.Sprint(time.Now()) + " : host sleep 15 sec")
 	}
 	return nil
 }

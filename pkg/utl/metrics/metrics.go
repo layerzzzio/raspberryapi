@@ -475,7 +475,9 @@ func (s Service) NetStats() ([]net.IOCountersStat, error) {
 
 // Top100Files returns the top 100 largest files in path.
 func (s Service) Top100Files(path string) ([]PathSize, string, error) {
-	cmd := exec.Command("zsh", "-c", "gfind "+path+" -type f -printf '%s<sep>%p<end>\n' | sort -n -r | head -100")
+	cmd := exec.Command("sh", "-c", "find "+path+" -type f -printf '%s<sep>%p<end>\n' | sort -n -r | head -100")
+	// on mac with zsh and gfind installed
+	// cmd := exec.Command("zsh", "-c", "gfind "+path+" -type f -printf '%s<sep>%p<end>\n' | sort -n -r | head -100")
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr

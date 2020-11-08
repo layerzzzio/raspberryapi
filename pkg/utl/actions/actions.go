@@ -35,13 +35,59 @@ func New() *Service {
 }
 
 // KillProcess kill a given process
-func (s Service) KillProcess(name string, pid int) rpi.Exec {
-	return rpi.Exec{}
+func (s Service) KillProcess(pid int) rpi.Exec {
+	startTime := uint64(time.Now().Unix())
+
+	exitStatus := 0
+	var stdErr string
+
+	ps, err := os.FindProcess(pid)
+
+	if err != nil {
+		exitStatus = 1
+		stdErr = fmt.Sprint(err)
+	} else {
+		e := ps.Kill()
+		if e != nil {
+			exitStatus = 1
+			stdErr = fmt.Sprint(e)
+		}
+	}
+
+	// execution end time
+	endTime := uint64(time.Now().Unix())
+
+	return rpi.Exec{
+		Name:       KillProcess,
+		StartTime:  startTime,
+		EndTime:    endTime,
+		ExitStatus: uint8(exitStatus),
+		Stderr:     stdErr,
+	}
 }
 
-// DisconnectUser disconnect a user from the current host
-func (s Service) DisconnectUser(name string, pid int) rpi.Exec {
-	return rpi.Exec{}
+// DisconnectUser disconnect a user from an active tty from the current host
+func (s Service) DisconnectUser(path string, username string) rpi.Exec {
+	startTime := uint64(time.Now().Unix())
+
+	exitStatus := 0
+	var stdErr string
+	e := os.Remove(path)
+	if e != nil {
+		exitStatus = 1
+		stdErr = fmt.Sprint(e)
+	}
+
+	// execution end time
+	endTime := uint64(time.Now().Unix())
+
+	return rpi.Exec{
+		Name:       DisconnectUser,
+		StartTime:  startTime,
+		EndTime:    endTime,
+		ExitStatus: uint8(exitStatus),
+		Stderr:     stdErr,
+	}
 }
 
 // DeleteFile deletes a file or (empty) directory

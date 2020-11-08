@@ -2,7 +2,7 @@ package transport
 
 import (
 	"net/http"
-	"strings"
+	"strconv"
 
 	"github.com/labstack/echo"
 	"github.com/raspibuddy/rpi/pkg/api/actions/destroy"
@@ -17,13 +17,46 @@ type HTTP struct {
 func NewHTTP(svc destroy.Service, r *echo.Group) {
 	h := HTTP{svc}
 	cr := r.Group("/destroy")
-	cr.GET("/deletefile/:path", h.deletefile)
+	cr.GET("/deletefile", h.deletefile)
+	cr.GET("/disconnectuser", h.disconnectuser)
+	cr.GET("/killprocess/:pid", h.killprocess)
 }
 
 func (h *HTTP) deletefile(ctx echo.Context) error {
-	path := strings.Replace(ctx.Param("path"), "_", "/", -1)
+	path := ctx.QueryParam("filepath")
+	if path == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - path is null")
+	}
 
 	result, err := h.svc.ExecuteDF(path)
+	if err != nil {
+		return err
+	}
+	return ctx.JSON(http.StatusOK, result)
+}
+
+func (h *HTTP) disconnectuser(ctx echo.Context) error {
+	terminal := ctx.QueryParam("terminal")
+	username := ctx.QueryParam("username")
+
+	if terminal == "" || username == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - terminal or username is null")
+	}
+
+	result, err := h.svc.ExecuteDU(terminal, username)
+	if err != nil {
+		return err
+	}
+	return ctx.JSON(http.StatusOK, result)
+}
+
+func (h *HTTP) killprocess(ctx echo.Context) error {
+	pid, err := strconv.Atoi(ctx.Param("pid"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request due to an invalid pid - should be an integer")
+	}
+
+	result, err := h.svc.ExecuteKP(pid)
 	if err != nil {
 		return err
 	}

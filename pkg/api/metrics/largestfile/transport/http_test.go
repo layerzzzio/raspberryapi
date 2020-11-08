@@ -40,33 +40,33 @@ func TestView(t *testing.T) {
 					return nil, errors.New("test error")
 				},
 			},
-			wantedStatus: http.StatusInternalServerError,
+			wantedStatus: http.StatusNotFound,
 		},
 		// {
 		// 	name: "success",
-		// 	req:  "_dummy_path",
+		// 	req:  "?directorypath=/dummy/path",
 		// 	lfsys: &mocksys.LargestFile{
 		// 		ViewFn: func([]metrics.PathSize) ([]rpi.LargestFile, error) {
 		// 			return []rpi.LargestFile{
 		// 				{
-		// 					Path:                "/bin/file1",
-		// 					Name:                "file1",
 		// 					Size:                11,
-		// 					Category:            "/bin",
+		// 					Name:                "file1",
+		// 					Path:                "/dummy/path/bin/file1",
+		// 					Category:            "/dummy/path/bin",
 		// 					CategoryDescription: "represents some essential user command binaries",
 		// 				},
 		// 				{
-		// 					Path:                "/usr/include/file2",
-		// 					Name:                "file2",
 		// 					Size:                22,
-		// 					Category:            "/usr/include",
+		// 					Name:                "file2",
+		// 					Path:                "/dummy/path/include/file2",
+		// 					Category:            "/dummy/path/include",
 		// 					CategoryDescription: "contains system general-use include files for the C programming language",
 		// 				},
 		// 				{
-		// 					Path:                "/usr/dummy/file3",
-		// 					Name:                "file3",
 		// 					Size:                33,
-		// 					Category:            "/usr",
+		// 					Name:                "file3",
+		// 					Path:                "/dummy/path/file3",
+		// 					Category:            "/dummy/path",
 		// 					CategoryDescription: "contains shareable and read-only data",
 		// 				},
 		// 			}, nil
@@ -77,22 +77,22 @@ func TestView(t *testing.T) {
 		// 		{
 		// 			Size:                11,
 		// 			Name:                "file1",
-		// 			Path:                "/bin/file1",
-		// 			Category:            "/bin",
+		// 			Path:                "/dummy/path/bin/file1",
+		// 			Category:            "/dummy/path/bin",
 		// 			CategoryDescription: "represents some essential user command binaries",
 		// 		},
 		// 		{
 		// 			Size:                22,
 		// 			Name:                "file2",
-		// 			Path:                "/usr/include/file2",
-		// 			Category:            "/usr/include",
+		// 			Path:                "/dummy/path/include/file2",
+		// 			Category:            "/dummy/path/include",
 		// 			CategoryDescription: "contains system general-use include files for the C programming language",
 		// 		},
 		// 		{
 		// 			Size:                33,
 		// 			Name:                "file3",
-		// 			Path:                "/usr/dummy/file3",
-		// 			Category:            "/usr",
+		// 			Path:                "/dummy/path/file3",
+		// 			Category:            "/dummy/path",
 		// 			CategoryDescription: "contains shareable and read-only data",
 		// 		},
 		// 	},
@@ -109,7 +109,7 @@ func TestView(t *testing.T) {
 			ts := httptest.NewServer(r)
 
 			defer ts.Close()
-			path := ts.URL + "/largestfiles/" + tc.req
+			path := ts.URL + "/largestfiles" + tc.req
 			res, err := http.Get(path)
 			if err != nil {
 				t.Fatal(err)

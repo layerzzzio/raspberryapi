@@ -6,8 +6,10 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
+	"github.com/gorilla/websocket"
 	"github.com/raspibuddy/rpi"
 	"github.com/raspibuddy/rpi/pkg/api/metrics/process"
 	"github.com/raspibuddy/rpi/pkg/api/metrics/process/transport"
@@ -107,6 +109,109 @@ func TestList(t *testing.T) {
 				assert.Equal(t, tc.wantedResp, response)
 			}
 			assert.Equal(t, tc.wantedStatus, res.StatusCode)
+		})
+	}
+}
+
+func TestListWs(t *testing.T) {
+
+	var response []rpi.Process
+
+	cases := []struct {
+		name         string
+		psys         *mocksys.Process
+		wantedStatus int
+		wantedResp   []rpi.Process
+	}{
+		{
+			name:         "error: invalid request response",
+			wantedStatus: http.StatusInternalServerError,
+		},
+		{
+			name: "error: List result is nil",
+			psys: &mocksys.Process{
+				ListFn: func([]metrics.PInfo) ([]rpi.Process, error) {
+					return nil, errors.New("test error")
+				},
+			},
+			wantedStatus: http.StatusInternalServerError,
+		},
+		{
+			name: "success",
+			psys: &mocksys.Process{
+				ListFn: func([]metrics.PInfo) ([]rpi.Process, error) {
+					return []rpi.Process{
+						{
+							ID:         1,
+							Name:       "process_1",
+							CPUPercent: 1.1,
+							MemPercent: 2.2,
+						},
+						{
+							ID:         2,
+							Name:       "process_2",
+							CPUPercent: 3.3,
+							MemPercent: 4.4,
+						},
+					}, nil
+				},
+			},
+			wantedStatus: http.StatusOK,
+			wantedResp: []rpi.Process{
+				{
+					ID:         1,
+					Name:       "process_1",
+					CPUPercent: 1.1,
+					MemPercent: 2.2,
+				},
+				{
+					ID:         2,
+					Name:       "process_2",
+					CPUPercent: 3.3,
+					MemPercent: 4.4,
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			r := server.New()
+			rg := r.Group("")
+			m := metrics.New(metrics.Service{})
+			s := process.New(tc.psys, m)
+			transport.NewHTTP(s, rg)
+
+			ts := httptest.NewServer(r)
+			defer ts.Close()
+
+			path := ts.URL + "/processes-ws"
+			pathWS := "ws" + strings.TrimPrefix(path, "http")
+
+			ws, _, errWS := websocket.DefaultDialer.Dial(pathWS, nil)
+			if errWS != nil {
+				t.Fatalf("%v", errWS)
+			}
+			defer ws.Close()
+
+			pathL := ts.URL + "/processes"
+			res, err := http.Get(pathL)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer res.Body.Close()
+			body, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				panic(err)
+			}
+			for i := 0; i < 10; i++ {
+				if tc.wantedResp != nil {
+					if err := json.Unmarshal(body, &response); err != nil {
+						t.Fatal(err)
+					}
+					assert.Equal(t, tc.wantedResp, response)
+				}
+			}
 		})
 	}
 }

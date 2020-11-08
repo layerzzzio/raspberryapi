@@ -13,7 +13,7 @@ import (
 type Destroy struct{}
 
 // ExecuteDF returns an action response
-func (d Destroy) ExecuteDF(execs map[int]rpi.Exec) (rpi.Action, error) {
+func (des Destroy) ExecuteDF(execs map[int]rpi.Exec) (rpi.Action, error) {
 	// redefine the steps for this actions
 	steps := map[int]string{
 		1: actions.DeleteFile,
@@ -42,4 +42,14 @@ func (d Destroy) ExecuteDF(execs map[int]rpi.Exec) (rpi.Action, error) {
 		StartTime:     execs[1].StartTime,
 		EndTime:       uint64(time.Now().Unix()),
 	}, nil
+}
+
+// ExecuteDU returns an action response
+func (des Destroy) ExecuteDU(execs map[int]rpi.Exec) (rpi.Action, error) {
+	return rpi.Action{}, nil
+}
+
+// ExecuteKP returns an action response
+func (des Destroy) ExecuteKP(execs map[int]rpi.Exec) (rpi.Action, error) {
+	return rpi.Action{}, nil
 }
