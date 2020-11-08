@@ -1,6 +1,7 @@
 package sys
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -46,6 +47,7 @@ func (des Destroy) ExecuteDF(execs map[int]rpi.Exec) (rpi.Action, error) {
 
 // ExecuteDU returns an action response
 func (des Destroy) ExecuteDU(execs map[int]rpi.Exec) (rpi.Action, error) {
+	fmt.Println("to disconnect based on name and tty")
 	return rpi.Action{}, nil
 }
 
