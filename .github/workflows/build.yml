@@ -7,23 +7,28 @@ on:
   pull_request:
   
 jobs:
-  lint:
-    name: Lint
+  golangci:
+    strategy:
+      matrix:
+        go-version: [1.14.x]
+    name: lint
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go
-        uses: actions/setup-go@v1
+      - uses: actions/checkout@v2
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v2
         with:
-          go-version: 1.14.2
+          # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
+          version: v1.29
 
-      - name: Check out code
-        uses: actions/checkout@v1
+          # Optional: working directory, useful for monorepos
+          # working-directory: somedir
 
-      - name: Lint Go Code
-        run: |
-          export PATH=$PATH:$(go env GOPATH)/bin # temporary fix. See https://github.com/actions/setup-go/issues/14
-          go get -u golang.org/x/lint/golint 
-          make lint
+          # Optional: golangci-lint command line arguments.
+          # args: --issues-exit-code=0
+
+          # Optional: show only new issues if it's a pull request. The default value is `false`.
+          # only-new-issues: true
           
   test:
     name: Test
