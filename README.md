@@ -35,7 +35,7 @@ But kept maintaining the linter: golangci-lint
 It is used also in VS Code: 
 Code > Preferences > Settings > Extensions > Go > Linter Tool
 
-# CI/CD
+# ci/cd
 The CI/CD pipelines are inspired by Bruno Paz: 
 https://brunopaz.dev/blog/building-a-basic-ci-cd-pipeline-for-a-golang-application-using-github-actions
 
