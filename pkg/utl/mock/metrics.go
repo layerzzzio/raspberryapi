@@ -42,7 +42,14 @@ type Metrics struct {
 	RaspModelFn      func() (string, string, error)
 	NetInfoFn        func() ([]net.InterfaceStat, error)
 	NetStatsFn       func() ([]net.IOCountersStat, error)
-	WalkFolderFn     func() (*rpi.File, map[int64]string)
+	WalkFolderFn     func(
+		string,
+		metrics.ReadDir,
+		uint64,
+		int8,
+		metrics.ShouldIgnoreFolder,
+		chan int,
+	) (*rpi.File, map[int64]string)
 }
 
 // CPUInfo mock
@@ -184,6 +191,13 @@ func (m Metrics) NetStats() ([]net.IOCountersStat, error) {
 }
 
 // WalkFolder mock
-func (m Metrics) WalkFolder() (*rpi.File, map[int64]string) {
-	return m.WalkFolderFn()
+func (m Metrics) WalkFolder(
+	path string,
+	readDir metrics.ReadDir,
+	pathSize uint64,
+	fileLimit int8,
+	ignoreFunction metrics.ShouldIgnoreFolder,
+	progress chan int,
+) (*rpi.File, map[int64]string) {
+	return m.WalkFolderFn(path, readDir, pathSize, fileLimit, ignoreFunction, progress)
 }

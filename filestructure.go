@@ -4,7 +4,7 @@ package rpi
 type FileStructure struct {
 	DirectoryPath string  `json:"directoryPath"`
 	Structure     *File   `json:"structure,omitempty"`
-	LargestFiles  []*File `json:"largestfiles,omitempty"`
+	LargestFiles  []*File `json:"largestFiles,omitempty"`
 }
 
 // File structure representing files and folders with their accumulated sizes

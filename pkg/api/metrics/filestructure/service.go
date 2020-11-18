@@ -29,7 +29,7 @@ type Metrics interface {
 		uint64,
 		int8,
 		metrics.ShouldIgnoreFolder,
-		chan<- int,
+		chan int,
 	) (*rpi.File, map[int64]string)
 }
 

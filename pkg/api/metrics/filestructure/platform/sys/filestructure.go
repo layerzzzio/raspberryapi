@@ -29,23 +29,21 @@ func (fs FileStructure) ViewLF(fileStructure *rpi.File, flattenFiles map[int64]s
 	sort.Ints(keys)
 
 	var truncatedKeys = []int{}
-	// var largestFiles = make(map[string]int64)
 	var largestFiles []*rpi.File
 
 	if len(keys) > 0 {
-		max := len(keys) - 1
-		min := len(keys) - 101
+		max := len(keys)
+		min := len(keys) - 100
 
 		if len(keys) == 1 {
 			truncatedKeys = keys
 		} else if len(keys) > 100 {
 			truncatedKeys = keys[min:max]
-		} else if len(keys) < 100 {
+		} else if len(keys) <= 100 {
 			truncatedKeys = keys[0:max]
 		}
 
 		for _, v := range truncatedKeys {
-			// largestFilesSorted[flattenFiles[int64(v)]] = int64(v)
 			largestFiles = append(
 				largestFiles,
 				&rpi.File{

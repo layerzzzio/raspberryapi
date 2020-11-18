@@ -584,7 +584,7 @@ func (s Service) WalkFolder(
 	pathSize uint64,
 	fileLimit int8,
 	ignoreFunction ShouldIgnoreFolder,
-	progress chan<- int,
+	progress chan (int),
 ) (*rpi.File, map[int64]string) {
 	var flattenFiles = make(map[int64]string)
 	var wg sync.WaitGroup
@@ -614,7 +614,7 @@ func walkSubFolderConcurrently(
 	fileLimit int8,
 	c chan bool,
 	wg *sync.WaitGroup,
-	progress chan<- int,
+	progress chan int,
 ) *rpi.File {
 	result := &rpi.File{}
 	entries, err := readDir(path)

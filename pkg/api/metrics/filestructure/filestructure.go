@@ -7,7 +7,7 @@ import (
 	"github.com/raspibuddy/rpi/pkg/utl/metrics"
 )
 
-// View returns a FileStructure model.
+// ViewLF returns a FileStructure model.
 func (fs *FileStructure) ViewLF(path string, pathSize uint64, fileLimit int8) (rpi.FileStructure, error) {
 	progress := make(chan int)
 
