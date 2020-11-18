@@ -582,7 +582,7 @@ func (s Service) WalkFolder(
 	path string,
 	readDir ReadDir,
 	pathSize uint64,
-	fileLimit int8,
+	fileLimit float32,
 	ignoreFunction ShouldIgnoreFolder,
 	progress chan (int),
 ) (*rpi.File, map[int64]string) {
@@ -611,7 +611,7 @@ func walkSubFolderConcurrently(
 	parent *rpi.File,
 	readDir ReadDir,
 	pathSize uint64,
-	fileLimit int8,
+	fileLimit float32,
 	c chan bool,
 	wg *sync.WaitGroup,
 	progress chan int,

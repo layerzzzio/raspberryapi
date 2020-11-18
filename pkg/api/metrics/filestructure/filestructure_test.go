@@ -16,7 +16,7 @@ func TestViewLF(t *testing.T) {
 		name       string
 		path       string
 		pathSize   uint64
-		fileLimit  int8
+		fileLimit  float32
 		metrics    *mock.Metrics
 		fssys      mocksys.FileStructure
 		wantedData rpi.FileStructure
@@ -32,7 +32,7 @@ func TestViewLF(t *testing.T) {
 					string,
 					metrics.ReadDir,
 					uint64,
-					int8,
+					float32,
 					metrics.ShouldIgnoreFolder,
 					chan int,
 				) (*rpi.File, map[int64]string) {
@@ -55,7 +55,7 @@ func TestViewLF(t *testing.T) {
 				},
 			},
 			fssys: mocksys.FileStructure{
-				ViewFLFn: func(*rpi.File, map[int64]string) (rpi.FileStructure, error) {
+				ViewLFFn: func(*rpi.File, map[int64]string) (rpi.FileStructure, error) {
 					return rpi.FileStructure{
 						DirectoryPath: "/dummy/path",
 						LargestFiles: []*rpi.File{

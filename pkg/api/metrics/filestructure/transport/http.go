@@ -22,22 +22,22 @@ func NewHTTP(svc filestructure.Service, r *echo.Group) {
 }
 
 func (h *HTTP) ViewLF(ctx echo.Context) error {
-	directoryPath := ctx.QueryParam("directoryPath")
+	directoryPath := ctx.QueryParam("directorypath")
 	if _, err := os.Stat(directoryPath); os.IsNotExist(err) {
 		return echo.NewHTTPError(http.StatusNotFound, "Not found - directoryPath is not a directory")
 	}
 
-	fileLimit, err := strconv.Atoi(ctx.QueryParam("fileLimit"))
+	fileLimit, err := strconv.ParseFloat(ctx.QueryParam("filelimit"), 32)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Not found - fileLimit is not an integer")
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - fileLimit is not an integer")
 	}
 
-	pathSize, err := strconv.ParseUint(ctx.QueryParam("pathSize"), 10, 64)
+	pathSize, err := strconv.ParseUint(ctx.QueryParam("pathsize"), 10, 64)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Not found - pathSize is not an integer")
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - pathSize is not an integer")
 	}
 
-	result, err := h.svc.ViewLF(directoryPath, pathSize, int8(fileLimit))
+	result, err := h.svc.ViewLF(directoryPath, pathSize, float32(fileLimit))
 	if err != nil {
 		return err
 	}

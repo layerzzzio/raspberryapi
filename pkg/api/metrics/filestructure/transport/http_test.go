@@ -1,117 +1,154 @@
 package transport_test
 
-// func TestView(t *testing.T) {
-// 	var response []rpi.filestructure
+import (
+	"encoding/json"
+	"errors"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 
-// 	cases := []struct {
-// 		name         string
-// 		req          string
-// 		lfsys        *mocksys.filestructure
-// 		wantedStatus int
-// 		wantedResp   []rpi.filestructure
-// 	}{
-// 		{
-// 			name:         "error: invalid request response",
-// 			wantedStatus: http.StatusNotFound,
-// 			req:          "",
-// 		},
-// 		{
-// 			name: "error: View result is nil",
-// 			req:  "a",
-// 			lfsys: &mocksys.filestructure{
-// 				ViewFn: func([]metrics.PathSize) ([]rpi.filestructure, error) {
-// 					return nil, errors.New("test error")
-// 				},
-// 			},
-// 			wantedStatus: http.StatusNotFound,
-// 		},
-// 		// {
-// 		// 	name: "success",
-// 		// 	req:  "?directorypath=/dummy/path",
-// 		// 	lfsys: &mocksys.filestructure{
-// 		// 		ViewFn: func([]metrics.PathSize) ([]rpi.filestructure, error) {
-// 		// 			return []rpi.filestructure{
-// 		// 				{
-// 		// 					Size:                11,
-// 		// 					Name:                "file1",
-// 		// 					Path:                "/dummy/path/bin/file1",
-// 		// 					Category:            "/dummy/path/bin",
-// 		// 					CategoryDescription: "represents some essential user command binaries",
-// 		// 				},
-// 		// 				{
-// 		// 					Size:                22,
-// 		// 					Name:                "file2",
-// 		// 					Path:                "/dummy/path/include/file2",
-// 		// 					Category:            "/dummy/path/include",
-// 		// 					CategoryDescription: "contains system general-use include files for the C programming language",
-// 		// 				},
-// 		// 				{
-// 		// 					Size:                33,
-// 		// 					Name:                "file3",
-// 		// 					Path:                "/dummy/path/file3",
-// 		// 					Category:            "/dummy/path",
-// 		// 					CategoryDescription: "contains shareable and read-only data",
-// 		// 				},
-// 		// 			}, nil
-// 		// 		},
-// 		// 	},
-// 		// 	wantedStatus: http.StatusOK,
-// 		// 	wantedResp: []rpi.filestructure{
-// 		// 		{
-// 		// 			Size:                11,
-// 		// 			Name:                "file1",
-// 		// 			Path:                "/dummy/path/bin/file1",
-// 		// 			Category:            "/dummy/path/bin",
-// 		// 			CategoryDescription: "represents some essential user command binaries",
-// 		// 		},
-// 		// 		{
-// 		// 			Size:                22,
-// 		// 			Name:                "file2",
-// 		// 			Path:                "/dummy/path/include/file2",
-// 		// 			Category:            "/dummy/path/include",
-// 		// 			CategoryDescription: "contains system general-use include files for the C programming language",
-// 		// 		},
-// 		// 		{
-// 		// 			Size:                33,
-// 		// 			Name:                "file3",
-// 		// 			Path:                "/dummy/path/file3",
-// 		// 			Category:            "/dummy/path",
-// 		// 			CategoryDescription: "contains shareable and read-only data",
-// 		// 		},
-// 		// 	},
-// 		// },
-// 	}
+	"github.com/raspibuddy/rpi"
+	"github.com/raspibuddy/rpi/pkg/api/metrics/filestructure"
+	"github.com/raspibuddy/rpi/pkg/api/metrics/filestructure/transport"
+	"github.com/raspibuddy/rpi/pkg/utl/metrics"
+	"github.com/raspibuddy/rpi/pkg/utl/mock/mocksys"
+	"github.com/raspibuddy/rpi/pkg/utl/server"
+	"gopkg.in/go-playground/assert.v1"
+)
 
-// 	for _, tc := range cases {
-// 		t.Run(tc.name, func(t *testing.T) {
-// 			r := server.New()
-// 			rg := r.Group("")
-// 			m := metrics.New(metrics.Service{})
-// 			s := filestructure.New(tc.lfsys, m)
-// 			transport.NewHTTP(s, rg)
-// 			ts := httptest.NewServer(r)
+func TestViewLF(t *testing.T) {
+	var response rpi.FileStructure
 
-// 			defer ts.Close()
-// 			path := ts.URL + "/filestructure" + tc.req
-// 			res, err := http.Get(path)
-// 			if err != nil {
-// 				t.Fatal(err)
-// 			}
+	cases := []struct {
+		name         string
+		req          string
+		fssys        *mocksys.FileStructure
+		wantedStatus int
+		wantedResp   rpi.FileStructure
+	}{
+		{
+			name:         "error: invalid request response",
+			wantedStatus: http.StatusNotFound,
+			req:          "",
+		},
+		{
+			name: "error: ViewLF directorypath not found",
+			req:  "?directorypath=/dummy",
+			fssys: &mocksys.FileStructure{
+				ViewLFFn: func(*rpi.File, map[int64]string) (rpi.FileStructure, error) {
+					return rpi.FileStructure{}, errors.New("test error")
+				},
+			},
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name: "error: ViewLF directorypath found",
+			req:  "?directorypath=../transport",
+			fssys: &mocksys.FileStructure{
+				ViewLFFn: func(*rpi.File, map[int64]string) (rpi.FileStructure, error) {
+					return rpi.FileStructure{}, errors.New("test error")
+				},
+			},
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name: "error: ViewLF directorypath found & filelimit not float",
+			req:  "?directorypath=../transport&filelimit=0.1X",
+			fssys: &mocksys.FileStructure{
+				ViewLFFn: func(*rpi.File, map[int64]string) (rpi.FileStructure, error) {
+					return rpi.FileStructure{}, errors.New("test error")
+				},
+			},
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name: "error: ViewLF directorypath, filelimit found & pathsize not int ",
+			req:  "?directorypath=../transport&filelimit=1&pathsize=ABC",
+			fssys: &mocksys.FileStructure{
+				ViewLFFn: func(*rpi.File, map[int64]string) (rpi.FileStructure, error) {
+					return rpi.FileStructure{}, errors.New("test error")
+				},
+			},
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name: "error: ViewLF return nil",
+			req:  "?directorypath=../transport&filelimit=1&pathsize=1000",
+			fssys: &mocksys.FileStructure{
+				ViewLFFn: func(*rpi.File, map[int64]string) (rpi.FileStructure, error) {
+					return rpi.FileStructure{}, errors.New("test error")
+				},
+			},
+			wantedStatus: http.StatusInternalServerError,
+		},
+		{
+			name: "success: ViewLF directorypath, filelimit & pathsize found",
+			req:  "?directorypath=../transport&filelimit=1&pathsize=1000",
+			fssys: &mocksys.FileStructure{
+				ViewLFFn: func(*rpi.File, map[int64]string) (rpi.FileStructure, error) {
+					return rpi.FileStructure{
+						DirectoryPath: "../transport",
+						LargestFiles: []*rpi.File{
+							{
+								Path: "/boot/start.elf",
+								Size: 3002560,
+							},
+							{
+								Path: "/boot/start4x.elf",
+								Size: 3038152,
+							},
+						},
+					}, nil
+				},
+			},
+			wantedResp: rpi.FileStructure{
+				DirectoryPath: "../transport",
+				LargestFiles: []*rpi.File{
+					{
+						Path: "/boot/start.elf",
+						Size: 3002560,
+					},
+					{
+						Path: "/boot/start4x.elf",
+						Size: 3038152,
+					},
+				},
+			},
+			wantedStatus: http.StatusOK,
+		},
+	}
 
-// 			defer res.Body.Close()
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			r := server.New()
+			rg := r.Group("")
+			m := metrics.New(metrics.Service{})
+			s := filestructure.New(tc.fssys, m)
+			transport.NewHTTP(s, rg)
+			ts := httptest.NewServer(r)
 
-// 			body, err := ioutil.ReadAll(res.Body)
-// 			if err != nil {
-// 				panic(err)
-// 			}
+			defer ts.Close()
+			path := ts.URL + "/filestructure/largestfiles" + tc.req
+			res, err := http.Get(path)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-// 			if tc.wantedResp != nil {
-// 				if err := json.Unmarshal(body, &response); err != nil {
-// 					t.Fatal(err)
-// 				}
-// 				assert.Equal(t, tc.wantedResp, response)
-// 			}
-// 			assert.Equal(t, tc.wantedStatus, res.StatusCode)
-// 		})
-// 	}
-// }
+			defer res.Body.Close()
+
+			body, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				panic(err)
+			}
+
+			if tc.wantedResp.DirectoryPath != "" {
+				if err := json.Unmarshal(body, &response); err != nil {
+					t.Fatal(err)
+				}
+				assert.Equal(t, tc.wantedResp, response)
+			}
+			assert.Equal(t, tc.wantedStatus, res.StatusCode)
+		})
+	}
+}

@@ -46,7 +46,7 @@ type Metrics struct {
 		string,
 		metrics.ReadDir,
 		uint64,
-		int8,
+		float32,
 		metrics.ShouldIgnoreFolder,
 		chan int,
 	) (*rpi.File, map[int64]string)
@@ -195,7 +195,7 @@ func (m Metrics) WalkFolder(
 	path string,
 	readDir metrics.ReadDir,
 	pathSize uint64,
-	fileLimit int8,
+	fileLimit float32,
 	ignoreFunction metrics.ShouldIgnoreFolder,
 	progress chan int,
 ) (*rpi.File, map[int64]string) {

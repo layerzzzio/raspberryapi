@@ -7,7 +7,7 @@ import (
 
 // Service represents all filestructure application services.
 type Service interface {
-	ViewLF(path string, pathSize uint64, fileLimit int8) (rpi.FileStructure, error)
+	ViewLF(path string, pathSize uint64, fileLimit float32) (rpi.FileStructure, error)
 }
 
 // FileStructure represents a FileStructure application service.
@@ -27,7 +27,7 @@ type Metrics interface {
 		string,
 		metrics.ReadDir,
 		uint64,
-		int8,
+		float32,
 		metrics.ShouldIgnoreFolder,
 		chan int,
 	) (*rpi.File, map[int64]string)

@@ -25,7 +25,7 @@ type LogService struct {
 const name = "filestructure"
 
 // View is the logging function attached to the a file structure services and responsible for logging it out.
-func (ls *LogService) ViewLF(ctx echo.Context, path string, pathSize uint64, fileLimit int8) (resp rpi.FileStructure, err error) {
+func (ls *LogService) ViewLF(ctx echo.Context, path string, pathSize uint64, fileLimit float32) (resp rpi.FileStructure, err error) {
 	defer func(begin time.Time) {
 		ls.logger.Log(
 			ctx,

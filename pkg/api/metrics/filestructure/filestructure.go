@@ -8,7 +8,7 @@ import (
 )
 
 // ViewLF returns a FileStructure model.
-func (fs *FileStructure) ViewLF(path string, pathSize uint64, fileLimit int8) (rpi.FileStructure, error) {
+func (fs *FileStructure) ViewLF(path string, pathSize uint64, fileLimit float32) (rpi.FileStructure, error) {
 	progress := make(chan int)
 
 	fileStructure, flattenFiles := fs.mt.WalkFolder(
