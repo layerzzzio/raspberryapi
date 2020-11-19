@@ -289,6 +289,42 @@ func TestWalkFolderOnSimpleDir(t *testing.T) {
 	assert.False(t, more, "the progress channel should be closed")
 }
 
+func TestWalkFolderNotInLimit(t *testing.T) {
+	testStructure := fakeFile{"a", 0, []fakeFile{
+		{"b", 0, []fakeFile{
+			{"c", 90, []fakeFile{}},
+			{"d", 0, []fakeFile{
+				{"e", 50, []fakeFile{}},
+				{"f", 30, []fakeFile{}},
+				{"g", 70, []fakeFile{ //thisfolder should get ignored
+					{"h", 10, []fakeFile{}},
+					{"i", 20, []fakeFile{}},
+				}},
+			}},
+		}},
+	}}
+	dummyIgnoreFunction := func(path string) bool { return path == "b/d/g" }
+	progress := make(chan int, 3)
+	s := metrics.New(metrics.Service{})
+	result, _ := s.WalkFolder("b", createReadDir(testStructure), 180, 70, dummyIgnoreFunction, progress)
+	expected := &rpi.File{
+		Name:  "b",
+		Size:  0,
+		IsDir: true,
+	}
+
+	assert.Equal(t, expected.Name, result.Name)
+	assert.Equal(t, expected.Size, result.Size)
+	assert.Equal(t, expected.IsDir, result.IsDir)
+
+	resultProgress := 0
+	resultProgress += <-progress
+	resultProgress += <-progress
+	_, more := <-progress
+	assert.Equal(t, 2, resultProgress)
+	assert.False(t, more, "the progress channel should be closed")
+}
+
 func TestWalkFolderHandlesError(t *testing.T) {
 	failing := func(path string) ([]os.FileInfo, error) {
 		return []os.FileInfo{}, errors.New("Not found")

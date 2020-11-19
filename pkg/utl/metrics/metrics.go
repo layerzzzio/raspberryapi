@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"os/user"
@@ -622,6 +623,7 @@ func walkSubFolderConcurrently(
 	var mutex sync.Mutex
 	for _, entry := range entries {
 		fileRatio := float64(entry.Size()) / float64(pathSize)
+		fmt.Printf("file %v - fileRatio %v > fileLimit %v\n", entry.Name(), fileRatio, float64(fileLimit)/100)
 		if entry.IsDir() {
 			numSubFolders++
 			subFolderPath := filepath.Join(path, entry.Name())
