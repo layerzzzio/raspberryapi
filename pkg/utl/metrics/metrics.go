@@ -535,20 +535,6 @@ func DirSize(path string) (float64, string) {
 	return outStd, stderr.String()
 }
 
-// func DirSize(path string) (int64, error) {
-// 	var size int64
-// 	err := filepath.Walk(path, func(_ string, info os.FileInfo, err error) error {
-// 		if err != nil {
-// 			return err
-// 		}
-// 		if !info.IsDir() {
-// 			size += info.Size()
-// 		}
-// 		return err
-// 	})
-// 	return size, err
-// }
-
 // UpdateSize goes through subfiles and subfolders and accumulates their size
 func UpdateSize(f *rpi.File) {
 	if !f.IsDir {
@@ -606,6 +592,12 @@ func (s Service) WalkFolder(
 	return root, flattenFiles
 }
 
+func updateProgress(progress chan<- int, count *int) {
+	if *count > 0 {
+		progress <- *count
+	}
+}
+
 func walkSubFolderConcurrently(
 	path string,
 	parent *rpi.File,
@@ -626,7 +618,7 @@ func walkSubFolderConcurrently(
 	result.Files = make([]*rpi.File, 0, len(entries))
 	numSubFolders := 0
 
-	// defer updateProgress(progress, &numSubFolders)
+	defer updateProgress(progress, &numSubFolders)
 	var mutex sync.Mutex
 	for _, entry := range entries {
 		fileRatio := float64(entry.Size()) / float64(pathSize)

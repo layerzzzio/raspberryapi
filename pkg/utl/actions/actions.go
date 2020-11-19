@@ -22,7 +22,7 @@ var (
 )
 
 // Service represents several system scripts.
-type Service struct {}
+type Service struct{}
 
 // Actions represents multiple system related action scripts.
 type Actions interface{}
