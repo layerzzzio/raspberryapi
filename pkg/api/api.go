@@ -9,14 +9,14 @@ import (
 	dl "github.com/raspibuddy/rpi/pkg/api/metrics/disk/logging"
 	ds "github.com/raspibuddy/rpi/pkg/api/metrics/disk/platform/sys"
 	dt "github.com/raspibuddy/rpi/pkg/api/metrics/disk/transport"
+	"github.com/raspibuddy/rpi/pkg/api/metrics/filestructure"
+	fsl "github.com/raspibuddy/rpi/pkg/api/metrics/filestructure/logging"
+	fss "github.com/raspibuddy/rpi/pkg/api/metrics/filestructure/platform/sys"
+	fst "github.com/raspibuddy/rpi/pkg/api/metrics/filestructure/transport"
 	"github.com/raspibuddy/rpi/pkg/api/metrics/host"
 	hl "github.com/raspibuddy/rpi/pkg/api/metrics/host/logging"
 	hs "github.com/raspibuddy/rpi/pkg/api/metrics/host/platform/sys"
 	ht "github.com/raspibuddy/rpi/pkg/api/metrics/host/transport"
-	"github.com/raspibuddy/rpi/pkg/api/metrics/largestfile"
-	lfl "github.com/raspibuddy/rpi/pkg/api/metrics/largestfile/logging"
-	lfs "github.com/raspibuddy/rpi/pkg/api/metrics/largestfile/platform/sys"
-	lft "github.com/raspibuddy/rpi/pkg/api/metrics/largestfile/transport"
 	"github.com/raspibuddy/rpi/pkg/api/metrics/load"
 	ll "github.com/raspibuddy/rpi/pkg/api/metrics/load/logging"
 	ls "github.com/raspibuddy/rpi/pkg/api/metrics/load/platform/sys"
@@ -63,7 +63,7 @@ func Start(cfg *config.Configuration) error {
 	ht.NewHTTP(hl.New(host.New(hs.Host{}, m), log).Service, v1)
 	ut.NewHTTP(ul.New(user.New(us.User{}, m), log).Service, v1)
 	nt.NewHTTP(nl.New(net.New(ns.Net{}, m), log).Service, v1)
-	lft.NewHTTP(lfl.New(largestfile.New(lfs.LargestFile{}, m), log).Service, v1)
+	fst.NewHTTP(fsl.New(filestructure.New(fss.FileStructure{}, m), log).Service, v1)
 
 	server.Start(e, &server.Config{
 		Port:                cfg.Server.Port,
