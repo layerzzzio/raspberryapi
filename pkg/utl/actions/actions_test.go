@@ -3,6 +3,7 @@ package actions_test
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"testing"
 	"time"
 
@@ -55,6 +56,149 @@ func TestDeleteFile(t *testing.T) {
 			createFile(dummypath)
 			deletefile := a.DeleteFile(tc.path)
 			assert.Equal(t, tc.wantedData, deletefile)
+		})
+	}
+}
+
+func TestKillProcess(t *testing.T) {
+	cases := []struct {
+		name         string
+		convertIssue bool
+		pidAlive     bool
+		wantedData   rpi.Exec
+	}{
+		{
+			name:         "error pid convertion issue",
+			convertIssue: true,
+			wantedData: rpi.Exec{
+				Name:       "kill_process",
+				StartTime:  uint64(time.Now().Unix()),
+				EndTime:    uint64(time.Now().Unix()),
+				ExitStatus: 1,
+				Stdin:      "",
+				Stdout:     "",
+				Stderr:     "pid is not an int",
+			},
+		},
+		{
+			name:     "error killing process",
+			pidAlive: false,
+			wantedData: rpi.Exec{
+				Name:       "kill_process",
+				StartTime:  uint64(time.Now().Unix()),
+				EndTime:    uint64(time.Now().Unix()),
+				ExitStatus: 1,
+				Stdin:      "",
+				Stdout:     "",
+				Stderr:     "os: process already finished",
+			},
+		},
+		{
+			name:     "success killing process",
+			pidAlive: true,
+			wantedData: rpi.Exec{
+				Name:       "kill_process",
+				StartTime:  uint64(time.Now().Unix()),
+				EndTime:    uint64(time.Now().Unix()),
+				ExitStatus: 0,
+				Stdin:      "",
+				Stdout:     "",
+				Stderr:     "",
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			a := actions.New()
+			cmd := exec.Command("bash", "sleep 10")
+			err := cmd.Start()
+			if err != nil {
+				t.Fatalf("Failed to start test process: %v", err)
+			}
+
+			var largestfiles rpi.Exec
+
+			if tc.convertIssue {
+				largestfiles = a.KillProcess("ABC")
+			} else {
+				if tc.pidAlive {
+					// process is still alive
+					largestfiles = a.KillProcess(fmt.Sprint(cmd.Process.Pid))
+					err = cmd.Wait()
+					if err == nil {
+						t.Errorf("Test process succeeded, but expected to fail")
+					}
+				} else {
+					// process is dead
+					err = cmd.Wait()
+					if err == nil {
+						t.Errorf("Test process succeeded, but expected to fail")
+					}
+					largestfiles = a.KillProcess(fmt.Sprint(cmd.Process.Pid))
+				}
+			}
+			assert.Equal(t, tc.wantedData, largestfiles)
+		})
+	}
+}
+
+func TestKillProcessByName(t *testing.T) {
+	cases := []struct {
+		name        string
+		processname string
+		wantedData  rpi.Exec
+	}{
+		// {
+		// 	name:        "error killing process by its name",
+		// 	processname: "sleep 666",
+		// 	wantedData: rpi.Exec{
+		// 		Name:       "kill_process_by_name",
+		// 		StartTime:  uint64(time.Now().Unix()),
+		// 		EndTime:    uint64(time.Now().Unix()),
+		// 		ExitStatus: 1,
+		// 		Stdin:      "",
+		// 		Stdout:     "",
+		// 		Stderr:     "exit status 1",
+		// 	},
+		// },
+		{
+			name:        "success killing process by its name",
+			processname: "/bin/bash sleep 10",
+			wantedData: rpi.Exec{
+				Name:       "kill_process",
+				StartTime:  uint64(time.Now().Unix()),
+				EndTime:    uint64(time.Now().Unix()),
+				ExitStatus: 0,
+				Stdin:      "",
+				Stdout:     "",
+				Stderr:     "",
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			a := actions.New()
+			cmd := exec.Command("sh", "sleep 10")
+			aa, b := cmd.CombinedOutput()
+			fmt.Println(string(aa))
+			fmt.Println(b)
+
+			err := cmd.Start()
+			if err != nil {
+				t.Fatalf("Failed to start test process: %v", err)
+			}
+
+			largestfiles := a.KillProcessByName(tc.name)
+			err = cmd.Wait()
+			if err == nil {
+				t.Errorf("Test process succeeded, but expected to fail")
+			}
+
+			fmt.Println(largestfiles)
+
+			assert.Equal(t, tc.wantedData.ExitStatus, largestfiles.ExitStatus)
 		})
 	}
 }

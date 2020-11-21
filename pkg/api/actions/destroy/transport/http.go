@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	"github.com/raspibuddy/rpi/pkg/api/actions/destroy"
 )
 
@@ -36,14 +36,12 @@ func (h *HTTP) deletefile(ctx echo.Context) error {
 }
 
 func (h *HTTP) disconnectuser(ctx echo.Context) error {
-	terminal := ctx.QueryParam("terminal")
-	username := ctx.QueryParam("username")
-
-	if terminal == "" || username == "" {
+	terminalname := ctx.QueryParam("terminalname")
+	if terminalname == "" {
 		return echo.NewHTTPError(http.StatusNotFound, "Not found - terminal or username is null")
 	}
 
-	result, err := h.svc.ExecuteDU(terminal, username)
+	result, err := h.svc.ExecuteDU(terminalname)
 	if err != nil {
 		return err
 	}

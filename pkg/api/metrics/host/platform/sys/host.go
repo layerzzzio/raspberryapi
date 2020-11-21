@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	"github.com/raspibuddy/rpi"
 	disksys "github.com/raspibuddy/rpi/pkg/api/metrics/disk/platform/sys"
 	netsys "github.com/raspibuddy/rpi/pkg/api/metrics/net/platform/sys"

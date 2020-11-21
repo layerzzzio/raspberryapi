@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	"github.com/raspibuddy/rpi"
 	"github.com/raspibuddy/rpi/pkg/api/actions/destroy"
 )
@@ -41,18 +41,18 @@ func (ls *LogService) ExecuteDF(ctx echo.Context, path string) (resp rpi.Action,
 }
 
 // ExecuteDU is the logging function attached to the Execute delete file destroy services and responsible for logging it out.
-func (ls *LogService) ExecuteDU(ctx echo.Context, terminal string, username string) (resp rpi.Action, err error) {
+func (ls *LogService) ExecuteDU(ctx echo.Context, terminalname string) (resp rpi.Action, err error) {
 	defer func(begin time.Time) {
 		ls.logger.Log(
 			ctx,
-			name, fmt.Sprintf("request: execute disconnect user %v from terminal %v", terminal, username), err,
+			name, fmt.Sprintf("request: execute kill terminal %v", terminalname), err,
 			map[string]interface{}{
 				"resp": resp,
 				"took": time.Since(begin),
 			},
 		)
 	}(time.Now())
-	return ls.Service.ExecuteDU(terminal, username)
+	return ls.Service.ExecuteDU(terminalname)
 }
 
 // ExecuteKP is the logging function attached to the Execute kill process destroy services and responsible for logging it out.

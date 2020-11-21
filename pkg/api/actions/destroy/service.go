@@ -7,7 +7,7 @@ import (
 // Service represents all Destroy application services.
 type Service interface {
 	ExecuteDF(string) (rpi.Action, error)
-	ExecuteDU(string, string) (rpi.Action, error)
+	ExecuteDU(string) (rpi.Action, error)
 	ExecuteKP(int) (rpi.Action, error)
 }
 
@@ -27,8 +27,8 @@ type DESSYS interface {
 // Actions represents the system metrics interface
 type Actions interface {
 	DeleteFile(string) rpi.Exec
-	DisconnectUser(string, string) rpi.Exec
-	KillProcess(int) rpi.Exec
+	KillProcessByName(string) rpi.Exec
+	KillProcess(string) rpi.Exec
 }
 
 // New creates a DESSYS application service instance.

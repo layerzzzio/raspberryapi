@@ -1,6 +1,8 @@
 package destroy
 
 import (
+	"fmt"
+
 	"github.com/raspibuddy/rpi"
 )
 
@@ -16,11 +18,11 @@ func (des *Destroy) ExecuteDF(path string) (rpi.Action, error) {
 }
 
 // ExecuteDU disconnect user and returns an action.
-func (des *Destroy) ExecuteDU(terminal string, username string) (rpi.Action, error) {
+func (des *Destroy) ExecuteDU(processname string) (rpi.Action, error) {
 	// populate execs in the right execution order
 	// always start with 1, not with 0
 	execs := map[int]rpi.Exec{
-		1: des.a.DisconnectUser(terminal, username),
+		1: des.a.KillProcessByName(processname),
 	}
 
 	return des.dessys.ExecuteDU(execs)
@@ -31,7 +33,7 @@ func (des *Destroy) ExecuteKP(pid int) (rpi.Action, error) {
 	// populate execs in the right execution order
 	// always start with 1, not with 0
 	execs := map[int]rpi.Exec{
-		1: des.a.KillProcess(pid),
+		1: des.a.KillProcess(fmt.Sprint(pid)),
 	}
 
 	return des.dessys.ExecuteKP(execs)

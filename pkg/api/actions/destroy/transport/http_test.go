@@ -150,9 +150,9 @@ func TestExecuteDU(t *testing.T) {
 			dessys: &mocksys.Action{
 				ExecuteDUFn: func(map[int]rpi.Exec) (rpi.Action, error) {
 					return rpi.Action{
-						Name: actions.DisconnectUser,
+						Name: actions.KillProcessByName,
 						Steps: map[int]string{
-							1: actions.DisconnectUser,
+							1: actions.KillProcessByName,
 						},
 						NumberOfSteps: 1,
 						StartTime:     uint64(time.Now().Unix()),
@@ -160,7 +160,7 @@ func TestExecuteDU(t *testing.T) {
 						ExitStatus:    0,
 						Executions: map[int]rpi.Exec{
 							1: {
-								Name:       actions.DisconnectUser,
+								Name:       actions.KillProcessByName,
 								StartTime:  uint64(time.Now().Unix()),
 								EndTime:    uint64(time.Now().Unix()),
 								ExitStatus: 0,
