@@ -36,9 +36,9 @@ func (h *HTTP) deletefile(ctx echo.Context) error {
 }
 
 func (h *HTTP) disconnectuser(ctx echo.Context) error {
-	terminalname := ctx.QueryParam("terminalname")
+	terminalname := ctx.QueryParam("processname")
 	if terminalname == "" {
-		return echo.NewHTTPError(http.StatusNotFound, "Not found - terminal or username is null")
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - processname is null")
 	}
 
 	result, err := h.svc.ExecuteDU(terminalname)

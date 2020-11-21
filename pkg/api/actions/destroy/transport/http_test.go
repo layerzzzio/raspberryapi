@@ -129,13 +129,8 @@ func TestExecuteDU(t *testing.T) {
 			wantedStatus: http.StatusNotFound,
 		},
 		{
-			name:         "error: invalid request response",
-			req:          "?terminalXXX=ttys001&usernameXXX=massonl",
-			wantedStatus: http.StatusNotFound,
-		},
-		{
-			name: "error: ExecuteDU result is nil",
-			req:  "?terminal=ttys001&username=massonl",
+			name: "error: ExecuteDF result is nil",
+			req:  "?processname=dummyprocess",
 			dessys: &mocksys.Action{
 				ExecuteDUFn: func(map[int]rpi.Exec) (rpi.Action, error) {
 					return rpi.Action{}, errors.New("test error")
@@ -146,11 +141,11 @@ func TestExecuteDU(t *testing.T) {
 		{
 			name:         "success",
 			wantedStatus: http.StatusOK,
-			req:          "?terminal=ttys001&username=massonl",
+			req:          "?processname=dummyprocess",
 			dessys: &mocksys.Action{
 				ExecuteDUFn: func(map[int]rpi.Exec) (rpi.Action, error) {
 					return rpi.Action{
-						Name: actions.KillProcessByName,
+						Name: actions.DisconnectUser,
 						Steps: map[int]string{
 							1: actions.KillProcessByName,
 						},
@@ -186,6 +181,9 @@ func TestExecuteDU(t *testing.T) {
 
 			defer ts.Close()
 			path := ts.URL + "/destroy/disconnectuser" + tc.req
+
+			fmt.Println(path)
+
 			res, err := http.Get(path)
 			if err != nil {
 				t.Fatal(err)

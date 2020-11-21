@@ -149,30 +149,17 @@ func TestKillProcessByName(t *testing.T) {
 		processname string
 		wantedData  rpi.Exec
 	}{
-		// {
-		// 	name:        "error killing process by its name",
-		// 	processname: "sleep 666",
-		// 	wantedData: rpi.Exec{
-		// 		Name:       "kill_process_by_name",
-		// 		StartTime:  uint64(time.Now().Unix()),
-		// 		EndTime:    uint64(time.Now().Unix()),
-		// 		ExitStatus: 1,
-		// 		Stdin:      "",
-		// 		Stdout:     "",
-		// 		Stderr:     "exit status 1",
-		// 	},
-		// },
 		{
-			name:        "success killing process by its name",
-			processname: "/bin/bash sleep 10",
+			name:        "error killing process by its name",
+			processname: "impossible_process_name",
 			wantedData: rpi.Exec{
-				Name:       "kill_process",
+				Name:       "kill_process_by_name",
 				StartTime:  uint64(time.Now().Unix()),
 				EndTime:    uint64(time.Now().Unix()),
-				ExitStatus: 0,
+				ExitStatus: 1,
 				Stdin:      "",
 				Stdout:     "",
-				Stderr:     "",
+				Stderr:     "exit status 1",
 			},
 		},
 	}
@@ -180,25 +167,20 @@ func TestKillProcessByName(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			a := actions.New()
-			cmd := exec.Command("sh", "sleep 10")
-			aa, b := cmd.CombinedOutput()
-			fmt.Println(string(aa))
-			fmt.Println(b)
-
-			err := cmd.Start()
+			cmd := exec.Command("sh", "-c", "echo")
+			err := cmd.Run()
 			if err != nil {
 				t.Fatalf("Failed to start test process: %v", err)
 			}
 
 			largestfiles := a.KillProcessByName(tc.name)
+
 			err = cmd.Wait()
 			if err == nil {
 				t.Errorf("Test process succeeded, but expected to fail")
 			}
 
-			fmt.Println(largestfiles)
-
-			assert.Equal(t, tc.wantedData.ExitStatus, largestfiles.ExitStatus)
+			assert.Equal(t, tc.wantedData, largestfiles)
 		})
 	}
 }
