@@ -7,7 +7,7 @@ import (
 // Actions mock
 type Actions struct {
 	DeleteFileFn        func(path string) rpi.Exec
-	KillProcessByNameFn func(terminalname string) rpi.Exec
+	KillProcessByNameFn func(processname string, processtype string) rpi.Exec
 	KillProcessFn       func(pid string) rpi.Exec
 }
 
@@ -17,8 +17,8 @@ func (a Actions) DeleteFile(path string) rpi.Exec {
 }
 
 // DisconnectUser mock
-func (a Actions) KillProcessByName(terminalname string) rpi.Exec {
-	return a.KillProcessByNameFn(terminalname)
+func (a Actions) KillProcessByName(processname string, processtype string) rpi.Exec {
+	return a.KillProcessByNameFn(processname, processtype)
 }
 
 // KillProcess mock

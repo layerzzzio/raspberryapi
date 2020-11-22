@@ -147,11 +147,13 @@ func TestKillProcessByName(t *testing.T) {
 	cases := []struct {
 		name        string
 		processname string
+		processtype string
 		wantedData  rpi.Exec
 	}{
 		{
 			name:        "error killing process by its name",
 			processname: "impossible_process_name",
+			processtype: "dummy",
 			wantedData: rpi.Exec{
 				Name:       "kill_process_by_name",
 				StartTime:  uint64(time.Now().Unix()),
@@ -160,6 +162,20 @@ func TestKillProcessByName(t *testing.T) {
 				Stdin:      "",
 				Stdout:     "",
 				Stderr:     "exit status 1",
+			},
+		},
+		{
+			name:        "error killing process by its name (terminal)",
+			processname: "impossible_process_name",
+			processtype: "terminal",
+			wantedData: rpi.Exec{
+				Name:       "kill_process_by_name",
+				StartTime:  uint64(time.Now().Unix()),
+				EndTime:    uint64(time.Now().Unix()),
+				ExitStatus: 1,
+				Stdin:      "",
+				Stdout:     "",
+				Stderr:     "exit status 2",
 			},
 		},
 	}
@@ -173,7 +189,7 @@ func TestKillProcessByName(t *testing.T) {
 				t.Fatalf("Failed to start test process: %v", err)
 			}
 
-			largestfiles := a.KillProcessByName(tc.name)
+			largestfiles := a.KillProcessByName(tc.processname, tc.processtype)
 
 			err = cmd.Wait()
 			if err == nil {

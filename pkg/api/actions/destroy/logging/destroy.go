@@ -41,18 +41,18 @@ func (ls *LogService) ExecuteDF(ctx echo.Context, path string) (resp rpi.Action,
 }
 
 // ExecuteDU is the logging function attached to the Execute delete file destroy services and responsible for logging it out.
-func (ls *LogService) ExecuteDU(ctx echo.Context, terminalname string) (resp rpi.Action, err error) {
+func (ls *LogService) ExecuteDU(ctx echo.Context, processname string, processtype string) (resp rpi.Action, err error) {
 	defer func(begin time.Time) {
 		ls.logger.Log(
 			ctx,
-			name, fmt.Sprintf("request: execute kill terminal %v", terminalname), err,
+			name, fmt.Sprintf("request: execute kill process %v of type %v", processname, processtype), err,
 			map[string]interface{}{
 				"resp": resp,
 				"took": time.Since(begin),
 			},
 		)
 	}(time.Now())
-	return ls.Service.ExecuteDU(terminalname)
+	return ls.Service.ExecuteDU(processname, processtype)
 }
 
 // ExecuteKP is the logging function attached to the Execute kill process destroy services and responsible for logging it out.

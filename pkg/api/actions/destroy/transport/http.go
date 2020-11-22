@@ -17,9 +17,9 @@ type HTTP struct {
 func NewHTTP(svc destroy.Service, r *echo.Group) {
 	h := HTTP{svc}
 	cr := r.Group("/destroy")
-	cr.GET("/deletefile", h.deletefile)
-	cr.GET("/disconnectuser", h.disconnectuser)
-	cr.GET("/killprocess/:pid", h.killprocess)
+	cr.POST("/deletefile", h.deletefile)
+	cr.POST("/disconnectuser", h.disconnectuser)
+	cr.POST("/killprocess/:pid", h.killprocess)
 }
 
 func (h *HTTP) deletefile(ctx echo.Context) error {
@@ -41,7 +41,7 @@ func (h *HTTP) disconnectuser(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "Not found - processname is null")
 	}
 
-	result, err := h.svc.ExecuteDU(terminalname)
+	result, err := h.svc.ExecuteDU(terminalname, "terminal")
 	if err != nil {
 		return err
 	}

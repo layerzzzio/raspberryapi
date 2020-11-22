@@ -1,6 +1,10 @@
 package api
 
 import (
+	"github.com/raspibuddy/rpi/pkg/api/actions/destroy"
+	adl "github.com/raspibuddy/rpi/pkg/api/actions/destroy/logging"
+	ads "github.com/raspibuddy/rpi/pkg/api/actions/destroy/platform/sys"
+	adt "github.com/raspibuddy/rpi/pkg/api/actions/destroy/transport"
 	"github.com/raspibuddy/rpi/pkg/api/metrics/cpu"
 	cl "github.com/raspibuddy/rpi/pkg/api/metrics/cpu/logging"
 	cs "github.com/raspibuddy/rpi/pkg/api/metrics/cpu/platform/sys"
@@ -41,6 +45,7 @@ import (
 	vl "github.com/raspibuddy/rpi/pkg/api/metrics/vcore/logging"
 	vs "github.com/raspibuddy/rpi/pkg/api/metrics/vcore/platform/sys"
 	vt "github.com/raspibuddy/rpi/pkg/api/metrics/vcore/transport"
+	"github.com/raspibuddy/rpi/pkg/utl/actions"
 	"github.com/raspibuddy/rpi/pkg/utl/config"
 	"github.com/raspibuddy/rpi/pkg/utl/metrics"
 	"github.com/raspibuddy/rpi/pkg/utl/server"
@@ -53,6 +58,7 @@ func Start(cfg *config.Configuration) error {
 	log := zlog.New()
 	v1 := e.Group("/v1")
 	m := metrics.New(metrics.Service{})
+	a := actions.New()
 
 	ct.NewHTTP(cl.New(cpu.New(cs.CPU{}, m), log).Service, v1)
 	vt.NewHTTP(vl.New(vcore.New(vs.VCore{}, m), log).Service, v1)
@@ -64,6 +70,7 @@ func Start(cfg *config.Configuration) error {
 	ut.NewHTTP(ul.New(user.New(us.User{}, m), log).Service, v1)
 	nt.NewHTTP(nl.New(net.New(ns.Net{}, m), log).Service, v1)
 	fst.NewHTTP(fsl.New(filestructure.New(fss.FileStructure{}, m), log).Service, v1)
+	adt.NewHTTP(adl.New(destroy.New(ads.Destroy{}, a), log).Service, v1)
 
 	server.Start(e, &server.Config{
 		Port:                cfg.Server.Port,

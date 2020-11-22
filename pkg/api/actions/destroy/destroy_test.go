@@ -101,6 +101,7 @@ func TestExecuteDU(t *testing.T) {
 	cases := []struct {
 		name        string
 		processname string
+		processtype string
 		execs       map[int]rpi.Exec
 		actions     *mock.Actions
 		dessys      *mocksys.Action
@@ -110,6 +111,7 @@ func TestExecuteDU(t *testing.T) {
 		{
 			name:        "success",
 			processname: "dummyprocess",
+			processtype: "dummytype",
 			execs: map[int]rpi.Exec{
 				1: {
 					Name:       actions.KillProcessByName,
@@ -119,7 +121,7 @@ func TestExecuteDU(t *testing.T) {
 				},
 			},
 			actions: &mock.Actions{
-				KillProcessByNameFn: func(processname string) rpi.Exec {
+				KillProcessByNameFn: func(processname string, processtype string) rpi.Exec {
 					return rpi.Exec{
 						Name:       actions.KillProcessByName,
 						StartTime:  2,
@@ -175,7 +177,7 @@ func TestExecuteDU(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			s := destroy.New(tc.dessys, tc.actions)
-			deletefile, err := s.ExecuteDU(tc.processname)
+			deletefile, err := s.ExecuteDU(tc.processname, tc.processtype)
 			assert.Equal(t, tc.wantedData, deletefile)
 			assert.Equal(t, tc.wantedErr, err)
 		})

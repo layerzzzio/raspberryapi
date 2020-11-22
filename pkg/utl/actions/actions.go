@@ -72,13 +72,18 @@ func (s Service) KillProcess(pid string) rpi.Exec {
 }
 
 // KillProcessByName disconnect a user from an active tty from the current host
-func (s Service) KillProcessByName(name string) rpi.Exec {
+func (s Service) KillProcessByName(processname string, processtype string) rpi.Exec {
 	startTime := uint64(time.Now().Unix())
 
 	exitStatus := 0
 	var stdErr string
 
-	_, err := exec.Command("sh", "-c", "pkill -SIGKILL "+name).Output()
+	var err error
+	if processtype == "terminal" {
+		_, err = exec.Command("sh", "-c", "pkill -t "+processname).Output()
+	} else {
+		_, err = exec.Command("sh", "-c", "pkill "+processname).Output()
+	}
 
 	if err != nil {
 		exitStatus = 1

@@ -1,6 +1,7 @@
 package transport_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -90,7 +91,7 @@ func TestExecuteDF(t *testing.T) {
 
 			fmt.Println(path)
 
-			res, err := http.Get(path)
+			res, err := http.Post(path, "application/json", bytes.NewBufferString(tc.req))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -184,7 +185,7 @@ func TestExecuteDU(t *testing.T) {
 
 			fmt.Println(path)
 
-			res, err := http.Get(path)
+			res, err := http.Post(path, "application/json", bytes.NewBufferString(tc.req))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -302,7 +303,7 @@ func TestExecuteKP(t *testing.T) {
 			defer ts.Close()
 			path := ts.URL + "/destroy/killprocess/" + tc.req
 
-			res, err := http.Get(path)
+			res, err := http.Post(path, "application/json", bytes.NewBufferString(tc.req))
 			if err != nil {
 				t.Fatal(err)
 			}
