@@ -44,8 +44,8 @@ func (des Destroy) ExecuteDF(execs map[int]rpi.Exec) (rpi.Action, error) {
 	}, nil
 }
 
-// ExecuteDU returns an action response
-func (des Destroy) ExecuteDU(execs map[int]rpi.Exec) (rpi.Action, error) {
+// ExecuteSUS returns an action response
+func (des Destroy) ExecuteSUS(execs map[int]rpi.Exec) (rpi.Action, error) {
 	// redefine the steps for this actions
 	steps := map[int]string{
 		1: actions.KillProcessByName,
@@ -66,7 +66,7 @@ func (des Destroy) ExecuteDU(execs map[int]rpi.Exec) (rpi.Action, error) {
 
 	// the exit status is the status of the last exec
 	return rpi.Action{
-		Name:          actions.DisconnectUser,
+		Name:          actions.StopUserSession,
 		Steps:         steps,
 		NumberOfSteps: uint16(len(steps)),
 		Executions:    execs,

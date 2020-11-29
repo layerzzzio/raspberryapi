@@ -18,7 +18,7 @@ func NewHTTP(svc destroy.Service, r *echo.Group) {
 	h := HTTP{svc}
 	cr := r.Group("/destroy")
 	cr.POST("/deletefile", h.deletefile)
-	cr.POST("/disconnectuser", h.disconnectuser)
+	cr.POST("/stopusersession", h.stopusersession)
 	cr.POST("/killprocess/:pid", h.killprocess)
 }
 
@@ -35,13 +35,13 @@ func (h *HTTP) deletefile(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, result)
 }
 
-func (h *HTTP) disconnectuser(ctx echo.Context) error {
+func (h *HTTP) stopusersession(ctx echo.Context) error {
 	terminalname := ctx.QueryParam("processname")
 	if terminalname == "" {
 		return echo.NewHTTPError(http.StatusNotFound, "Not found - processname is null")
 	}
 
-	result, err := h.svc.ExecuteDU(terminalname, "terminal")
+	result, err := h.svc.ExecuteSUS(terminalname, "terminal")
 	if err != nil {
 		return err
 	}

@@ -114,7 +114,7 @@ func TestExecuteDF(t *testing.T) {
 	}
 }
 
-func TestExecuteDU(t *testing.T) {
+func TestExecuteSUS(t *testing.T) {
 	var response rpi.Action
 
 	cases := []struct {
@@ -133,7 +133,7 @@ func TestExecuteDU(t *testing.T) {
 			name: "error: ExecuteDF result is nil",
 			req:  "?processname=dummyprocess",
 			dessys: &mocksys.Action{
-				ExecuteDUFn: func(map[int]rpi.Exec) (rpi.Action, error) {
+				ExecuteSUSFn: func(map[int]rpi.Exec) (rpi.Action, error) {
 					return rpi.Action{}, errors.New("test error")
 				},
 			},
@@ -144,9 +144,9 @@ func TestExecuteDU(t *testing.T) {
 			wantedStatus: http.StatusOK,
 			req:          "?processname=dummyprocess",
 			dessys: &mocksys.Action{
-				ExecuteDUFn: func(map[int]rpi.Exec) (rpi.Action, error) {
+				ExecuteSUSFn: func(map[int]rpi.Exec) (rpi.Action, error) {
 					return rpi.Action{
-						Name: actions.DisconnectUser,
+						Name: actions.StopUserSession,
 						Steps: map[int]string{
 							1: actions.KillProcessByName,
 						},
@@ -181,7 +181,7 @@ func TestExecuteDU(t *testing.T) {
 			ts := httptest.NewServer(r)
 
 			defer ts.Close()
-			path := ts.URL + "/destroy/disconnectuser" + tc.req
+			path := ts.URL + "/destroy/stopusersession" + tc.req
 
 			fmt.Println(path)
 

@@ -17,15 +17,15 @@ func (des *Destroy) ExecuteDF(path string) (rpi.Action, error) {
 	return des.dessys.ExecuteDF(execs)
 }
 
-// ExecuteDU disconnect user and returns an action.
-func (des *Destroy) ExecuteDU(processname string, processtype string) (rpi.Action, error) {
+// ExecuteSUS disconnect user and returns an action.
+func (des *Destroy) ExecuteSUS(processname string, processtype string) (rpi.Action, error) {
 	// populate execs in the right execution order
 	// always start with 1, not with 0
 	execs := map[int]rpi.Exec{
 		1: des.a.KillProcessByName(processname, processtype),
 	}
 
-	return des.dessys.ExecuteDU(execs)
+	return des.dessys.ExecuteSUS(execs)
 }
 
 // ExecuteKP kill a process and returns an action.

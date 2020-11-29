@@ -22,8 +22,8 @@ var (
 	// KillProcessByName is the name of the kill process by name exec
 	KillProcessByName = "kill_process_by_name"
 
-	// DisconnectUser is the name of the disconnect user action
-	DisconnectUser = "disconnect_user"
+	// StopUserSession is the name of the disconnect user action
+	StopUserSession = "stop_user_sessions"
 )
 
 // Service represents several system scripts.

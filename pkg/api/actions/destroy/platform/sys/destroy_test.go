@@ -78,7 +78,7 @@ func TestExecuteDF(t *testing.T) {
 	}
 }
 
-func TestExecuteDU(t *testing.T) {
+func TestExecuteSUS(t *testing.T) {
 	cases := []struct {
 		name       string
 		execs      map[int]rpi.Exec
@@ -115,7 +115,7 @@ func TestExecuteDU(t *testing.T) {
 				},
 			},
 			wantedData: rpi.Action{
-				Name:          actions.DisconnectUser,
+				Name:          actions.StopUserSession,
 				Steps:         map[int]string{1: actions.KillProcessByName},
 				NumberOfSteps: 1,
 				Executions: map[int]rpi.Exec{
@@ -136,7 +136,7 @@ func TestExecuteDU(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			s := destroy.DESSYS(Destroy{})
-			deletefile, err := s.ExecuteDU(tc.execs)
+			deletefile, err := s.ExecuteSUS(tc.execs)
 			assert.Equal(t, tc.wantedData, deletefile)
 			assert.Equal(t, tc.wantedErr, err)
 		})

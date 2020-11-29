@@ -16,7 +16,7 @@ func (a Actions) DeleteFile(path string) rpi.Exec {
 	return a.DeleteFileFn(path)
 }
 
-// DisconnectUser mock
+// KillProcessByName mock
 func (a Actions) KillProcessByName(processname string, processtype string) rpi.Exec {
 	return a.KillProcessByNameFn(processname, processtype)
 }

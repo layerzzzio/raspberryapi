@@ -7,7 +7,7 @@ import (
 // Service represents all Destroy application services.
 type Service interface {
 	ExecuteDF(string) (rpi.Action, error)
-	ExecuteDU(string, string) (rpi.Action, error)
+	ExecuteSUS(string, string) (rpi.Action, error)
 	ExecuteKP(int) (rpi.Action, error)
 }
 
@@ -20,7 +20,7 @@ type Destroy struct {
 // DESSYS represents a Destroy repository service.
 type DESSYS interface {
 	ExecuteDF(map[int]rpi.Exec) (rpi.Action, error)
-	ExecuteDU(map[int]rpi.Exec) (rpi.Action, error)
+	ExecuteSUS(map[int]rpi.Exec) (rpi.Action, error)
 	ExecuteKP(map[int]rpi.Exec) (rpi.Action, error)
 }
 

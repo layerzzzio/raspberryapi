@@ -40,8 +40,8 @@ func (ls *LogService) ExecuteDF(ctx echo.Context, path string) (resp rpi.Action,
 	return ls.Service.ExecuteDF(path)
 }
 
-// ExecuteDU is the logging function attached to the Execute delete file destroy services and responsible for logging it out.
-func (ls *LogService) ExecuteDU(ctx echo.Context, processname string, processtype string) (resp rpi.Action, err error) {
+// ExecuteSUS is the logging function attached to the Execute delete file destroy services and responsible for logging it out.
+func (ls *LogService) ExecuteSUS(ctx echo.Context, processname string, processtype string) (resp rpi.Action, err error) {
 	defer func(begin time.Time) {
 		ls.logger.Log(
 			ctx,
@@ -52,7 +52,7 @@ func (ls *LogService) ExecuteDU(ctx echo.Context, processname string, processtyp
 			},
 		)
 	}(time.Now())
-	return ls.Service.ExecuteDU(processname, processtype)
+	return ls.Service.ExecuteSUS(processname, processtype)
 }
 
 // ExecuteKP is the logging function attached to the Execute kill process destroy services and responsible for logging it out.
