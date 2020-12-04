@@ -2,6 +2,7 @@ package destroy
 
 import (
 	"github.com/raspibuddy/rpi"
+	"github.com/raspibuddy/rpi/pkg/utl/actions"
 )
 
 // Service represents all Destroy application services.
@@ -20,7 +21,7 @@ type Destroy struct {
 // DESSYS represents a Destroy repository service.
 type DESSYS interface {
 	ExecuteDF(map[int]rpi.Exec) (rpi.Action, error)
-	ExecuteSUS(map[int]rpi.Exec) (rpi.Action, error)
+	ExecuteSUS(map[int](map[int]actions.Func)) (rpi.Action, error)
 	ExecuteKP(map[int]rpi.Exec) (rpi.Action, error)
 }
 

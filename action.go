@@ -2,13 +2,12 @@ package rpi
 
 // Action represents the result of an action : Action = Σ Exec
 type Action struct {
-	Name          string         `json:"name"`
-	Steps         map[int]string `json:"steps"`
-	NumberOfSteps uint16         `json:"numberOfSteps"`
-	Executions    map[int]Exec   `json:"executions"`
-	ExitStatus    uint8          `json:"exitStatus"`
-	StartTime     uint64         `json:"startTime"`
-	EndTime       uint64         `json:"endTime"`
+	Name          string          `json:"name"`
+	NumberOfSteps uint16          `json:"numberOfSteps"`
+	Progress      map[string]Exec `json:"executions"`
+	ExitStatus    uint8           `json:"exitStatus"`
+	StartTime     uint64          `json:"startTime"`
+	EndTime       uint64          `json:"endTime"`
 }
 
 // Exec represents the result of an execute.

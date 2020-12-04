@@ -1,6 +1,7 @@
 package actions_test
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -145,38 +146,37 @@ func TestKillProcess(t *testing.T) {
 
 func TestKillProcessByName(t *testing.T) {
 	cases := []struct {
-		name        string
-		processname string
-		processtype string
-		wantedData  rpi.Exec
+		name             string
+		argument         actions.KPBN
+		wantedExitStatus uint8
+		wantedStderr     string
 	}{
 		{
-			name:        "error killing process by its name",
-			processname: "impossible_process_name",
-			processtype: "dummy",
-			wantedData: rpi.Exec{
-				Name:       "kill_process_by_name",
-				StartTime:  uint64(time.Now().Unix()),
-				EndTime:    uint64(time.Now().Unix()),
-				ExitStatus: 1,
-				Stdin:      "",
-				Stdout:     "",
-				Stderr:     "exit status 1",
+			name: "error killing process by its name",
+			argument: actions.KPBN{
+				Processname: "impossible_process_name",
+				Processtype: "dummy",
 			},
+			wantedExitStatus: 1,
+			wantedStderr:     "exit status 1",
 		},
 		{
-			name:        "error killing process by its name (terminal)",
-			processname: "impossible_process_name",
-			processtype: "terminal",
-			wantedData: rpi.Exec{
-				Name:       "kill_process_by_name",
-				StartTime:  uint64(time.Now().Unix()),
-				EndTime:    uint64(time.Now().Unix()),
-				ExitStatus: 1,
-				Stdin:      "",
-				Stdout:     "",
-				Stderr:     "exit status 2",
+			name: "error killing process by its name (terminal)",
+			argument: actions.KPBN{
+				Processname: "impossible_process_name",
+				Processtype: "terminal",
 			},
+			wantedExitStatus: 1,
+			wantedStderr:     "exit status 2",
+		},
+		{
+			name: "error processname is empty",
+			argument: actions.KPBN{
+				Processname: "",
+				Processtype: "terminal",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
 		},
 	}
 
@@ -189,14 +189,15 @@ func TestKillProcessByName(t *testing.T) {
 				t.Fatalf("Failed to start test process: %v", err)
 			}
 
-			largestfiles := a.KillProcessByName(tc.processname, tc.processtype)
+			killProcessByName, _ := a.KillProcessByName(tc.argument)
 
 			err = cmd.Wait()
 			if err == nil {
 				t.Errorf("Test process succeeded, but expected to fail")
 			}
 
-			assert.Equal(t, tc.wantedData, largestfiles)
+			assert.Equal(t, tc.wantedExitStatus, killProcessByName.ExitStatus)
+			assert.Equal(t, tc.wantedStderr, killProcessByName.Stderr)
 		})
 	}
 }
@@ -223,4 +224,340 @@ func isError(err error) bool {
 	}
 
 	return (err != nil)
+}
+
+func TestParallelize(t *testing.T) {
+	value1 := 1
+	value2 := 2
+
+	fun1 := func() {
+		value1 = 11
+	}
+
+	fun2 := func() {
+		value2 = 22
+	}
+
+	err := actions.Parallelize([]func(){fun1, fun2})
+	assert.Nil(t, err)
+	assert.Equal(t, value1, 11)
+	assert.Equal(t, value2, 22)
+}
+
+func TestParallelizerLongTimeout(t *testing.T) {
+	value1 := 1
+	value2 := 2
+
+	fun1 := func() {
+		value1 = 11
+	}
+
+	fun2 := func() {
+		value2 = 22
+	}
+
+	err := actions.ParallelizeTimeout(time.Minute, []func(){fun1, fun2})
+	assert.Nil(t, err)
+	assert.Equal(t, value1, 11)
+	assert.Equal(t, value2, 22)
+}
+
+func TestParallelizerShortTimeout(t *testing.T) {
+	value1 := 1
+	value2 := 2
+
+	fun1 := func() {
+		time.Sleep(time.Minute)
+		value1 = 11
+	}
+
+	fun2 := func() {
+		time.Sleep(time.Minute)
+		value2 = 22
+	}
+
+	err := actions.ParallelizeTimeout(time.Second, []func(){fun1, fun2})
+	assert.NotNil(t, err)
+	assert.Equal(t, value1, 1)
+	assert.Equal(t, value2, 2)
+}
+
+func TestFlattenExecPlan(t *testing.T) {
+	cases := []struct {
+		name       string
+		execPlan   map[int](map[int]actions.Func)
+		wantedData map[string]rpi.Exec
+	}{
+		{
+			name: "success flatten exec plan",
+			execPlan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name: "dummy_11",
+					},
+					2: {
+						Name: "dummy_12",
+					},
+				},
+				2: {
+					1: {
+						Name: "dummy_21",
+					},
+					2: {
+						Name: "dummy_22",
+					},
+				},
+			},
+			wantedData: map[string]rpi.Exec{
+				"1" + actions.Separator + "1": {},
+				"1" + actions.Separator + "2": {},
+				"2" + actions.Separator + "1": {},
+				"2" + actions.Separator + "2": {},
+			},
+		},
+		{
+			name: "success with another example",
+			execPlan: map[int](map[int]actions.Func){
+				1: {
+					1: actions.Func{
+						Name:    "funcA",
+						Pointer: funcA,
+						Argument: []interface{}{
+							ArgFuncA{
+								Arg0: "string0",
+								Arg1: "string1",
+							},
+						},
+					},
+				},
+			},
+			wantedData: map[string]rpi.Exec{
+				"1" + actions.Separator + "1": {},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			flattenExecPlan := actions.FlattenExecPlan(tc.execPlan)
+			assert.Equal(t, tc.wantedData, flattenExecPlan)
+		})
+	}
+}
+
+func timeSleep(dur1 int, dur2 int) int {
+	time.Sleep(time.Duration(dur1+dur2) * time.Second)
+	return dur1 + dur2
+}
+
+func TestCall(t *testing.T) {
+	cases := []struct {
+		name       string
+		funcName   interface{}
+		params     []interface{}
+		wantedData int
+		wantedErr  error
+	}{
+		{
+			name:      "error params out of index",
+			funcName:  timeSleep,
+			params:    []interface{}{1, 1, 1},
+			wantedErr: errors.New("The number of params is out of index."),
+		},
+		{
+			name:       "success calling function timeSleep",
+			funcName:   timeSleep,
+			params:     []interface{}{1, 1},
+			wantedData: 2,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			flattenExecPlan, err := actions.Call(tc.funcName, tc.params)
+			if err != nil {
+				assert.Equal(t, tc.wantedErr, err)
+			} else {
+				assert.Equal(t, tc.wantedData, flattenExecPlan.(int))
+			}
+		})
+	}
+}
+
+func TestError(t *testing.T) {
+	cases := []struct {
+		name       string
+		params     *actions.Error
+		wantedData string
+	}{
+		{
+			name:       "success",
+			params:     &actions.Error{[]string{"dummy"}},
+			wantedData: "at least one argument is empty: [dummy]",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := actions.Error{tc.params.Arguments}
+			res := err.Error()
+			assert.Equal(t, tc.wantedData, res)
+		})
+	}
+}
+
+type ArgFuncA struct {
+	Arg0 string
+	Arg1 string
+}
+
+func funcA(arg interface{}) (rpi.Exec, error) {
+	arg0 := arg.(ArgFuncA).Arg0
+	arg1 := arg.(ArgFuncA).Arg1
+
+	if arg0 == "" || arg1 == "" {
+		return rpi.Exec{}, &actions.Error{[]string{"arg0", "arg1"}}
+	}
+
+	stdOut := fmt.Sprintf("%v-%v", arg0, arg1)
+
+	res := rpi.Exec{
+		Name:       "funcA",
+		StartTime:  1,
+		EndTime:    2,
+		ExitStatus: 0,
+		Stdin:      "",
+		Stdout:     stdOut,
+		Stderr:     "",
+	}
+
+	return res, nil
+}
+
+type ArgFuncB struct {
+	Arg2 string
+}
+
+func funcB(arg interface{}) (rpi.Exec, error) {
+	arg2 := arg.(ArgFuncB).Arg2
+
+	if arg2 == "" {
+		return rpi.Exec{}, &actions.Error{[]string{"arg2"}}
+	}
+
+	stdOut := fmt.Sprint(arg2)
+
+	res := rpi.Exec{
+		Name:       "funcB",
+		StartTime:  1,
+		EndTime:    2,
+		ExitStatus: 0,
+		Stdin:      "",
+		Stdout:     stdOut,
+		Stderr:     "",
+	}
+
+	return res, nil
+}
+
+func TestExecuteExecPlanNoDependency(t *testing.T) {
+	cases := []struct {
+		name                 string
+		execPlan             map[int](map[int]actions.Func)
+		progress             map[string]rpi.Exec
+		wantedDataExec       map[string]rpi.Exec
+		wantedDataExitStatus uint8
+	}{
+		// {
+		// 	name: "success : one parent | one child",
+		// 	execPlan: map[int](map[int]actions.Func){
+		// 		1: {
+		// 			1: actions.Func{
+		// 				Name:    "funcA",
+		// 				Pointer: funcA,
+		// 				Argument: []interface{}{
+		// 					ArgFuncA{
+		// 						Arg0: "string0",
+		// 						Arg1: "string1",
+		// 					},
+		// 				},
+		// 			},
+		// 		},
+		// 	},
+		// 	progress: map[string]rpi.Exec{
+		// 		"1" + actions.Separator + "1": {},
+		// 	},
+		// 	wantedDataExec: map[string]rpi.Exec{
+		// 		"1" + actions.Separator + "1": {
+		// 			Name:       "funcA",
+		// 			StartTime:  1,
+		// 			EndTime:    2,
+		// 			ExitStatus: 0,
+		// 			Stdin:      "",
+		// 			Stderr:     "",
+		// 			Stdout:     "string0-string1",
+		// 		},
+		// 	},
+		// 	wantedDataExitStatus: 0,
+		// },
+		{
+			name: "success : one parent | two children",
+			execPlan: map[int](map[int]actions.Func){
+				1: {
+					1: actions.Func{
+						Name:    "funcA",
+						Pointer: funcA,
+						Argument: []interface{}{
+							ArgFuncA{
+								Arg0: "string0",
+								Arg1: "string1",
+							},
+						},
+					},
+					2: actions.Func{
+						Name:    "funcB",
+						Pointer: funcB,
+						Argument: []interface{}{
+							ArgFuncB{
+								Arg2: "string2",
+							},
+						},
+					},
+				},
+			},
+			progress: map[string]rpi.Exec{
+				"1" + actions.Separator + "1": {},
+				"1" + actions.Separator + "2": {},
+			},
+			wantedDataExec: map[string]rpi.Exec{
+				"1" + actions.Separator + "1": {
+					Name:       "funcA",
+					StartTime:  1,
+					EndTime:    2,
+					ExitStatus: 0,
+					Stdin:      "",
+					Stderr:     "",
+					Stdout:     "string0-string1",
+				},
+				"1" + actions.Separator + "2": {
+					Name:       "funcB",
+					StartTime:  1,
+					EndTime:    2,
+					ExitStatus: 0,
+					Stdin:      "",
+					Stderr:     "",
+					Stdout:     "string2",
+				},
+			},
+			wantedDataExitStatus: 0,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			exec, exitStatus := actions.ExecuteExecPlan(tc.execPlan, tc.progress)
+			assert.Equal(t, tc.wantedDataExec, exec)
+			assert.Equal(t, tc.wantedDataExitStatus, exitStatus)
+		})
+	}
 }
