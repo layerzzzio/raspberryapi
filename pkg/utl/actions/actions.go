@@ -1,17 +1,16 @@
 package actions
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"reflect"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/raspibuddy/rpi"
-	"github.com/shomali11/parallelizer"
 )
 
 // TODO: to test this method by simulating different OS scenarios in a Docker container (raspbian/strech)
@@ -168,7 +167,9 @@ func (s Service) DeleteFile(path string) rpi.Exec {
 	}
 }
 
-func Call(funcName interface{}, params []interface{}) (result interface{}, err error) {
+func Call(funcName interface{}, params []interface{}, wg *sync.WaitGroup) (result interface{}, err error) {
+	defer wg.Done()
+
 	f := reflect.ValueOf(funcName)
 	if len(params) != f.Type().NumIn() {
 		err = errors.New("The number of params is out of index.")
@@ -182,29 +183,6 @@ func Call(funcName interface{}, params []interface{}) (result interface{}, err e
 	res := f.Call(in)
 	result = res[0].Interface()
 	return
-}
-
-// Parallelize parallelizes the function calls
-func Parallelize(functions []func()) error {
-	return ParallelizeContext(context.Background(), functions...)
-}
-
-// ParallelizeTimeout parallelizes the function calls with a timeout
-func ParallelizeTimeout(timeout time.Duration, functions []func()) error {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	return ParallelizeContext(ctx, functions...)
-}
-
-// ParallelizeContext parallelizes the function calls with a context
-func ParallelizeContext(ctx context.Context, functions ...func()) error {
-	group := parallelizer.NewGroup()
-	for _, function := range functions {
-		group.Add(function)
-	}
-
-	return group.Wait(parallelizer.WithContext(ctx))
 }
 
 func FlattenExecPlan(execPlan map[int](map[int]Func)) map[string]rpi.Exec {
@@ -224,62 +202,53 @@ func FlattenExecPlan(execPlan map[int](map[int]Func)) map[string]rpi.Exec {
 func ExecuteExecPlan(execPlan map[int](map[int]Func), progress map[string]rpi.Exec) (map[string]rpi.Exec, uint8) {
 	var exitStatus uint8
 	var index string
-	var arguments []interface{}
 
 	for kp, parentExec := range execPlan {
 		index = fmt.Sprint(kp)
-		childExecFunc := make([]func(), 0, len(parentExec))
+		var wg sync.WaitGroup
 
 		for kc, childExec := range parentExec {
-			fmt.Println("----------------> " + childExec.Name)
-			fmt.Println("----------------> " + fmt.Sprint(kc))
+			wg.Add(1)
 
-			// creating the func that will be added to the WaitGroup
-			funChild := func() {
-				i, err := strconv.Atoi(index)
-				if err != nil {
-					panic("cannot convert index to integer")
+			i, err := strconv.Atoi(index)
+			if err != nil {
+				panic("cannot convert index to integer")
+			}
+
+			// adding arguments here in absolutely essentials
+			// it allows the params to be sorted in the right order
+			// arguments = append(arguments, childExec.Argument...)
+			if len(childExec.Dependency) > 0 && i > 1 {
+				for _, dep := range childExec.Dependency {
+					childExec.Argument = append(childExec.Argument, progress[dep].Stdout)
 				}
+			}
 
-				fmt.Println("----------------> " + fmt.Sprint(kc))
+			var res interface{}
+			var errC error
 
-				// adding arguments here in absolutely essentials
-				// it allows the params to be sorted in the right order
-				arguments = append(arguments, childExec.Argument...)
-
-				// intermediate arguments can only be extracted after first step is completed
-				// and only if the current function has one or multiple dependencies
-				// dep should be formatted the same way as index+Separator+fmt.Sprint(kc)
-				if len(childExec.Dependency) > 0 && i > 1 {
-					for _, dep := range childExec.Dependency {
-						arguments = append(arguments, progress[dep].Stdout)
+			go func(childExec Func, kc int) {
+				res, errC = Call(childExec.Pointer, childExec.Argument, &wg)
+				if errC != nil {
+					progress[index+Separator+fmt.Sprint(kc)] = rpi.Exec{
+						Name:       childExec.Name,
+						ExitStatus: 1,
+						Stderr:     fmt.Sprint(errC),
 					}
+				} else {
+					progress[index+Separator+fmt.Sprint(kc)] = res.(rpi.Exec)
 				}
+			}(childExec, kc)
 
-				fmt.Println("-------------------------------- " + childExec.Name)
-				fmt.Println(childExec.Argument)
-				fmt.Println(childExec.Name)
-				fmt.Println(childExec.Pointer)
-				fmt.Println(arguments)
-
-				res, _ := Call(childExec.Pointer, arguments)
-				resExec := res.(rpi.Exec)
-				exitStatus = resExec.ExitStatus
-				progress[index+Separator+fmt.Sprint(kc)] = resExec
-			}
-			childExecFunc = append(childExecFunc, funChild)
-			// index and intermediateRes are re-initialized at every turn
-			arguments = nil
-
-			if exitStatus != 0 {
-				break
-			}
 		}
 
-		Parallelize(childExecFunc)
+		wg.Wait()
 
-		if exitStatus != 0 {
-			break
+		for _, v := range progress {
+			if v.ExitStatus != 0 {
+				exitStatus = 1
+				break
+			}
 		}
 	}
 

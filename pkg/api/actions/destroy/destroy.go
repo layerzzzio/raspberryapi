@@ -23,23 +23,32 @@ func (des *Destroy) ExecuteSUS(processname string, processtype string) (rpi.Acti
 	// define the execution plan
 	// the below execution plan contains only one step
 	// this one step has only one substep
-	execPlan := map[int](map[int]actions.Func){
+	plan := map[int](map[int]actions.Func){
 		1: {
-			// no dependency for this task
-			// if there was one, the name of the limiting function
-			// should be the dependency value
 			1: {
 				Name:    actions.KillProcessByName,
 				Pointer: des.a.KillProcessByName,
-				Argument: actions.KPBN{
-					Processname: processname,
-					Processtype: processtype,
+				Argument: []interface{}{
+					actions.KPBN{
+						Processname: processname,
+						Processtype: processtype,
+					},
+				},
+			},
+			2: {
+				Name:    actions.KillProcessByName,
+				Pointer: des.a.KillProcessByName,
+				Argument: []interface{}{
+					actions.KPBN{
+						Processname: processname,
+						Processtype: processtype,
+					},
 				},
 			},
 		},
 	}
 
-	return des.dessys.ExecuteSUS(execPlan)
+	return des.dessys.ExecuteSUS(plan)
 }
 
 // ExecuteKP kill a process and returns an action.
