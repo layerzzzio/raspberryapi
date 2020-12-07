@@ -13,8 +13,8 @@ type Destroy struct{}
 // ExecuteDF returns an action response after deleting a file
 func (des Destroy) ExecuteDF(execPlan map[int](map[int]actions.Func)) (rpi.Action, error) {
 	actionStartTime := uint64(time.Now().Unix())
-	progressInit := actions.FlattenExecPlan(execPlan)
-	progress, exitStatus := actions.ExecuteExecPlan(execPlan, progressInit)
+	progressInit := actions.FlattenPlan(execPlan)
+	progress, exitStatus := actions.ExecutePlan(execPlan, progressInit)
 
 	return rpi.Action{
 		Name:          actions.DeleteFile,
@@ -29,8 +29,8 @@ func (des Destroy) ExecuteDF(execPlan map[int](map[int]actions.Func)) (rpi.Actio
 // ExecuteSUS returns an action response after stopping a user session
 func (des Destroy) ExecuteSUS(execPlan map[int](map[int]actions.Func)) (rpi.Action, error) {
 	actionStartTime := uint64(time.Now().Unix())
-	progressInit := actions.FlattenExecPlan(execPlan)
-	progress, exitStatus := actions.ExecuteExecPlan(execPlan, progressInit)
+	progressInit := actions.FlattenPlan(execPlan)
+	progress, exitStatus := actions.ExecutePlan(execPlan, progressInit)
 
 	return rpi.Action{
 		Name:          actions.StopUserSession,
@@ -45,8 +45,8 @@ func (des Destroy) ExecuteSUS(execPlan map[int](map[int]actions.Func)) (rpi.Acti
 // ExecuteKP returns an action response after killing a process
 func (des Destroy) ExecuteKP(execPlan map[int](map[int]actions.Func)) (rpi.Action, error) {
 	actionStartTime := uint64(time.Now().Unix())
-	progressInit := actions.FlattenExecPlan(execPlan)
-	progress, exitStatus := actions.ExecuteExecPlan(execPlan, progressInit)
+	progressInit := actions.FlattenPlan(execPlan)
+	progress, exitStatus := actions.ExecutePlan(execPlan, progressInit)
 
 	return rpi.Action{
 		Name:          actions.KillProcess,

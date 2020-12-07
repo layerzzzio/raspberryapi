@@ -26,8 +26,8 @@ func (des *Destroy) ExecuteSUS(processname string, processtype string) (rpi.Acti
 	plan := map[int](map[int]actions.Func){
 		1: {
 			1: {
-				Name:    actions.KillProcessByName,
-				Pointer: des.a.KillProcessByName,
+				Name:      actions.KillProcessByName,
+				Reference: des.a.KillProcessByName,
 				Argument: []interface{}{
 					actions.KPBN{
 						Processname: processname,
@@ -36,8 +36,8 @@ func (des *Destroy) ExecuteSUS(processname string, processtype string) (rpi.Acti
 				},
 			},
 			2: {
-				Name:    actions.KillProcessByName,
-				Pointer: des.a.KillProcessByName,
+				Name:      actions.KillProcessByName,
+				Reference: des.a.KillProcessByName,
 				Argument: []interface{}{
 					actions.KPBN{
 						Processname: processname,
