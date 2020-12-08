@@ -3,13 +3,13 @@ package actions_test
 import (
 	"errors"
 	"fmt"
-	"os"
 	"os/exec"
 	"testing"
 	"time"
 
 	"github.com/raspibuddy/rpi"
 	"github.com/raspibuddy/rpi/pkg/utl/actions"
+	"github.com/raspibuddy/rpi/pkg/utl/test_utl"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -54,7 +54,7 @@ func TestDeleteFile(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			a := actions.New()
-			createFile(dummypath)
+			test_utl.CreateFile(dummypath)
 			deletefile := a.DeleteFile(tc.path)
 			assert.Equal(t, tc.wantedData, deletefile)
 		})
@@ -147,7 +147,7 @@ func TestKillProcess(t *testing.T) {
 func TestKillProcessByName(t *testing.T) {
 	cases := []struct {
 		name             string
-		argument         actions.KPBN
+		argument         interface{}
 		wantedExitStatus uint8
 		wantedStderr     string
 	}{
@@ -175,6 +175,32 @@ func TestKillProcessByName(t *testing.T) {
 				Processname: "",
 				Processtype: "terminal",
 			},
+			wantedExitStatus: 1,
+			wantedStderr:     "exit status 2",
+		},
+		{
+			name: "error processtype is empty",
+			argument: actions.KPBN{
+				Processname: "",
+				Processtype: "terminal",
+			},
+			wantedExitStatus: 1,
+			wantedStderr:     "exit status 2",
+		},
+		{
+			name: "error otherParam",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"processname": "impossible_process",
+					"processtype": "terminal",
+				},
+			},
+			wantedExitStatus: 1,
+			wantedStderr:     "exit status 2",
+		},
+		{
+			name:             "error wrong type",
+			argument:         "dummy",
 			wantedExitStatus: 0,
 			wantedStderr:     "",
 		},
@@ -201,31 +227,6 @@ func TestKillProcessByName(t *testing.T) {
 		})
 	}
 }
-
-func createFile(path string) {
-	// check if file exists
-	var _, err = os.Stat(path)
-
-	// create file if not exists
-	if os.IsNotExist(err) {
-		var file, err = os.Create(path)
-		if isError(err) {
-			return
-		}
-		defer file.Close()
-	}
-
-	fmt.Println("File Created Successfully", path)
-}
-
-func isError(err error) bool {
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-
-	return (err != nil)
-}
-
 func TestFlattenPlan(t *testing.T) {
 	cases := []struct {
 		name       string
@@ -264,10 +265,10 @@ func TestFlattenPlan(t *testing.T) {
 			execPlan: map[int](map[int]actions.Func){
 				1: {
 					1: actions.Func{
-						Name:      "funcA",
-						Reference: funcA,
+						Name:      "FuncA",
+						Reference: test_utl.FuncA,
 						Argument: []interface{}{
-							ArgFuncA{
+							test_utl.ArgFuncA{
 								Arg0: "string0",
 								Arg1: "string1",
 							},
@@ -289,42 +290,45 @@ func TestFlattenPlan(t *testing.T) {
 	}
 }
 
-func timeSleep(dur1 int, dur2 int) int {
-	time.Sleep(time.Duration(dur1+dur2) * time.Second)
-	return dur1 + dur2
-}
-
 func TestCall(t *testing.T) {
 	cases := []struct {
 		name       string
 		funcName   interface{}
 		params     []interface{}
-		wantedData int
+		wantedData rpi.Exec
 		wantedErr  error
 	}{
 		{
 			name:      "error params out of index",
-			funcName:  timeSleep,
-			params:    []interface{}{1, 1, 1},
+			funcName:  test_utl.FuncB,
+			params:    []interface{}{test_utl.ArgFuncB{Arg2: "string2"}, "dummy"},
 			wantedErr: errors.New("The number of params is out of index."),
 		},
 		{
-			name:       "success calling function timeSleep",
-			funcName:   timeSleep,
-			params:     []interface{}{1, 1},
-			wantedData: 2,
+			name:     "success calling function FuncB",
+			funcName: test_utl.FuncB,
+			params:   []interface{}{test_utl.ArgFuncB{Arg2: "string2"}},
+			wantedData: rpi.Exec{
+				Name:       "FuncB",
+				StartTime:  1,
+				EndTime:    2,
+				ExitStatus: 0,
+				Stdin:      "",
+				Stdout:     "string2",
+				Stderr:     "",
+			},
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			// var wg sync.WaitGroup
-			// wg.Add(1)
-			FlattenPlan, err := actions.Call(tc.funcName, tc.params)
+			call, err := actions.Call(tc.funcName, tc.params)
+			fmt.Println(call)
+			fmt.Println(err)
 			if err != nil {
 				assert.Equal(t, tc.wantedErr, err)
 			} else {
-				assert.Equal(t, tc.wantedData, FlattenPlan.(int))
+				assert.Equal(t, tc.wantedData, call.(rpi.Exec))
 			}
 		})
 	}
@@ -352,99 +356,6 @@ func TestError(t *testing.T) {
 	}
 }
 
-type ArgFuncA struct {
-	Arg0 string
-	Arg1 string
-}
-
-func funcA(arg interface{}) (rpi.Exec, error) {
-	arg0 := arg.(ArgFuncA).Arg0
-	arg1 := arg.(ArgFuncA).Arg1
-
-	if arg0 == "" || arg1 == "" {
-		return rpi.Exec{}, &actions.Error{[]string{"arg0", "arg1"}}
-	}
-
-	stdOut := fmt.Sprintf("%v-%v", arg0, arg1)
-
-	time.Sleep(5 * time.Second)
-
-	res := rpi.Exec{
-		Name:       "funcA",
-		StartTime:  1,
-		EndTime:    2,
-		ExitStatus: 0,
-		Stdin:      "",
-		Stdout:     stdOut,
-		Stderr:     "",
-	}
-
-	return res, nil
-}
-
-type ArgFuncB struct {
-	Arg2 string
-}
-
-func funcB(arg interface{}) (rpi.Exec, error) {
-	arg2 := arg.(ArgFuncB).Arg2
-
-	if arg2 == "" {
-		return rpi.Exec{}, &actions.Error{[]string{"arg2"}}
-	}
-
-	stdOut := fmt.Sprint(arg2)
-
-	time.Sleep(2 * time.Second)
-
-	res := rpi.Exec{
-		Name:       "funcB",
-		StartTime:  1,
-		EndTime:    2,
-		ExitStatus: 0,
-		Stdin:      "",
-		Stdout:     stdOut,
-		Stderr:     "",
-	}
-
-	return res, nil
-}
-
-type ArgFuncC struct {
-	Arg3 string
-}
-
-func funcC(arg interface{}) (rpi.Exec, error) {
-	var arg3 string
-
-	fmt.Println("in funcC " + fmt.Sprint(arg))
-
-	switch v := arg.(type) {
-	case ArgFuncC:
-		arg3 = v.Arg3
-	case actions.OtherParams:
-		arg3 = arg.(actions.OtherParams).Value["arg3"]
-	default:
-		return rpi.Exec{}, &actions.Error{[]string{"arg2"}}
-	}
-
-	stdOut := fmt.Sprint(arg3)
-
-	time.Sleep(2 * time.Second)
-
-	res := rpi.Exec{
-		Name:       "funcC",
-		StartTime:  1,
-		EndTime:    2,
-		ExitStatus: 0,
-		Stdin:      "",
-		Stdout:     stdOut,
-		Stderr:     "",
-	}
-
-	return res, nil
-}
-
 func TestExecutePlanWithoutDependency(t *testing.T) {
 	cases := []struct {
 		name                 string
@@ -455,14 +366,14 @@ func TestExecutePlanWithoutDependency(t *testing.T) {
 		wantedDataExitStatus uint8
 	}{
 		{
-			name: "success : one parent | one child (funcA)",
+			name: "success : one parent | one child (test_utl.FuncA)",
 			execPlan: map[int](map[int]actions.Func){
 				1: {
 					1: actions.Func{
-						Name:      "funcA",
-						Reference: funcA,
+						Name:      "FuncA",
+						Reference: test_utl.FuncA,
 						Argument: []interface{}{
-							ArgFuncA{
+							test_utl.ArgFuncA{
 								Arg0: "string0",
 								Arg1: "string1",
 							},
@@ -476,7 +387,7 @@ func TestExecutePlanWithoutDependency(t *testing.T) {
 			},
 			wantedDataExec: map[string]rpi.Exec{
 				"1" + actions.Separator + "1": {
-					Name:       "funcA",
+					Name:       "FuncA",
 					StartTime:  1,
 					EndTime:    2,
 					ExitStatus: 0,
@@ -488,14 +399,14 @@ func TestExecutePlanWithoutDependency(t *testing.T) {
 			wantedDataExitStatus: 0,
 		},
 		{
-			name: "success : one parent | one child (funcB)",
+			name: "success : one parent | one child (test_utl.FuncB)",
 			execPlan: map[int](map[int]actions.Func){
 				1: {
 					1: actions.Func{
-						Name:      "funcB",
-						Reference: funcB,
+						Name:      "FuncB",
+						Reference: test_utl.FuncB,
 						Argument: []interface{}{
-							ArgFuncB{
+							test_utl.ArgFuncB{
 								Arg2: "string2",
 							},
 						},
@@ -508,7 +419,7 @@ func TestExecutePlanWithoutDependency(t *testing.T) {
 			},
 			wantedDataExec: map[string]rpi.Exec{
 				"1" + actions.Separator + "1": {
-					Name:       "funcB",
+					Name:       "FuncB",
 					StartTime:  1,
 					EndTime:    2,
 					ExitStatus: 0,
@@ -524,20 +435,20 @@ func TestExecutePlanWithoutDependency(t *testing.T) {
 			execPlan: map[int](map[int]actions.Func){
 				1: {
 					1: actions.Func{
-						Name:      "funcA",
-						Reference: funcA,
+						Name:      "FuncA",
+						Reference: test_utl.FuncA,
 						Argument: []interface{}{
-							ArgFuncA{
+							test_utl.ArgFuncA{
 								Arg0: "string0",
 								Arg1: "string1",
 							},
 						},
 					},
 					2: actions.Func{
-						Name:      "funcB",
-						Reference: funcB,
+						Name:      "FuncB",
+						Reference: test_utl.FuncB,
 						Argument: []interface{}{
-							ArgFuncB{
+							test_utl.ArgFuncB{
 								Arg2: "string2",
 							},
 						},
@@ -551,7 +462,7 @@ func TestExecutePlanWithoutDependency(t *testing.T) {
 			},
 			wantedDataExec: map[string]rpi.Exec{
 				"1" + actions.Separator + "1": {
-					Name:       "funcA",
+					Name:       "FuncA",
 					StartTime:  1,
 					EndTime:    2,
 					ExitStatus: 0,
@@ -560,7 +471,7 @@ func TestExecutePlanWithoutDependency(t *testing.T) {
 					Stdout:     "string0-string1",
 				},
 				"1" + actions.Separator + "2": {
-					Name:       "funcB",
+					Name:       "FuncB",
 					StartTime:  1,
 					EndTime:    2,
 					ExitStatus: 0,
@@ -571,153 +482,153 @@ func TestExecutePlanWithoutDependency(t *testing.T) {
 			},
 			wantedDataExitStatus: 0,
 		},
-		// {
-		// 	name: "success : two parents | one child each",
-		// 	execPlan: map[int](map[int]actions.Func){
-		// 		1: {
-		// 			1: actions.Func{
-		// 				Name:      "funcA",
-		// 				Reference: funcA,
-		// 				Argument: []interface{}{
-		// 					ArgFuncA{
-		// 						Arg0: "string0",
-		// 						Arg1: "string1",
-		// 					},
-		// 				},
-		// 			},
-		// 		},
-		// 		2: {
-		// 			1: actions.Func{
-		// 				Name:      "funcB",
-		// 				Reference: funcB,
-		// 				Argument: []interface{}{
-		// 					ArgFuncB{
-		// 						Arg2: "string2",
-		// 					},
-		// 				},
-		// 			},
-		// 		},
-		// 	},
-		// 	timeExpected: 7,
-		// 	progress: map[string]rpi.Exec{
-		// 		"1" + actions.Separator + "1": {},
-		// 		"2" + actions.Separator + "1": {},
-		// 	},
-		// 	wantedDataExec: map[string]rpi.Exec{
-		// 		"1" + actions.Separator + "1": {
-		// 			Name:       "funcA",
-		// 			StartTime:  1,
-		// 			EndTime:    2,
-		// 			ExitStatus: 0,
-		// 			Stdin:      "",
-		// 			Stderr:     "",
-		// 			Stdout:     "string0-string1",
-		// 		},
-		// 		"2" + actions.Separator + "1": {
-		// 			Name:       "funcB",
-		// 			StartTime:  1,
-		// 			EndTime:    2,
-		// 			ExitStatus: 0,
-		// 			Stdin:      "",
-		// 			Stderr:     "",
-		// 			Stdout:     "string2",
-		// 		},
-		// 	},
-		// 	wantedDataExitStatus: 0,
-		// },
-		// {
-		// 	name: "success : two parents | two child each",
-		// 	execPlan: map[int](map[int]actions.Func){
-		// 		1: {
-		// 			1: actions.Func{
-		// 				Name:      "funcA",
-		// 				Reference: funcA,
-		// 				Argument: []interface{}{
-		// 					ArgFuncA{
-		// 						Arg0: "string0",
-		// 						Arg1: "string1",
-		// 					},
-		// 				},
-		// 			},
-		// 			2: actions.Func{
-		// 				Name:      "funcA",
-		// 				Reference: funcA,
-		// 				Argument: []interface{}{
-		// 					ArgFuncA{
-		// 						Arg0: "string0",
-		// 						Arg1: "string1",
-		// 					},
-		// 				},
-		// 			},
-		// 		},
-		// 		2: {
-		// 			1: actions.Func{
-		// 				Name:      "funcB",
-		// 				Reference: funcB,
-		// 				Argument: []interface{}{
-		// 					ArgFuncB{
-		// 						Arg2: "string2",
-		// 					},
-		// 				},
-		// 			},
-		// 			2: actions.Func{
-		// 				Name:      "funcB",
-		// 				Reference: funcB,
-		// 				Argument: []interface{}{
-		// 					ArgFuncB{
-		// 						Arg2: "string2",
-		// 					},
-		// 				},
-		// 			},
-		// 		},
-		// 	},
-		// 	timeExpected: 7,
-		// 	progress: map[string]rpi.Exec{
-		// 		"1" + actions.Separator + "1": {},
-		// 		"1" + actions.Separator + "2": {},
-		// 		"2" + actions.Separator + "1": {},
-		// 		"2" + actions.Separator + "2": {},
-		// 	},
-		// 	wantedDataExec: map[string]rpi.Exec{
-		// 		"1" + actions.Separator + "1": {
-		// 			Name:       "funcA",
-		// 			StartTime:  1,
-		// 			EndTime:    2,
-		// 			ExitStatus: 0,
-		// 			Stdin:      "",
-		// 			Stderr:     "",
-		// 			Stdout:     "string0-string1",
-		// 		},
-		// 		"1" + actions.Separator + "2": {
-		// 			Name:       "funcA",
-		// 			StartTime:  1,
-		// 			EndTime:    2,
-		// 			ExitStatus: 0,
-		// 			Stdin:      "",
-		// 			Stderr:     "",
-		// 			Stdout:     "string0-string1",
-		// 		},
-		// 		"2" + actions.Separator + "1": {
-		// 			Name:       "funcB",
-		// 			StartTime:  1,
-		// 			EndTime:    2,
-		// 			ExitStatus: 0,
-		// 			Stdin:      "",
-		// 			Stderr:     "",
-		// 			Stdout:     "string2",
-		// 		},
-		// 		"2" + actions.Separator + "2": {
-		// 			Name:       "funcB",
-		// 			StartTime:  1,
-		// 			EndTime:    2,
-		// 			ExitStatus: 0,
-		// 			Stdin:      "",
-		// 			Stderr:     "",
-		// 			Stdout:     "string2",
-		// 		},
-		// 	},
-		// 	wantedDataExitStatus: 0,
-		// },
+		{
+			name: "success : two parents | one child each",
+			execPlan: map[int](map[int]actions.Func){
+				1: {
+					1: actions.Func{
+						Name:      "FuncA",
+						Reference: test_utl.FuncA,
+						Argument: []interface{}{
+							test_utl.ArgFuncA{
+								Arg0: "string0",
+								Arg1: "string1",
+							},
+						},
+					},
+				},
+				2: {
+					1: actions.Func{
+						Name:      "FuncB",
+						Reference: test_utl.FuncB,
+						Argument: []interface{}{
+							test_utl.ArgFuncB{
+								Arg2: "string2",
+							},
+						},
+					},
+				},
+			},
+			timeExpected: 7,
+			progress: map[string]rpi.Exec{
+				"1" + actions.Separator + "1": {},
+				"2" + actions.Separator + "1": {},
+			},
+			wantedDataExec: map[string]rpi.Exec{
+				"1" + actions.Separator + "1": {
+					Name:       "FuncA",
+					StartTime:  1,
+					EndTime:    2,
+					ExitStatus: 0,
+					Stdin:      "",
+					Stderr:     "",
+					Stdout:     "string0-string1",
+				},
+				"2" + actions.Separator + "1": {
+					Name:       "FuncB",
+					StartTime:  1,
+					EndTime:    2,
+					ExitStatus: 0,
+					Stdin:      "",
+					Stderr:     "",
+					Stdout:     "string2",
+				},
+			},
+			wantedDataExitStatus: 0,
+		},
+		{
+			name: "success : two parents | two child each",
+			execPlan: map[int](map[int]actions.Func){
+				1: {
+					1: actions.Func{
+						Name:      "FuncA",
+						Reference: test_utl.FuncA,
+						Argument: []interface{}{
+							test_utl.ArgFuncA{
+								Arg0: "string0",
+								Arg1: "string1",
+							},
+						},
+					},
+					2: actions.Func{
+						Name:      "FuncA",
+						Reference: test_utl.FuncA,
+						Argument: []interface{}{
+							test_utl.ArgFuncA{
+								Arg0: "string0",
+								Arg1: "string1",
+							},
+						},
+					},
+				},
+				2: {
+					1: actions.Func{
+						Name:      "FuncB",
+						Reference: test_utl.FuncB,
+						Argument: []interface{}{
+							test_utl.ArgFuncB{
+								Arg2: "string2",
+							},
+						},
+					},
+					2: actions.Func{
+						Name:      "FuncB",
+						Reference: test_utl.FuncB,
+						Argument: []interface{}{
+							test_utl.ArgFuncB{
+								Arg2: "string2",
+							},
+						},
+					},
+				},
+			},
+			timeExpected: 7,
+			progress: map[string]rpi.Exec{
+				"1" + actions.Separator + "1": {},
+				"1" + actions.Separator + "2": {},
+				"2" + actions.Separator + "1": {},
+				"2" + actions.Separator + "2": {},
+			},
+			wantedDataExec: map[string]rpi.Exec{
+				"1" + actions.Separator + "1": {
+					Name:       "FuncA",
+					StartTime:  1,
+					EndTime:    2,
+					ExitStatus: 0,
+					Stdin:      "",
+					Stderr:     "",
+					Stdout:     "string0-string1",
+				},
+				"1" + actions.Separator + "2": {
+					Name:       "FuncA",
+					StartTime:  1,
+					EndTime:    2,
+					ExitStatus: 0,
+					Stdin:      "",
+					Stderr:     "",
+					Stdout:     "string0-string1",
+				},
+				"2" + actions.Separator + "1": {
+					Name:       "FuncB",
+					StartTime:  1,
+					EndTime:    2,
+					ExitStatus: 0,
+					Stdin:      "",
+					Stderr:     "",
+					Stdout:     "string2",
+				},
+				"2" + actions.Separator + "2": {
+					Name:       "FuncB",
+					StartTime:  1,
+					EndTime:    2,
+					ExitStatus: 0,
+					Stdin:      "",
+					Stderr:     "",
+					Stdout:     "string2",
+				},
+			},
+			wantedDataExitStatus: 0,
+		},
 	}
 
 	counter := 1
@@ -749,14 +660,14 @@ func TestExecutePlanWithDependency(t *testing.T) {
 		wantedDataExitStatus uint8
 	}{
 		{
-			name: "success : two parents | one child each",
+			name: "success : two parents | one child each: argument from previous step",
 			execPlan: map[int](map[int]actions.Func){
 				1: {
 					1: actions.Func{
-						Name:      "funcA",
-						Reference: funcA,
+						Name:      "FuncA",
+						Reference: test_utl.FuncA,
 						Argument: []interface{}{
-							ArgFuncA{
+							test_utl.ArgFuncA{
 								Arg0: "string0",
 								Arg1: "string1",
 							},
@@ -765,8 +676,8 @@ func TestExecutePlanWithDependency(t *testing.T) {
 				},
 				2: {
 					1: actions.Func{
-						Name:      "funcC",
-						Reference: funcC,
+						Name:      "FuncC",
+						Reference: test_utl.FuncC,
 						Dependency: actions.OtherParams{
 							Value: map[string]string{
 								"arg3": "1" + actions.Separator + "1",
@@ -781,7 +692,7 @@ func TestExecutePlanWithDependency(t *testing.T) {
 			},
 			wantedDataExec: map[string]rpi.Exec{
 				"1" + actions.Separator + "1": {
-					Name:       "funcA",
+					Name:       "FuncA",
 					StartTime:  1,
 					EndTime:    2,
 					ExitStatus: 0,
@@ -790,13 +701,104 @@ func TestExecutePlanWithDependency(t *testing.T) {
 					Stdout:     "string0-string1",
 				},
 				"2" + actions.Separator + "1": {
-					Name:       "funcC",
+					Name:       "FuncC",
 					StartTime:  1,
 					EndTime:    2,
 					ExitStatus: 0,
 					Stdin:      "",
 					Stderr:     "",
 					Stdout:     "string0-string1",
+				},
+			},
+			wantedDataExitStatus: 0,
+		},
+		{
+			name: "success : two parents | two children each: argument from previous step",
+			execPlan: map[int](map[int]actions.Func){
+				1: {
+					1: actions.Func{
+						Name:      "FuncA",
+						Reference: test_utl.FuncA,
+						Argument: []interface{}{
+							test_utl.ArgFuncA{
+								Arg0: "string0",
+								Arg1: "string1",
+							},
+						},
+					},
+					2: actions.Func{
+						Name:      "FuncB",
+						Reference: test_utl.FuncB,
+						Argument: []interface{}{
+							test_utl.ArgFuncB{
+								Arg2: "string2",
+							},
+						},
+					},
+				},
+				2: {
+					1: actions.Func{
+						Name:      "FuncC",
+						Reference: test_utl.FuncC,
+						Dependency: actions.OtherParams{
+							Value: map[string]string{
+								"arg3": "1" + actions.Separator + "1",
+							},
+						},
+					},
+					2: actions.Func{
+						Name:      "FuncC",
+						Reference: test_utl.FuncC,
+						Dependency: actions.OtherParams{
+							Value: map[string]string{
+								"arg3": "1" + actions.Separator + "2",
+							},
+						},
+					},
+				},
+			},
+			progress: map[string]rpi.Exec{
+				"1" + actions.Separator + "1": {},
+				"1" + actions.Separator + "2": {},
+				"2" + actions.Separator + "1": {},
+				"2" + actions.Separator + "2": {},
+			},
+			wantedDataExec: map[string]rpi.Exec{
+				"1" + actions.Separator + "1": {
+					Name:       "FuncA",
+					StartTime:  1,
+					EndTime:    2,
+					ExitStatus: 0,
+					Stdin:      "",
+					Stderr:     "",
+					Stdout:     "string0-string1",
+				},
+				"1" + actions.Separator + "2": {
+					Name:       "FuncB",
+					StartTime:  1,
+					EndTime:    2,
+					ExitStatus: 0,
+					Stdin:      "",
+					Stderr:     "",
+					Stdout:     "string2",
+				},
+				"2" + actions.Separator + "1": {
+					Name:       "FuncC",
+					StartTime:  1,
+					EndTime:    2,
+					ExitStatus: 0,
+					Stdin:      "",
+					Stderr:     "",
+					Stdout:     "string0-string1",
+				},
+				"2" + actions.Separator + "2": {
+					Name:       "FuncC",
+					StartTime:  1,
+					EndTime:    2,
+					ExitStatus: 0,
+					Stdin:      "",
+					Stderr:     "",
+					Stdout:     "string2",
 				},
 			},
 			wantedDataExitStatus: 0,

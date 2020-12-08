@@ -31,17 +31,7 @@ func (des *Destroy) ExecuteSUS(processname string, processtype string) (rpi.Acti
 				Argument: []interface{}{
 					actions.KPBN{
 						Processname: processname,
-						Processtype: processtype,
-					},
-				},
-			},
-			2: {
-				Name:      actions.KillProcessByName,
-				Reference: des.a.KillProcessByName,
-				Argument: []interface{}{
-					actions.KPBN{
-						Processname: processname,
-						Processtype: processtype,
+						Processtype: "terminal",
 					},
 				},
 			},

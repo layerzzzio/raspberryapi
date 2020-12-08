@@ -110,16 +110,23 @@ type KPBN struct {
 }
 
 // KillProcessByName disconnect a user from an active tty from the current host
-func (s Service) KillProcessByName(arg interface{}, dependency ...OtherParams) (rpi.Exec, error) {
-	processname := arg.(KPBN).Processname
-	processtype := arg.(KPBN).Processtype
+// func (s Service) KillProcessByName(arg interface{}, dependency ...OtherParams) (rpi.Exec, error) {
+func (s Service) KillProcessByName(arg interface{}) (rpi.Exec, error) {
+	var processname string
+	var processtype string
 
-	if processname == "" || processtype == "" {
+	switch v := arg.(type) {
+	case KPBN:
+		processname = v.Processname
+		processtype = v.Processtype
+	case OtherParams:
+		processname = arg.(OtherParams).Value["processname"]
+		processtype = arg.(OtherParams).Value["processtype"]
+	default:
 		return rpi.Exec{}, &Error{[]string{"processname", "processtype"}}
 	}
 
 	startTime := uint64(time.Now().Unix())
-
 	exitStatus := 0
 	var stdErr string
 
@@ -209,80 +216,85 @@ type CallRes struct {
 }
 
 func handleResults(input chan CallRes, output chan map[string]rpi.Exec, wg *sync.WaitGroup) {
-	var progress = map[string]rpi.Exec{}
+	var res = map[string]rpi.Exec{}
 	for exec := range input {
-		progress[exec.Index] = exec.Result
+		res[exec.Index] = exec.Result
 		wg.Done()
 	}
-	output <- progress
+	output <- res
+}
+
+func concurrentExec(execs map[int]Func, index string, progress map[string]rpi.Exec) map[string]rpi.Exec {
+	input := make(chan CallRes)
+	output := make(chan map[string]rpi.Exec)
+	var wg sync.WaitGroup
+	defer close(output)
+
+	go handleResults(input, output, &wg)
+
+	for kc, childExec := range execs {
+		wg.Add(1)
+		i, _ := strconv.Atoi(index)
+
+		// adding arguments here in absolutely essentials
+		// it allows the params to be sorted in the right order
+		// arguments = append(arguments, childExec.Argument...)
+		if len(childExec.Dependency.Value) > 0 && i > 1 {
+			otherParamValue := map[string]string{}
+			for varName, dep := range childExec.Dependency.Value {
+				otherParamValue[varName] = progress[dep].Stdout
+				otherParam := OtherParams{
+					Value: otherParamValue,
+				}
+				childExec.Argument = append(childExec.Argument, otherParam)
+			}
+		}
+
+		go func(childExec Func, kc int) {
+			res, errC := Call(childExec.Reference, childExec.Argument)
+			if errC != nil {
+				input <- CallRes{
+					Index: index + Separator + fmt.Sprint(kc),
+					Result: rpi.Exec{
+						Name:       childExec.Name,
+						ExitStatus: 1,
+						Stderr:     fmt.Sprint(errC),
+					},
+				}
+			} else {
+				input <- CallRes{
+					Index:  index + Separator + fmt.Sprint(kc),
+					Result: res.(rpi.Exec),
+				}
+			}
+		}(childExec, kc)
+	}
+
+	wg.Wait()       // Wait until the count is back to zero
+	close(input)    // Close the input channel
+	res := <-output // Read the message written to the output channel
+	return res
 }
 
 func ExecutePlan(execPlan map[int](map[int]Func), progress map[string]rpi.Exec) (map[string]rpi.Exec, uint8) {
 	var exitStatus uint8
 	var index string
 	start := int(time.Now().Unix())
-	input := make(chan CallRes)
-	output := make(chan map[string]rpi.Exec)
 
 	for kp, parentExec := range execPlan {
 		index = fmt.Sprint(kp)
-		var wg sync.WaitGroup
 
-		defer close(output)
+		res := concurrentExec(parentExec, index, progress)
 
-		go handleResults(input, output, &wg)
-
-		for kc, childExec := range parentExec {
-			wg.Add(1)
-			i, _ := strconv.Atoi(index)
-
-			// adding arguments here in absolutely essentials
-			// it allows the params to be sorted in the right order
-			// arguments = append(arguments, childExec.Argument...)
-			if len(childExec.Dependency.Value) > 0 && i > 1 {
-				otherParamValue := map[string]string{}
-				for varName, dep := range childExec.Dependency.Value {
-					otherParamValue[varName] = progress[dep].Stdout
-					otherParam := OtherParams{
-						Value: otherParamValue,
-					}
-					childExec.Argument = append(childExec.Argument, otherParam)
-				}
-			}
-
-			go func(childExec Func, kc int) {
-				// wg.Done() is located in function Call()
-				res, errC := Call(childExec.Reference, childExec.Argument)
-
-				if errC != nil {
-					input <- CallRes{
-						Index: index + Separator + fmt.Sprint(kc),
-						Result: rpi.Exec{
-							Name:       childExec.Name,
-							ExitStatus: 1,
-							Stderr:     fmt.Sprint(errC),
-						},
-					}
-				} else {
-					input <- CallRes{
-						Index:  index + Separator + fmt.Sprint(kc),
-						Result: res.(rpi.Exec),
-					}
-				}
-			}(childExec, kc)
-		}
-
-		wg.Wait()            // Wait until the count is back to zero
-		close(input)         // Close the input channel
-		progress := <-output // Read the message written to the output channel
-
-		fmt.Println(progress)
-
-		for _, v := range progress {
+		for k, v := range res {
+			progress[k] = v
 			if v.ExitStatus != 0 {
 				exitStatus = 1
-				break
 			}
+		}
+
+		if exitStatus == 1 {
+			break
 		}
 	}
 
