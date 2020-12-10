@@ -42,3 +42,13 @@ https://brunopaz.dev/blog/building-a-basic-ci-cd-pipeline-for-a-golang-applicati
 Some GitHub Actions used:
 - codecov https://github.com/marketplace/actions/codecov
 - golang-ci lint https://github.com/golangci/golangci-lint-action
+
+# how to detect data race
+## per file
+/usr/local/bin/go test -timeout 30s -race metrics_test.go
+/usr/local/bin/go test -timeout 620s -race actions_test.go
+
+## per test
+/usr/local/bin/go test -timeout 30s -run ^TestCall$ github.com/raspibuddy/rpi/pkg/utl/actions -race
+/usr/local/bin/go test -timeout 30s -run ^TestExecutePlanWithoutDependency$ github.com/raspibuddy/rpi/pkg/utl/actions -race
+/usr/local/bin/go test -timeout 30s -run ^TestExecutePlanWithDependency$ github.com/raspibuddy/rpi/pkg/utl/actions -race

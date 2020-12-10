@@ -6,22 +6,22 @@ import (
 
 // Actions mock
 type Actions struct {
-	DeleteFileFn     func(path string) rpi.Exec
-	DisconnectUserFn func(terminal string, username string) rpi.Exec
-	KillProcessFn    func(pid int) rpi.Exec
+	DeleteFileFn        func(arg interface{}) (rpi.Exec, error)
+	KillProcessByNameFn func(arg interface{}) (rpi.Exec, error)
+	KillProcessFn       func(arg interface{}) (rpi.Exec, error)
 }
 
 // DeleteFile mock
-func (a Actions) DeleteFile(path string) rpi.Exec {
-	return a.DeleteFileFn(path)
+func (a Actions) DeleteFile(arg interface{}) (rpi.Exec, error) {
+	return a.DeleteFileFn(arg)
 }
 
-// DisconnectUser mock
-func (a Actions) DisconnectUser(terminal string, username string) rpi.Exec {
-	return a.DisconnectUserFn(terminal, username)
+// KillProcessByName mock
+func (a Actions) KillProcessByName(arg interface{}) (rpi.Exec, error) {
+	return a.KillProcessByNameFn(arg)
 }
 
 // KillProcess mock
-func (a Actions) KillProcess(pid int) rpi.Exec {
-	return a.KillProcessFn(pid)
+func (a Actions) KillProcess(arg interface{}) (rpi.Exec, error) {
+	return a.KillProcessFn(arg)
 }

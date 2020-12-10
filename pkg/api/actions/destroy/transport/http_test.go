@@ -1,6 +1,7 @@
 package transport_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -38,7 +39,7 @@ func TestExecuteDF(t *testing.T) {
 			name: "error: ExecuteDF result is nil",
 			req:  "?filepath=/dummy",
 			dessys: &mocksys.Action{
-				ExecuteDFFn: func(map[int]rpi.Exec) (rpi.Action, error) {
+				ExecuteDFFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
 					return rpi.Action{}, errors.New("test error")
 				},
 			},
@@ -49,27 +50,13 @@ func TestExecuteDF(t *testing.T) {
 			wantedStatus: http.StatusOK,
 			req:          "?filepath=/dummy",
 			dessys: &mocksys.Action{
-				ExecuteDFFn: func(map[int]rpi.Exec) (rpi.Action, error) {
+				ExecuteDFFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
 					return rpi.Action{
-						Name: actions.DeleteFile,
-						Steps: map[int]string{
-							1: actions.DeleteFile,
-						},
+						Name:          actions.DeleteFile,
 						NumberOfSteps: 1,
 						StartTime:     uint64(time.Now().Unix()),
 						EndTime:       uint64(time.Now().Unix()),
 						ExitStatus:    0,
-						Executions: map[int]rpi.Exec{
-							1: {
-								Name:       actions.DeleteFile,
-								StartTime:  uint64(time.Now().Unix()),
-								EndTime:    uint64(time.Now().Unix()),
-								ExitStatus: 0,
-								Stdin:      "",
-								Stdout:     "",
-								Stderr:     "",
-							},
-						},
 					}, nil
 				},
 			},
@@ -90,7 +77,7 @@ func TestExecuteDF(t *testing.T) {
 
 			fmt.Println(path)
 
-			res, err := http.Get(path)
+			res, err := http.Post(path, "application/json", bytes.NewBufferString(tc.req))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -113,7 +100,7 @@ func TestExecuteDF(t *testing.T) {
 	}
 }
 
-func TestExecuteDU(t *testing.T) {
+func TestExecuteSUS(t *testing.T) {
 	var response rpi.Action
 
 	cases := []struct {
@@ -129,15 +116,10 @@ func TestExecuteDU(t *testing.T) {
 			wantedStatus: http.StatusNotFound,
 		},
 		{
-			name:         "error: invalid request response",
-			req:          "?terminalXXX=ttys001&usernameXXX=massonl",
-			wantedStatus: http.StatusNotFound,
-		},
-		{
-			name: "error: ExecuteDU result is nil",
-			req:  "?terminal=ttys001&username=massonl",
+			name: "error: ExecuteSUS result is nil",
+			req:  "?processname=dummyprocess",
 			dessys: &mocksys.Action{
-				ExecuteDUFn: func(map[int]rpi.Exec) (rpi.Action, error) {
+				ExecuteSUSFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
 					return rpi.Action{}, errors.New("test error")
 				},
 			},
@@ -146,29 +128,15 @@ func TestExecuteDU(t *testing.T) {
 		{
 			name:         "success",
 			wantedStatus: http.StatusOK,
-			req:          "?terminal=ttys001&username=massonl",
+			req:          "?processname=dummyprocess",
 			dessys: &mocksys.Action{
-				ExecuteDUFn: func(map[int]rpi.Exec) (rpi.Action, error) {
+				ExecuteSUSFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
 					return rpi.Action{
-						Name: actions.DisconnectUser,
-						Steps: map[int]string{
-							1: actions.DisconnectUser,
-						},
+						Name:          actions.StopUserSession,
 						NumberOfSteps: 1,
 						StartTime:     uint64(time.Now().Unix()),
 						EndTime:       uint64(time.Now().Unix()),
 						ExitStatus:    0,
-						Executions: map[int]rpi.Exec{
-							1: {
-								Name:       actions.DisconnectUser,
-								StartTime:  uint64(time.Now().Unix()),
-								EndTime:    uint64(time.Now().Unix()),
-								ExitStatus: 0,
-								Stdin:      "",
-								Stdout:     "",
-								Stderr:     "",
-							},
-						},
 					}, nil
 				},
 			},
@@ -185,8 +153,11 @@ func TestExecuteDU(t *testing.T) {
 			ts := httptest.NewServer(r)
 
 			defer ts.Close()
-			path := ts.URL + "/destroy/disconnectuser" + tc.req
-			res, err := http.Get(path)
+			path := ts.URL + "/destroy/stopusersession" + tc.req
+
+			fmt.Println(path)
+
+			res, err := http.Post(path, "application/json", bytes.NewBufferString(tc.req))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -233,62 +204,27 @@ func TestExecuteKP(t *testing.T) {
 			name: "error: ExecuteKP result is nil",
 			req:  "1234",
 			dessys: &mocksys.Action{
-				ExecuteKPFn: func(map[int]rpi.Exec) (rpi.Action, error) {
+				ExecuteKPFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
 					return rpi.Action{}, errors.New("test error")
 				},
 			},
 			wantedStatus: http.StatusInternalServerError,
 		},
 		{
-			name: "success",
-			req:  "1234",
+			name:         "success",
+			wantedStatus: http.StatusOK,
+			req:          "1234",
 			dessys: &mocksys.Action{
-				ExecuteKPFn: func(map[int]rpi.Exec) (rpi.Action, error) {
+				ExecuteKPFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
 					return rpi.Action{
-						Name: actions.KillProcess,
-						Steps: map[int]string{
-							1: actions.KillProcess,
-						},
+						Name:          actions.StopUserSession,
 						NumberOfSteps: 1,
 						StartTime:     uint64(time.Now().Unix()),
 						EndTime:       uint64(time.Now().Unix()),
 						ExitStatus:    0,
-						Executions: map[int]rpi.Exec{
-							1: {
-								Name:       actions.KillProcess,
-								StartTime:  uint64(time.Now().Unix()),
-								EndTime:    uint64(time.Now().Unix()),
-								ExitStatus: 0,
-								Stdin:      "",
-								Stdout:     "",
-								Stderr:     "",
-							},
-						},
 					}, nil
 				},
 			},
-			wantedResp: rpi.Action{
-				Name: actions.KillProcess,
-				Steps: map[int]string{
-					1: actions.KillProcess,
-				},
-				NumberOfSteps: 1,
-				StartTime:     uint64(time.Now().Unix()),
-				EndTime:       uint64(time.Now().Unix()),
-				ExitStatus:    0,
-				Executions: map[int]rpi.Exec{
-					1: {
-						Name:       actions.KillProcess,
-						StartTime:  uint64(time.Now().Unix()),
-						EndTime:    uint64(time.Now().Unix()),
-						ExitStatus: 0,
-						Stdin:      "",
-						Stdout:     "",
-						Stderr:     "",
-					},
-				},
-			},
-			wantedStatus: http.StatusOK,
 		},
 	}
 
@@ -304,7 +240,7 @@ func TestExecuteKP(t *testing.T) {
 			defer ts.Close()
 			path := ts.URL + "/destroy/killprocess/" + tc.req
 
-			res, err := http.Get(path)
+			res, err := http.Post(path, "application/json", bytes.NewBufferString(tc.req))
 			if err != nil {
 				t.Fatal(err)
 			}
