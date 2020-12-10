@@ -1,6 +1,7 @@
 package test_utl_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -153,8 +154,13 @@ func TestCreateFile(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			a := actions.New()
 			res := test_utl.CreateFile(tc.path)
+			fmt.Println(res)
 			if res {
-				a.DeleteFile(tc.path)
+				del, err := a.DeleteFile(actions.DF{Path: tc.path})
+				if err != nil {
+					fmt.Println(del)
+					fmt.Println(err)
+				}
 			}
 			assert.Equal(t, tc.wantedData, res)
 		})

@@ -20,16 +20,16 @@ type Destroy struct {
 
 // DESSYS represents a Destroy repository service.
 type DESSYS interface {
-	ExecuteDF(map[int]rpi.Exec) (rpi.Action, error)
+	ExecuteDF(map[int](map[int]actions.Func)) (rpi.Action, error)
 	ExecuteSUS(map[int](map[int]actions.Func)) (rpi.Action, error)
-	ExecuteKP(map[int]rpi.Exec) (rpi.Action, error)
+	ExecuteKP(map[int](map[int]actions.Func)) (rpi.Action, error)
 }
 
 // Actions represents the system metrics interface
 type Actions interface {
-	DeleteFile(string) rpi.Exec
-	KillProcessByName(string, string) rpi.Exec
-	KillProcess(string) rpi.Exec
+	DeleteFile(interface{}) (rpi.Exec, error)
+	KillProcessByName(interface{}) (rpi.Exec, error)
+	KillProcess(interface{}) (rpi.Exec, error)
 }
 
 // New creates a DESSYS application service instance.

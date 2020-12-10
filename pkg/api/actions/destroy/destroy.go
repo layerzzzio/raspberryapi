@@ -9,20 +9,25 @@ import (
 
 // ExecuteDF delete file(s) and returns an action.
 func (des *Destroy) ExecuteDF(path string) (rpi.Action, error) {
-	// populate execs in the right execution order
-	// always start with 1, not with 0
-	execs := map[int]rpi.Exec{
-		1: des.a.DeleteFile(path),
+	plan := map[int](map[int]actions.Func){
+		1: {
+			1: {
+				Name:      actions.DeleteFile,
+				Reference: des.a.DeleteFile,
+				Argument: []interface{}{
+					actions.KP{
+						Pid: path,
+					},
+				},
+			},
+		},
 	}
 
-	return des.dessys.ExecuteDF(execs)
+	return des.dessys.ExecuteDF(plan)
 }
 
 // ExecuteSUS stop a user session and returns an action.
 func (des *Destroy) ExecuteSUS(processname string, processtype string) (rpi.Action, error) {
-	// define the execution plan
-	// the below execution plan contains only one step
-	// this one step has only one substep
 	plan := map[int](map[int]actions.Func){
 		1: {
 			1: {
@@ -31,39 +36,7 @@ func (des *Destroy) ExecuteSUS(processname string, processtype string) (rpi.Acti
 				Argument: []interface{}{
 					actions.KPBN{
 						Processname: processname,
-						Processtype: "terminal",
-					},
-				},
-			},
-			2: {
-				Name:      actions.KillProcessByName,
-				Reference: des.a.KillProcessByName,
-				Argument: []interface{}{
-					actions.KPBN{
-						Processname: processname,
-						Processtype: "terminal",
-					},
-				},
-			},
-		},
-		2: {
-			1: {
-				Name:      actions.KillProcessByName,
-				Reference: des.a.KillProcessByName,
-				Argument: []interface{}{
-					actions.KPBN{
-						Processname: processname,
-						Processtype: "terminal",
-					},
-				},
-			},
-			2: {
-				Name:      actions.KillProcessByName,
-				Reference: des.a.KillProcessByName,
-				Argument: []interface{}{
-					actions.KPBN{
-						Processname: processname,
-						Processtype: "terminal",
+						Processtype: processtype,
 					},
 				},
 			},
@@ -75,11 +48,19 @@ func (des *Destroy) ExecuteSUS(processname string, processtype string) (rpi.Acti
 
 // ExecuteKP kill a process and returns an action.
 func (des *Destroy) ExecuteKP(pid int) (rpi.Action, error) {
-	// populate execs in the right execution order
-	// always start with 1, not with 0
-	execs := map[int]rpi.Exec{
-		1: des.a.KillProcess(fmt.Sprint(pid)),
+	plan := map[int](map[int]actions.Func){
+		1: {
+			1: {
+				Name:      actions.KillProcess,
+				Reference: des.a.KillProcess,
+				Argument: []interface{}{
+					actions.KP{
+						Pid: fmt.Sprint(pid),
+					},
+				},
+			},
+		},
 	}
 
-	return des.dessys.ExecuteKP(execs)
+	return des.dessys.ExecuteKP(plan)
 }

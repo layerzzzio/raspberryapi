@@ -71,8 +71,23 @@ func (e *Error) Error() string {
 	return fmt.Sprintf("at least one argument is empty: %v", e.Arguments)
 }
 
+type KP struct {
+	Pid string
+}
+
 // KillProcess kill a given process
-func (s Service) KillProcess(pid string) rpi.Exec {
+func (s Service) KillProcess(arg interface{}) (rpi.Exec, error) {
+	var pid string
+
+	switch v := arg.(type) {
+	case KP:
+		pid = v.Pid
+	case OtherParams:
+		pid = arg.(OtherParams).Value["pid"]
+	default:
+		return rpi.Exec{ExitStatus: 1}, &Error{[]string{"pid"}}
+	}
+
 	var stdErr string
 	startTime := uint64(time.Now().Unix())
 	pidNum, err := strconv.Atoi(pid)
@@ -83,7 +98,7 @@ func (s Service) KillProcess(pid string) rpi.Exec {
 			EndTime:    uint64(time.Now().Unix()),
 			ExitStatus: uint8(1),
 			Stderr:     "pid is not an int",
-		}
+		}, nil
 	} else {
 		exitStatus := 0
 		ps, _ := os.FindProcess(pidNum)
@@ -101,7 +116,7 @@ func (s Service) KillProcess(pid string) rpi.Exec {
 			EndTime:    endTime,
 			ExitStatus: uint8(exitStatus),
 			Stderr:     stdErr,
-		}
+		}, nil
 	}
 }
 
@@ -124,7 +139,7 @@ func (s Service) KillProcessByName(arg interface{}) (rpi.Exec, error) {
 		processname = arg.(OtherParams).Value["processname"]
 		processtype = arg.(OtherParams).Value["processtype"]
 	default:
-		return rpi.Exec{}, &Error{[]string{"processname", "processtype"}}
+		return rpi.Exec{ExitStatus: 1}, &Error{[]string{"processname", "processtype"}}
 	}
 
 	startTime := uint64(time.Now().Unix())
@@ -155,8 +170,22 @@ func (s Service) KillProcessByName(arg interface{}) (rpi.Exec, error) {
 	}, nil
 }
 
+type DF struct {
+	Path string
+}
+
 // DeleteFile deletes a file or (empty) directory
-func (s Service) DeleteFile(path string) rpi.Exec {
+func (s Service) DeleteFile(arg interface{}) (rpi.Exec, error) {
+	var path string
+
+	switch v := arg.(type) {
+	case DF:
+		path = v.Path
+	case OtherParams:
+		path = arg.(OtherParams).Value["path"]
+	default:
+		return rpi.Exec{ExitStatus: 1}, &Error{[]string{"path"}}
+	}
 	// execution start time
 	startTime := uint64(time.Now().Unix())
 
@@ -177,7 +206,7 @@ func (s Service) DeleteFile(path string) rpi.Exec {
 		EndTime:    endTime,
 		ExitStatus: uint8(exitStatus),
 		Stderr:     stdErr,
-	}
+	}, nil
 }
 
 func Call(funcName interface{}, params []interface{}) (result interface{}, err error) {
@@ -234,7 +263,6 @@ func concurrentExec(execs map[int]Func, index string, progress map[string]rpi.Ex
 	go handleResults(input, output, &wg)
 
 	for kc, childExec := range execs {
-		fmt.Println(index + "_" + fmt.Sprint(kc))
 		wg.Add(1)
 		i, _ := strconv.Atoi(index)
 

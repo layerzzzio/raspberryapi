@@ -19,35 +19,46 @@ var (
 
 func TestDeleteFile(t *testing.T) {
 	cases := []struct {
-		name       string
-		path       string
-		wantedData rpi.Exec
+		name             string
+		argument         interface{}
+		wantedExitStatus uint8
+		wantedStderr     string
+		wantedErr        error
 	}{
 		{
-			name: "error",
-			path: "",
-			wantedData: rpi.Exec{
-				Name:       "delete_file",
-				StartTime:  uint64(time.Now().Unix()),
-				EndTime:    uint64(time.Now().Unix()),
-				ExitStatus: 1,
-				Stdin:      "",
-				Stdout:     "",
-				Stderr:     "remove : no such file or directory",
+			name:             "error : no such file or directory",
+			argument:         actions.DF{Path: ""},
+			wantedExitStatus: 1,
+			wantedStderr:     "remove : no such file or directory",
+			wantedErr:        nil,
+		},
+		{
+			name: "error : too many arguments",
+			argument: []actions.OtherParams{
+				{Value: map[string]string{"path": dummypath}},
+				{Value: map[string]string{"dummy": dummypath}},
 			},
+			wantedExitStatus: 1,
+			wantedStderr:     "",
+			wantedErr:        &actions.Error{Arguments: []string{"path"}},
 		},
 		{
 			name: "success",
-			path: dummypath,
-			wantedData: rpi.Exec{
-				Name:       "delete_file",
-				StartTime:  uint64(time.Now().Unix()),
-				EndTime:    uint64(time.Now().Unix()),
-				ExitStatus: 0,
-				Stdin:      "",
-				Stdout:     "",
-				Stderr:     "",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"path": dummypath,
+				},
 			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+		{
+			name:             "success",
+			argument:         actions.DF{Path: dummypath},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
 		},
 	}
 
@@ -55,57 +66,65 @@ func TestDeleteFile(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			a := actions.New()
 			test_utl.CreateFile(dummypath)
-			deletefile := a.DeleteFile(tc.path)
-			assert.Equal(t, tc.wantedData, deletefile)
+			deletefile, err := a.DeleteFile(tc.argument)
+			assert.Equal(t, tc.wantedExitStatus, deletefile.ExitStatus)
+			assert.Equal(t, tc.wantedStderr, deletefile.Stderr)
+			assert.Equal(t, tc.wantedErr, err)
 		})
 	}
 }
 
 func TestKillProcess(t *testing.T) {
 	cases := []struct {
-		name         string
-		convertIssue bool
-		pidAlive     bool
-		wantedData   rpi.Exec
+		name             string
+		convertIssue     bool
+		pidAlive         bool
+		otherParam       bool
+		argument         interface{}
+		wantedExitStatus uint8
+		wantedStderr     string
+		wantedErr        error
 	}{
 		{
-			name:         "error pid convertion issue",
-			convertIssue: true,
-			wantedData: rpi.Exec{
-				Name:       "kill_process",
-				StartTime:  uint64(time.Now().Unix()),
-				EndTime:    uint64(time.Now().Unix()),
-				ExitStatus: 1,
-				Stdin:      "",
-				Stdout:     "",
-				Stderr:     "pid is not an int",
-			},
+			name:             "error too many arguments",
+			convertIssue:     true,
+			wantedExitStatus: 1,
+			argument:         []actions.KP{{Pid: "ABC"}, {Pid: "ABC"}},
+			wantedStderr:     "",
+			wantedErr:        &actions.Error{Arguments: []string{"pid"}},
 		},
 		{
-			name:     "error killing process",
-			pidAlive: false,
-			wantedData: rpi.Exec{
-				Name:       "kill_process",
-				StartTime:  uint64(time.Now().Unix()),
-				EndTime:    uint64(time.Now().Unix()),
-				ExitStatus: 1,
-				Stdin:      "",
-				Stdout:     "",
-				Stderr:     "os: process already finished",
-			},
+			name:             "error pid convertion issue",
+			convertIssue:     true,
+			wantedExitStatus: 1,
+			argument:         actions.KP{Pid: "ABC"},
+			wantedStderr:     "pid is not an int",
+			wantedErr:        nil,
 		},
 		{
-			name:     "success killing process",
-			pidAlive: true,
-			wantedData: rpi.Exec{
-				Name:       "kill_process",
-				StartTime:  uint64(time.Now().Unix()),
-				EndTime:    uint64(time.Now().Unix()),
-				ExitStatus: 0,
-				Stdin:      "",
-				Stdout:     "",
-				Stderr:     "",
-			},
+			name:             "error killing process",
+			convertIssue:     false,
+			pidAlive:         false,
+			wantedExitStatus: 1,
+			wantedStderr:     "os: process already finished",
+			wantedErr:        nil,
+		},
+		{
+			name:             "success killing process other params",
+			convertIssue:     false,
+			pidAlive:         true,
+			otherParam:       true,
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+		{
+			name:             "success killing process",
+			convertIssue:     false,
+			pidAlive:         true,
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
 		},
 	}
 
@@ -121,14 +140,20 @@ func TestKillProcess(t *testing.T) {
 			var largestfiles rpi.Exec
 
 			if tc.convertIssue {
-				largestfiles = a.KillProcess("ABC")
+				largestfiles, err = a.KillProcess(tc.argument)
 			} else {
 				if tc.pidAlive {
 					// process is still alive
-					largestfiles = a.KillProcess(fmt.Sprint(cmd.Process.Pid))
-					err = cmd.Wait()
-					if err == nil {
-						t.Errorf("Test process succeeded, but expected to fail")
+					if tc.otherParam {
+						largestfiles, err = a.KillProcess(actions.OtherParams{
+							Value: map[string]string{
+								"pid": fmt.Sprint(cmd.Process.Pid),
+							},
+						})
+						err := cmd.Wait()
+						fmt.Println(err)
+					} else {
+						largestfiles, err = a.KillProcess(actions.KP{Pid: fmt.Sprint(cmd.Process.Pid)})
 					}
 				} else {
 					// process is dead
@@ -136,10 +161,12 @@ func TestKillProcess(t *testing.T) {
 					if err == nil {
 						t.Errorf("Test process succeeded, but expected to fail")
 					}
-					largestfiles = a.KillProcess(fmt.Sprint(cmd.Process.Pid))
+					largestfiles, err = a.KillProcess(actions.KP{Pid: fmt.Sprint(cmd.Process.Pid)})
 				}
 			}
-			assert.Equal(t, tc.wantedData, largestfiles)
+			assert.Equal(t, tc.wantedExitStatus, largestfiles.ExitStatus)
+			assert.Equal(t, tc.wantedStderr, largestfiles.Stderr)
+			assert.Equal(t, tc.wantedErr, err)
 		})
 	}
 }
@@ -201,7 +228,7 @@ func TestKillProcessByName(t *testing.T) {
 		{
 			name:             "error wrong type",
 			argument:         "dummy",
-			wantedExitStatus: 0,
+			wantedExitStatus: 1,
 			wantedStderr:     "",
 		},
 	}
@@ -803,6 +830,98 @@ func TestExecutePlanWithDependency(t *testing.T) {
 			wantedDataExitStatus: 0,
 		},
 		{
+			name: "error : two parents | one child each | argument from previous and current step",
+			execPlan: map[int](map[int]actions.Func){
+				1: {
+					1: actions.Func{
+						Name:      "FuncC",
+						Reference: test_utl.FuncC,
+						Argument: []interface{}{
+							test_utl.ArgFuncC{
+								Arg3: "string3",
+							},
+						},
+					},
+				},
+				2: {
+					1: actions.Func{
+						Name:      "FuncA",
+						Reference: test_utl.FuncA,
+						Dependency: actions.OtherParams{
+							Value: map[string]string{
+								"arg0": "1" + actions.Separator + "1",
+								"arg1": "string1",
+							},
+						},
+					},
+				},
+				3: {
+					1: actions.Func{
+						Name:      "FuncC",
+						Reference: test_utl.FuncC,
+						// too many arguments: forcing error
+						Argument: []interface{}{
+							test_utl.ArgFuncC{
+								Arg3: "string3",
+							},
+							test_utl.ArgFuncC{
+								Arg3: "string3",
+							},
+						},
+					},
+				},
+				4: {
+					1: actions.Func{
+						Name:      "FuncC",
+						Reference: test_utl.FuncC,
+						Argument: []interface{}{
+							test_utl.ArgFuncC{
+								Arg3: "string3",
+							},
+						},
+					},
+				},
+			},
+			timeExpected: 3,
+			progress: map[string]rpi.Exec{
+				"1" + actions.Separator + "1": {},
+				"2" + actions.Separator + "1": {},
+				"3" + actions.Separator + "1": {},
+				"4" + actions.Separator + "1": {},
+			},
+			wantedDataExec: map[string]rpi.Exec{
+				"1" + actions.Separator + "1": {
+					Name:       "FuncC",
+					StartTime:  1,
+					EndTime:    2,
+					ExitStatus: 0,
+					Stdin:      "",
+					Stderr:     "",
+					Stdout:     "string3",
+				},
+				"2" + actions.Separator + "1": {
+					Name:       "FuncA",
+					StartTime:  1,
+					EndTime:    2,
+					ExitStatus: 0,
+					Stdin:      "",
+					Stderr:     "",
+					Stdout:     "string3-string1",
+				},
+				"3" + actions.Separator + "1": {
+					Name:       "FuncC",
+					StartTime:  0,
+					EndTime:    0,
+					ExitStatus: 1,
+					Stdin:      "",
+					Stderr:     "The number of params is out of index.",
+					Stdout:     "",
+				},
+				"4" + actions.Separator + "1": {},
+			},
+			wantedDataExitStatus: 1,
+		},
+		{
 			name: "success : two parents | one child each | argument from previous and current step",
 			execPlan: map[int](map[int]actions.Func){
 				1: {
@@ -963,7 +1082,7 @@ func TestExecutePlanWithDependency(t *testing.T) {
 				assert.Equal(t, tc.wantedDataExitStatus, exitStatus)
 			})
 		}
-		if counter == 5 {
+		if counter == 1 {
 			break
 		}
 		counter += 1
