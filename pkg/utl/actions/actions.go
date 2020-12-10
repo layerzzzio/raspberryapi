@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"reflect"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -233,6 +234,7 @@ func concurrentExec(execs map[int]Func, index string, progress map[string]rpi.Ex
 	go handleResults(input, output, &wg)
 
 	for kc, childExec := range execs {
+		fmt.Println(index + "_" + fmt.Sprint(kc))
 		wg.Add(1)
 		i, _ := strconv.Atoi(index)
 
@@ -241,13 +243,16 @@ func concurrentExec(execs map[int]Func, index string, progress map[string]rpi.Ex
 		// arguments = append(arguments, childExec.Argument...)
 		if len(childExec.Dependency.Value) > 0 && i > 1 {
 			otherParamValue := map[string]string{}
+			var otherParam = OtherParams{}
 			for varName, dep := range childExec.Dependency.Value {
-				otherParamValue[varName] = progress[dep].Stdout
-				otherParam := OtherParams{
-					Value: otherParamValue,
+				if strings.Contains(dep, Separator) {
+					otherParamValue[varName] = progress[dep].Stdout
+				} else {
+					otherParamValue[varName] = dep
 				}
-				childExec.Argument = append(childExec.Argument, otherParam)
+				otherParam = OtherParams{Value: otherParamValue}
 			}
+			childExec.Argument = append(childExec.Argument, otherParam)
 		}
 
 		go func(childExec Func, kc int) {
@@ -279,16 +284,16 @@ func concurrentExec(execs map[int]Func, index string, progress map[string]rpi.Ex
 func ExecutePlan(execPlan map[int](map[int]Func), progress map[string]rpi.Exec) (map[string]rpi.Exec, uint8) {
 	var exitStatus uint8
 	var index string
-	start := int(time.Now().Unix())
 
-	for kp, parentExec := range execPlan {
+	n := len(execPlan)
+
+	for kp := 1; kp <= n; kp++ {
 		index = fmt.Sprint(kp)
+		res := concurrentExec(execPlan[kp], index, progress)
 
-		res := concurrentExec(parentExec, index, progress)
-
-		for k, v := range res {
-			progress[k] = v
-			if v.ExitStatus != 0 {
+		for i, e := range res {
+			progress[i] = e
+			if e.ExitStatus != 0 {
 				exitStatus = 1
 			}
 		}
@@ -298,6 +303,5 @@ func ExecutePlan(execPlan map[int](map[int]Func), progress map[string]rpi.Exec) 
 		}
 	}
 
-	fmt.Println("duration: " + fmt.Sprint(int(time.Now().Unix())-start))
 	return progress, exitStatus
 }

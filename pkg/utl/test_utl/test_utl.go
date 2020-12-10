@@ -104,7 +104,7 @@ func FuncA(arg interface{}) (rpi.Exec, error) {
 
 	stdOut := fmt.Sprintf("%v-%v", arg0, arg1)
 
-	time.Sleep(5 * time.Second)
+	time.Sleep(2 * time.Second)
 
 	res := rpi.Exec{
 		Name:       "FuncA",
@@ -137,7 +137,7 @@ func FuncB(arg interface{}) (rpi.Exec, error) {
 
 	stdOut := fmt.Sprint(arg2)
 
-	time.Sleep(2 * time.Second)
+	time.Sleep(1 * time.Second)
 
 	res := rpi.Exec{
 		Name:       "FuncB",
@@ -170,7 +170,7 @@ func FuncC(arg interface{}) (rpi.Exec, error) {
 
 	stdOut := fmt.Sprint(arg3)
 
-	time.Sleep(2 * time.Second)
+	time.Sleep(1 * time.Second)
 
 	res := rpi.Exec{
 		Name:       "FuncC",

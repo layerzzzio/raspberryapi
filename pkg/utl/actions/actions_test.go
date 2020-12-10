@@ -381,7 +381,7 @@ func TestExecutePlanWithoutDependency(t *testing.T) {
 					},
 				},
 			},
-			timeExpected: 5,
+			timeExpected: 2,
 			progress: map[string]rpi.Exec{
 				"1" + actions.Separator + "1": {},
 			},
@@ -413,7 +413,7 @@ func TestExecutePlanWithoutDependency(t *testing.T) {
 					},
 				},
 			},
-			timeExpected: 2,
+			timeExpected: 1,
 			progress: map[string]rpi.Exec{
 				"1" + actions.Separator + "1": {},
 			},
@@ -455,7 +455,7 @@ func TestExecutePlanWithoutDependency(t *testing.T) {
 					},
 				},
 			},
-			timeExpected: 5,
+			timeExpected: 2,
 			progress: map[string]rpi.Exec{
 				"1" + actions.Separator + "1": {},
 				"1" + actions.Separator + "2": {},
@@ -481,6 +481,94 @@ func TestExecutePlanWithoutDependency(t *testing.T) {
 				},
 			},
 			wantedDataExitStatus: 0,
+		},
+		{
+			name: "error : 4 parents | one child each | abort plan at step 2",
+			execPlan: map[int](map[int]actions.Func){
+				1: {
+					1: actions.Func{
+						Name:      "FuncA",
+						Reference: test_utl.FuncA,
+						Argument: []interface{}{
+							test_utl.ArgFuncA{
+								Arg0: "string0",
+								Arg1: "string1",
+							},
+						},
+					},
+				},
+				2: {
+					1: actions.Func{
+						Name:      "FuncB",
+						Reference: test_utl.FuncB,
+						// too many arguments forcing an error
+						Argument: []interface{}{
+							test_utl.ArgFuncA{
+								Arg0: "string0",
+								Arg1: "string1",
+							},
+							test_utl.ArgFuncA{
+								Arg0: "string0",
+								Arg1: "string1",
+							},
+						},
+					},
+				},
+				3: {
+					1: actions.Func{
+						Name:      "FuncA",
+						Reference: test_utl.FuncA,
+						Argument: []interface{}{
+							test_utl.ArgFuncA{
+								Arg0: "string0",
+								Arg1: "string1",
+							},
+						},
+					},
+				},
+				4: {
+					1: actions.Func{
+						Name:      "FuncA",
+						Reference: test_utl.FuncA,
+						Argument: []interface{}{
+							test_utl.ArgFuncA{
+								Arg0: "string0",
+								Arg1: "string1",
+							},
+						},
+					},
+				},
+			},
+			timeExpected: 2,
+			progress: map[string]rpi.Exec{
+				"1" + actions.Separator + "1": {},
+				"2" + actions.Separator + "1": {},
+				"3" + actions.Separator + "1": {},
+				"4" + actions.Separator + "1": {},
+			},
+			wantedDataExec: map[string]rpi.Exec{
+				"1" + actions.Separator + "1": {
+					Name:       "FuncA",
+					StartTime:  1,
+					EndTime:    2,
+					ExitStatus: 0,
+					Stdin:      "",
+					Stderr:     "",
+					Stdout:     "string0-string1",
+				},
+				"2" + actions.Separator + "1": {
+					Name:       "FuncB",
+					StartTime:  0,
+					EndTime:    0,
+					ExitStatus: 1,
+					Stdin:      "",
+					Stderr:     "The number of params is out of index.",
+					Stdout:     "",
+				},
+				"3" + actions.Separator + "1": {},
+				"4" + actions.Separator + "1": {},
+			},
+			wantedDataExitStatus: 1,
 		},
 		{
 			name: "success : two parents | one child each",
@@ -509,7 +597,7 @@ func TestExecutePlanWithoutDependency(t *testing.T) {
 					},
 				},
 			},
-			timeExpected: 7,
+			timeExpected: 3,
 			progress: map[string]rpi.Exec{
 				"1" + actions.Separator + "1": {},
 				"2" + actions.Separator + "1": {},
@@ -582,7 +670,7 @@ func TestExecutePlanWithoutDependency(t *testing.T) {
 					},
 				},
 			},
-			timeExpected: 7,
+			timeExpected: 3,
 			progress: map[string]rpi.Exec{
 				"1" + actions.Separator + "1": {},
 				"1" + actions.Separator + "2": {},
@@ -636,9 +724,10 @@ func TestExecutePlanWithoutDependency(t *testing.T) {
 		fmt.Println("===========> Testing round " + fmt.Sprint(counter))
 		for _, tc := range cases {
 			t.Run(tc.name, func(t *testing.T) {
+				start := int(time.Now().Unix())
 				exec, exitStatus := actions.ExecutePlan(tc.execPlan, tc.progress)
+				fmt.Println("duration: " + fmt.Sprint(int(time.Now().Unix())-start))
 				fmt.Println("timeExpected: " + fmt.Sprint(tc.timeExpected))
-				fmt.Println("----------------------------")
 				assert.Equal(t, tc.wantedDataExec, exec)
 				assert.Equal(t, tc.wantedDataExitStatus, exitStatus)
 			})
@@ -648,7 +737,6 @@ func TestExecutePlanWithoutDependency(t *testing.T) {
 		}
 		counter += 1
 	}
-
 }
 
 func TestExecutePlanWithDependency(t *testing.T) {
@@ -656,11 +744,12 @@ func TestExecutePlanWithDependency(t *testing.T) {
 		name                 string
 		execPlan             map[int](map[int]actions.Func)
 		progress             map[string]rpi.Exec
+		timeExpected         int
 		wantedDataExec       map[string]rpi.Exec
 		wantedDataExitStatus uint8
 	}{
 		{
-			name: "success : two parents | one child each: argument from previous step",
+			name: "success : two parents | one child each | argument from previous step",
 			execPlan: map[int](map[int]actions.Func){
 				1: {
 					1: actions.Func{
@@ -686,6 +775,7 @@ func TestExecutePlanWithDependency(t *testing.T) {
 					},
 				},
 			},
+			timeExpected: 3,
 			progress: map[string]rpi.Exec{
 				"1" + actions.Separator + "1": {},
 				"2" + actions.Separator + "1": {},
@@ -713,7 +803,61 @@ func TestExecutePlanWithDependency(t *testing.T) {
 			wantedDataExitStatus: 0,
 		},
 		{
-			name: "success : two parents | two children each: argument from previous step",
+			name: "success : two parents | one child each | argument from previous and current step",
+			execPlan: map[int](map[int]actions.Func){
+				1: {
+					1: actions.Func{
+						Name:      "FuncC",
+						Reference: test_utl.FuncC,
+						Argument: []interface{}{
+							test_utl.ArgFuncC{
+								Arg3: "string3",
+							},
+						},
+					},
+				},
+				2: {
+					1: actions.Func{
+						Name:      "FuncA",
+						Reference: test_utl.FuncA,
+						Dependency: actions.OtherParams{
+							Value: map[string]string{
+								"arg0": "1" + actions.Separator + "1",
+								"arg1": "string1",
+							},
+						},
+					},
+				},
+			},
+			timeExpected: 3,
+			progress: map[string]rpi.Exec{
+				"1" + actions.Separator + "1": {},
+				"2" + actions.Separator + "1": {},
+			},
+			wantedDataExec: map[string]rpi.Exec{
+				"1" + actions.Separator + "1": {
+					Name:       "FuncC",
+					StartTime:  1,
+					EndTime:    2,
+					ExitStatus: 0,
+					Stdin:      "",
+					Stderr:     "",
+					Stdout:     "string3",
+				},
+				"2" + actions.Separator + "1": {
+					Name:       "FuncA",
+					StartTime:  1,
+					EndTime:    2,
+					ExitStatus: 0,
+					Stdin:      "",
+					Stderr:     "",
+					Stdout:     "string3-string1",
+				},
+			},
+			wantedDataExitStatus: 0,
+		},
+		{
+			name: "success : two parents | two children each | argument from previous step",
 			execPlan: map[int](map[int]actions.Func){
 				1: {
 					1: actions.Func{
@@ -757,6 +901,7 @@ func TestExecutePlanWithDependency(t *testing.T) {
 					},
 				},
 			},
+			timeExpected: 3,
 			progress: map[string]rpi.Exec{
 				"1" + actions.Separator + "1": {},
 				"1" + actions.Separator + "2": {},
@@ -805,11 +950,22 @@ func TestExecutePlanWithDependency(t *testing.T) {
 		},
 	}
 
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			exec, exitStatus := actions.ExecutePlan(tc.execPlan, tc.progress)
-			assert.Equal(t, tc.wantedDataExec, exec)
-			assert.Equal(t, tc.wantedDataExitStatus, exitStatus)
-		})
+	counter := 1
+	for {
+		fmt.Println("===========> Testing round " + fmt.Sprint(counter))
+		for _, tc := range cases {
+			t.Run(tc.name, func(t *testing.T) {
+				start := int(time.Now().Unix())
+				exec, exitStatus := actions.ExecutePlan(tc.execPlan, tc.progress)
+				fmt.Println("duration: " + fmt.Sprint(int(time.Now().Unix())-start))
+				fmt.Println("timeExpected: " + fmt.Sprint(tc.timeExpected))
+				assert.Equal(t, tc.wantedDataExec, exec)
+				assert.Equal(t, tc.wantedDataExitStatus, exitStatus)
+			})
+		}
+		if counter == 5 {
+			break
+		}
+		counter += 1
 	}
 }
