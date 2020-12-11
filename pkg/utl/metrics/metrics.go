@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	"fmt"
 	"os"
 	"os/exec"
 	"os/user"
@@ -593,11 +592,11 @@ func (s Service) WalkFolder(
 	return root, flattenFiles
 }
 
-func updateProgress(progress chan<- int, count *int) {
-	if *count > 0 {
-		progress <- *count
-	}
-}
+// func updateProgress(progress chan<- int, count *int) {
+// 	if *count > 0 {
+// 		progress <- *count
+// 	}
+// }
 
 func walkSubFolderConcurrently(
 	path string,
@@ -618,12 +617,10 @@ func walkSubFolderConcurrently(
 	dirName, name := filepath.Split(path)
 	result.Files = make([]*rpi.File, 0, len(entries))
 	numSubFolders := 0
-
-	defer updateProgress(progress, &numSubFolders)
+	// defer updateProgress(progress, &numSubFolders)
 	var mutex sync.Mutex
 	for _, entry := range entries {
 		fileRatio := float64(entry.Size()) / float64(pathSize)
-		fmt.Printf("file %v - fileRatio %v > fileLimit %v\n", entry.Name(), fileRatio, float64(fileLimit)/100)
 		if entry.IsDir() {
 			numSubFolders++
 			subFolderPath := filepath.Join(path, entry.Name())
@@ -637,8 +634,9 @@ func walkSubFolderConcurrently(
 				<-c
 				wg.Done()
 			}()
-			// check if file size > x% of path size
 		} else if fileRatio > float64(fileLimit)/100 && fileRatio <= 1 {
+			// check if file size > x% of path size
+			// fmt.Printf("file %v - fileRatio %v > fileLimit %v\n", entry.Name(), fileRatio, float64(fileLimit)/100)
 			size := entry.Size()
 			file := &rpi.File{
 				Name:   entry.Name(),
