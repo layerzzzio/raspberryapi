@@ -45,22 +45,26 @@ func (h *HTTP) listws(ctx echo.Context) error {
 	defer ws.Close()
 
 	for {
-		// Write data to client
-		msg, errR := h.svc.List()
-		if errR != nil {
-			ctx.Logger().Error(err)
-			break
-		}
+		// Compose message to write to client
+		msg, _ := h.svc.List()
+		// if errP != nil {
+		// 	ctx.Logger().Error(errP)
+		// }
 
 		err := ws.WriteJSON(msg)
-
 		if err != nil {
 			ctx.Logger().Error(err)
-			break
 		}
 
 		time.Sleep(30 * time.Second)
-		fmt.Println(fmt.Sprint(time.Now()) + " : process sleep 30 sec")
+
+		// Read incoming message from client including closing message
+		_, msgR, errR := ws.ReadMessage()
+		if errR != nil {
+			ctx.Logger().Error(errR)
+			break
+		}
+		fmt.Printf("%s\n", msgR)
 	}
 	return nil
 }

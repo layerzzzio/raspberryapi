@@ -48,18 +48,26 @@ func (h *HTTP) listws(ctx echo.Context) error {
 		msg, errR := h.svc.List()
 		if errR != nil {
 			ctx.Logger().Error(err)
-			break
+			// break
 		}
 
 		err := ws.WriteJSON(msg)
 
 		if err != nil {
 			ctx.Logger().Error(err)
-			break
+			// break
 		}
 
 		time.Sleep(15 * time.Second)
 		fmt.Println(fmt.Sprint(time.Now()) + " : host sleep 15 sec")
+
+		// Read
+		_, msgR, errR := ws.ReadMessage()
+		if errR != nil {
+			ctx.Logger().Error(errR)
+			break
+		}
+		fmt.Printf("%s\n", msgR)
 	}
 	return nil
 }

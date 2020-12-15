@@ -532,6 +532,8 @@ func TestListWs(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
+			// defer goleak.VerifyNone(t)
+
 			r := server.New()
 			rg := r.Group("")
 			m := metrics.New(metrics.Service{})
@@ -560,6 +562,7 @@ func TestListWs(t *testing.T) {
 			if err != nil {
 				panic(err)
 			}
+
 			for i := 0; i < 10; i++ {
 				if tc.wantedResp.ID != "" {
 					if err := json.Unmarshal(body, &response); err != nil {
