@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/raspibuddy/rpi"
@@ -551,6 +552,8 @@ func TestListWs(t *testing.T) {
 				t.Fatalf("%v", errWS)
 			}
 			defer ws.Close()
+
+			time.Sleep(20 * time.Second)
 
 			pathL := ts.URL + "/hosts"
 			res, err := http.Get(pathL)

@@ -1,7 +1,6 @@
 package transport
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -57,14 +56,15 @@ func (h *HTTP) listws(ctx echo.Context) error {
 		}
 
 		time.Sleep(30 * time.Second)
+		// fmt.Println(fmt.Sprint(time.Now()) + " : process sleep 30 sec")
 
 		// Read incoming message from client including closing message
-		_, msgR, errR := ws.ReadMessage()
+		_, _, errR := ws.ReadMessage()
 		if errR != nil {
 			ctx.Logger().Error(errR)
 			break
 		}
-		fmt.Printf("%s\n", msgR)
+		// fmt.Printf("%s\n", msgR)
 	}
 	return nil
 }
