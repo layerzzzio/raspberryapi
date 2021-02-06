@@ -31,6 +31,18 @@ var (
 
 	// StopUserSession is the name of the disconnect user action
 	StopUserSession = "stop_user_sessions"
+
+	// ChangeHostname is the name of the change username action
+	ChangeHostname = "change_hostname"
+
+	// ChangeHostnameInHostnameFile is the name of the change username action
+	ChangeHostnameInHostnameFile = "change_hostname_in_hostname_file"
+
+	// ChangeHostnameInHostFile is the name of the change username action
+	ChangeHostnameInHostsFile = "change_hostname_in_hosts_file"
+
+	// ChangePassword is the name of the change password action
+	ChangePassword = "change_password"
 )
 
 // Service represents several system scripts.
@@ -142,6 +154,7 @@ func (s Service) KillProcessByName(arg interface{}) (rpi.Exec, error) {
 		return rpi.Exec{ExitStatus: 1}, &Error{[]string{"processname", "processtype"}}
 	}
 
+	// execution start time
 	startTime := uint64(time.Now().Unix())
 	exitStatus := 0
 	var stdErr string
@@ -202,6 +215,131 @@ func (s Service) DeleteFile(arg interface{}) (rpi.Exec, error) {
 
 	return rpi.Exec{
 		Name:       DeleteFile,
+		StartTime:  startTime,
+		EndTime:    endTime,
+		ExitStatus: uint8(exitStatus),
+		Stderr:     stdErr,
+	}, nil
+}
+
+type CH struct {
+	Hostname string
+}
+
+// ChangeHostnameInHostnameFile changes the hostname in /etc/hostname
+func (s Service) ChangeHostnameInHostnameFile(arg interface{}) (rpi.Exec, error) {
+	var hostname string
+
+	switch v := arg.(type) {
+	case CH:
+		hostname = v.Hostname
+	case OtherParams:
+		hostname = arg.(OtherParams).Value["hostname"]
+	default:
+		return rpi.Exec{ExitStatus: 1}, &Error{[]string{"hostname"}}
+	}
+
+	// execution start time
+	startTime := uint64(time.Now().Unix())
+	exitStatus := 0
+	var stdErr string
+
+	err := OverwriteToFile(OverwriteToFileArg{
+		File:      "/etc/hostname",
+		Data:      []string{hostname},
+		Multiline: false,
+	})
+
+	if err != nil {
+		exitStatus = 1
+		stdErr = fmt.Sprint(err)
+	}
+
+	// execution end time
+	endTime := uint64(time.Now().Unix())
+
+	return rpi.Exec{
+		Name:       ChangeHostnameInHostnameFile,
+		StartTime:  startTime,
+		EndTime:    endTime,
+		ExitStatus: uint8(exitStatus),
+		Stderr:     stdErr,
+	}, nil
+}
+
+// ChangeHostnameInHostsFile changes the hostname in /etc/hosts
+func (s Service) ChangeHostnameInHostsFile(arg interface{}) (rpi.Exec, error) {
+	var hostname string
+
+	switch v := arg.(type) {
+	case CH:
+		hostname = v.Hostname
+	case OtherParams:
+		hostname = arg.(OtherParams).Value["hostname"]
+	default:
+		return rpi.Exec{ExitStatus: 1}, &Error{[]string{"hostname"}}
+	}
+
+	// execution start time
+	startTime := uint64(time.Now().Unix())
+	exitStatus := 0
+	var stdErr string
+
+	err := OverwriteToFile(OverwriteToFileArg{
+		File:      "/etc/hosts",
+		Data:      []string{hostname},
+		Multiline: false,
+	})
+
+	if err != nil {
+		exitStatus = 1
+		stdErr = fmt.Sprint(err)
+	}
+
+	// execution end time
+	endTime := uint64(time.Now().Unix())
+
+	return rpi.Exec{
+		Name:       ChangeHostnameInHostsFile,
+		StartTime:  startTime,
+		EndTime:    endTime,
+		ExitStatus: uint8(exitStatus),
+		Stderr:     stdErr,
+	}, nil
+}
+
+type CP struct {
+	Password string
+}
+
+// ChangePassword changes a password
+func (s Service) ChangePassword(arg interface{}) (rpi.Exec, error) {
+	var password string
+
+	switch v := arg.(type) {
+	case CP:
+		password = v.Password
+	case OtherParams:
+		password = arg.(OtherParams).Value["password"]
+	default:
+		return rpi.Exec{ExitStatus: 1}, &Error{[]string{"password"}}
+	}
+	// execution start time
+	startTime := uint64(time.Now().Unix())
+
+	exitStatus := 0
+	var stdErr string
+	e := os.Remove(password)
+	if e != nil {
+		exitStatus = 1
+		stdErr = fmt.Sprint(e)
+	}
+
+	// execution end time
+	endTime := uint64(time.Now().Unix())
+
+	return rpi.Exec{
+		Name:       ChangePassword,
 		StartTime:  startTime,
 		EndTime:    endTime,
 		ExitStatus: uint8(exitStatus),
@@ -332,4 +470,103 @@ func ExecutePlan(execPlan map[int](map[int]Func), progress map[string]rpi.Exec) 
 	}
 
 	return progress, exitStatus
+}
+
+// OverwriteToFileArg is the argument to function OverwriteToFile
+type OverwriteToFileArg struct {
+	File        string
+	Data        []string
+	Multiline   bool
+	Permissions int // 0644, 0666, etc.
+}
+
+// IsDirectory check is a file is a directory or not
+// func IsDirectory(path string) (bool, error) {
+// 	fileInfo, err := os.Stat(path)
+// 	if err != nil {
+// 		return false, err
+// 	}
+// 	return fileInfo.IsDir(), err
+// }
+
+// OverwriteToFile write data to file
+func OverwriteToFile(args OverwriteToFileArg) error {
+	perm := 0644
+
+	f, err := os.Create(args.File)
+	if err != nil {
+		fmt.Println(err)
+		f.Close()
+		return fmt.Errorf("creating file failed")
+	}
+
+	if args.Permissions != 0 {
+		perm = args.Permissions
+	}
+
+	if err := os.Chmod(args.File, os.FileMode(perm)); err != nil {
+		return fmt.Errorf("chmoding file failed")
+	}
+
+	for _, v := range args.Data {
+		if args.Multiline {
+			fmt.Fprintln(f, v)
+		} else {
+			fmt.Fprint(f, v)
+		}
+
+		if err != nil {
+			fmt.Println(err)
+			return fmt.Errorf("writing to file failed")
+		}
+	}
+
+	err = f.Close()
+	if err != nil {
+		fmt.Println(err)
+		return fmt.Errorf("closing file failed")
+	}
+
+	return nil
+}
+
+// ReplaceLineFile replace one or multiple line in file
+func ReplaceLineFile(args OverwriteToFileArg) error {
+	perm := 0644
+
+	f, err := os.Create(args.File)
+	if err != nil {
+		fmt.Println(err)
+		f.Close()
+		return fmt.Errorf("creating file failed")
+	}
+
+	if args.Permissions != 0 {
+		perm = args.Permissions
+	}
+
+	if err := os.Chmod(args.File, os.FileMode(perm)); err != nil {
+		return fmt.Errorf("chmoding file failed")
+	}
+
+	for _, v := range args.Data {
+		if args.Multiline {
+			fmt.Fprintln(f, v)
+		} else {
+			fmt.Fprint(f, v)
+		}
+
+		if err != nil {
+			fmt.Println(err)
+			return fmt.Errorf("writing to file failed")
+		}
+	}
+
+	err = f.Close()
+	if err != nil {
+		fmt.Println(err)
+		return fmt.Errorf("closing file failed")
+	}
+
+	return nil
 }

@@ -1,9 +1,13 @@
 package actions_test
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
+	"log"
+	"os"
 	"os/exec"
+	"strings"
 	"testing"
 	"time"
 
@@ -1086,5 +1090,92 @@ func TestExecutePlanWithDependency(t *testing.T) {
 			break
 		}
 		counter += 1
+	}
+}
+
+func TestOverwriteToFile(t *testing.T) {
+	cases := []struct {
+		name       string
+		args       actions.OverwriteToFileArg
+		wantedData error
+	}{
+		{
+			name: "success with multiline",
+			args: actions.OverwriteToFileArg{
+				File:      "./test_write_to_file",
+				Data:      []string{"text_1", "text_2", "text_3"},
+				Multiline: true,
+			},
+			wantedData: nil,
+		},
+		{
+			name: "success not multiline",
+			args: actions.OverwriteToFileArg{
+				File:      "./test_write_to_file",
+				Data:      []string{"text_1", "text_2", "text_3"},
+				Multiline: false,
+			},
+			wantedData: nil,
+		},
+		{
+			name: "success permissions not nill",
+			args: actions.OverwriteToFileArg{
+				File:        "./test_write_to_file",
+				Data:        []string{"text_1", "text_2", "text_3"},
+				Multiline:   false,
+				Permissions: 0755,
+			},
+			wantedData: nil,
+		},
+		{
+			name: "failure creating file",
+			args: actions.OverwriteToFileArg{
+				File:      "",
+				Data:      []string{"text_1", "text_2", "text_3"},
+				Multiline: false,
+			},
+			wantedData: fmt.Errorf("creating file failed"),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			overwriteToFile := actions.OverwriteToFile(tc.args)
+
+			if tc.name == "success with multiline" ||
+				tc.name == "success not multiline" ||
+				tc.name == "success permissions not nill" {
+				fmt.Println("here-->")
+				file, err := os.Open(tc.args.File)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				var readLines = []string{}
+				scanner := bufio.NewScanner(file)
+				for scanner.Scan() {
+					readLines = append(readLines, scanner.Text())
+				}
+
+				if err := scanner.Err(); err != nil {
+					log.Fatal(err)
+				}
+
+				file.Close()
+
+				e := os.Remove(tc.args.File)
+				if e != nil {
+					fmt.Println(e)
+				}
+
+				// assert statements
+				if tc.args.Multiline {
+					assert.Equal(t, tc.args.Data, readLines)
+				} else {
+					assert.Equal(t, strings.Join(tc.args.Data, ""), strings.Join(readLines, ""))
+				}
+			}
+			assert.Equal(t, tc.wantedData, overwriteToFile)
+		})
 	}
 }
