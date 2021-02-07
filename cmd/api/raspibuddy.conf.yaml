@@ -1,0 +1,5 @@
+server:
+  port: :3333
+  debug: true
+  read_timeout_seconds: 30
+  write_timeout_seconds: 15
