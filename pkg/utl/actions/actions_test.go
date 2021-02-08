@@ -1093,6 +1093,54 @@ func TestExecutePlanWithDependency(t *testing.T) {
 	}
 }
 
+func TestBackupFile(t *testing.T) {
+	cases := []struct {
+		name       string
+		path       string
+		perm       int
+		wantedData error
+	}{
+		{
+			name:       "success file does not exist",
+			path:       "./TestBackupFile",
+			perm:       0755,
+			wantedData: nil,
+		},
+		{
+			name:       "success file exists",
+			path:       "./TestBackupFile",
+			perm:       0755,
+			wantedData: nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.name != "success file does not exist" {
+				f, err := os.Create(tc.path)
+				if err != nil {
+					fmt.Println(err)
+					log.Fatal()
+				}
+
+				_, err = f.WriteString("hey man")
+				if err != nil {
+					fmt.Println(err)
+					log.Fatal()
+				}
+
+				err = f.Close()
+				if err != nil {
+					fmt.Println(err)
+					log.Fatal()
+				}
+			}
+			backupFile := actions.BackupFile(tc.path, tc.perm)
+			assert.Equal(t, tc.wantedData, backupFile)
+		})
+	}
+}
+
 func TestOverwriteToFile(t *testing.T) {
 	cases := []struct {
 		name       string
@@ -1145,7 +1193,6 @@ func TestOverwriteToFile(t *testing.T) {
 			if tc.name == "success with multiline" ||
 				tc.name == "success not multiline" ||
 				tc.name == "success permissions not nill" {
-				fmt.Println("here-->")
 				file, err := os.Open(tc.args.File)
 				if err != nil {
 					log.Fatal(err)

@@ -1,11 +1,14 @@
 package actions
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -17,6 +20,9 @@ import (
 // TODO: to test this method by simulating different OS scenarios in a Docker container (raspbian/strech)
 
 var (
+	// Default file permission
+	DefaultFilePerm = 0644
+
 	// Separator separates parent and child execution
 	Separator = "<|>"
 
@@ -489,66 +495,112 @@ type OverwriteToFileArg struct {
 // 	return fileInfo.IsDir(), err
 // }
 
-// OverwriteToFile write data to file
-func OverwriteToFile(args OverwriteToFileArg) error {
-	perm := 0644
+// BackupFile copy a file and add suffix .bak to the copied file
+// defer close file is not used here: https://www.joeshaw.org/dont-defer-close-on-writable-files/
+func BackupFile(path string, perm int) error {
+	newPath := path + ".bak"
 
-	f, err := os.Create(args.File)
-	if err != nil {
-		fmt.Println(err)
-		f.Close()
-		return fmt.Errorf("creating file failed")
-	}
+	// info, _ := os.Stat(path)
+	// fmt.Println(info)
 
-	if args.Permissions != 0 {
-		perm = args.Permissions
-	}
-
-	if err := os.Chmod(args.File, os.FileMode(perm)); err != nil {
-		return fmt.Errorf("chmoding file failed")
-	}
-
-	for _, v := range args.Data {
-		if args.Multiline {
-			fmt.Fprintln(f, v)
-		} else {
-			fmt.Fprint(f, v)
-		}
-
+	// copy the file if the file exists
+	if _, err := os.Stat(path); os.IsExist(err) {
+		fmt.Println("---> this exeist")
+		in, err := os.Open(path)
 		if err != nil {
-			fmt.Println(err)
-			return fmt.Errorf("writing to file failed")
+			return fmt.Errorf("opening source file failed")
+		}
+
+		out, err := os.Create(newPath)
+		if err != nil {
+			out.Close()
+			return fmt.Errorf("creating bak file failed")
+		}
+
+		if _, err = io.Copy(out, in); err != nil {
+			return fmt.Errorf("copying to bak file failed")
+		}
+
+		err = in.Close()
+		if err != nil {
+			return fmt.Errorf("closing file failed")
+		}
+
+		err = out.Close()
+		if err != nil {
+			return fmt.Errorf("closing new file failed")
+		}
+
+		if err := ApplyPermissionsToFile(newPath, perm); err != nil {
+			return fmt.Errorf("applying permission failed")
 		}
 	}
+	return nil
+}
 
-	err = f.Close()
+func ApplyPermissionsToFile(path string, perm int) error {
+	// check if permission if of type 0755, 0644 etc.
+	// min number = 1
+	// max number = 7
+	// doesn't check the first zero as the integer is converted to string
+	re := regexp.MustCompile(`[0-7]{3}`)
+	if re.MatchString(strconv.Itoa(perm)) {
+		if err := os.Chmod(path, os.FileMode(perm)); err != nil {
+			return fmt.Errorf("chmoding file failed")
+		}
+	} else {
+		if err := os.Chmod(path, os.FileMode(DefaultFilePerm)); err != nil {
+			return fmt.Errorf("chmoding default file permissions failed")
+		}
+	}
+	return nil
+}
+
+func CreateAndOpenFile(path string, perm int) (*os.File, error) {
+	f, err := os.Create(path)
 	if err != nil {
-		fmt.Println(err)
+		f.Close()
+		return nil, fmt.Errorf("creating file failed")
+	}
+
+	if err := ApplyPermissionsToFile(path, perm); err != nil {
+		return nil, fmt.Errorf("applying permission failed")
+	}
+
+	return f, nil
+}
+
+func CloseAndRemoveBakFile(file *os.File, path string) error {
+	// closing file
+	err := file.Close()
+	if err != nil {
 		return fmt.Errorf("closing file failed")
+	}
+
+	// remove bak file
+	pathBak := path + ".bak"
+	if _, err = os.Stat(pathBak); os.IsExist(err) {
+		if err = os.Remove(pathBak); err != nil {
+			return fmt.Errorf("removing bak file failed")
+		}
 	}
 
 	return nil
 }
 
-// ReplaceLineFile replace one or multiple line in file
-func ReplaceLineFile(args OverwriteToFileArg) error {
-	perm := 0644
-
-	f, err := os.Create(args.File)
+// OverwriteToFile overwrite data in a given file
+func OverwriteToFile(args OverwriteToFileArg) error {
+	err := BackupFile(args.File, DefaultFilePerm)
 	if err != nil {
-		fmt.Println(err)
-		f.Close()
-		return fmt.Errorf("creating file failed")
+		return fmt.Errorf("backuping file failed")
 	}
 
-	if args.Permissions != 0 {
-		perm = args.Permissions
+	f, err := CreateAndOpenFile(args.File, args.Permissions)
+	if err != nil {
+		return fmt.Errorf("creating and opening file failed")
 	}
 
-	if err := os.Chmod(args.File, os.FileMode(perm)); err != nil {
-		return fmt.Errorf("chmoding file failed")
-	}
-
+	// overwriting logic
 	for _, v := range args.Data {
 		if args.Multiline {
 			fmt.Fprintln(f, v)
@@ -557,15 +609,61 @@ func ReplaceLineFile(args OverwriteToFileArg) error {
 		}
 
 		if err != nil {
-			fmt.Println(err)
 			return fmt.Errorf("writing to file failed")
 		}
 	}
 
-	err = f.Close()
+	// close file and remove bak file
+	if err := CloseAndRemoveBakFile(f, args.File); err != nil {
+		return fmt.Errorf("closing file and removing bak file failed")
+	}
+
+	return nil
+}
+
+// ReplaceLineFile is the argument to function ReplaceLineFile
+type ReplaceLineFileArg struct {
+	File        string
+	Data        string
+	Permissions int // 0644, 0666, etc.
+}
+
+// ReplaceLineFile replace one or multiple line in file
+func ReplaceLineFile(args OverwriteToFileArg) error {
+	if err := BackupFile(args.File, DefaultFilePerm); err != nil {
+		return fmt.Errorf("backuping file failed")
+	}
+
+	f, err := CreateAndOpenFile(args.File, args.Permissions)
 	if err != nil {
-		fmt.Println(err)
-		return fmt.Errorf("closing file failed")
+		return fmt.Errorf("creating and opening file failed")
+	}
+
+	// replacing line logic
+	// source: https://stackoverflow.com/questions/8757389/reading-a-file-line-by-line-in-go
+	reader := bufio.NewReader(f)
+	var line string
+	for {
+		line, err = reader.ReadString('\n')
+		if err != nil && err != io.EOF {
+			break
+		}
+
+		// Process the line here.
+		fmt.Printf(" > Read %d characters\n", len(line))
+		if err != nil {
+			break
+		}
+	}
+
+	if err != io.EOF {
+		fmt.Printf(" > Failed with error: %v\n", err)
+		return err
+	}
+
+	// close file and remove bak file
+	if err := CloseAndRemoveBakFile(f, args.File); err != nil {
+		return fmt.Errorf("closing file and removing bak file failed")
 	}
 
 	return nil
