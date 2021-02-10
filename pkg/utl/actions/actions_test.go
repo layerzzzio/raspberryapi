@@ -1097,12 +1097,12 @@ func TestBackupFile(t *testing.T) {
 	cases := []struct {
 		name       string
 		path       string
-		perm       int
+		perm       uint32
 		wantedData error
 	}{
 		{
 			name:       "success file does not exist",
-			path:       "./TestBackupFile",
+			path:       "./dummyfile",
 			perm:       0755,
 			wantedData: nil,
 		},
@@ -1117,26 +1117,114 @@ func TestBackupFile(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.name != "success file does not exist" {
-				f, err := os.Create(tc.path)
+				// create file
+				file, err := os.Create(tc.path)
 				if err != nil {
-					fmt.Println(err)
-					log.Fatal()
+					log.Fatal(err)
 				}
 
-				_, err = f.WriteString("hey man")
+				// add text and close
+				fmt.Fprintln(file, "hey_man")
+				file.Close()
+
+				// backup file
+				backupFile := actions.BackupFile(tc.path, tc.perm)
+
+				// open backup file and read the content
+				fileBak, err := os.Open(tc.path + ".bak")
 				if err != nil {
-					fmt.Println(err)
-					log.Fatal()
+					log.Fatal(err)
 				}
 
-				err = f.Close()
-				if err != nil {
-					fmt.Println(err)
-					log.Fatal()
+				var readLines = []string{}
+				scanner := bufio.NewScanner(fileBak)
+				for scanner.Scan() {
+					readLines = append(readLines, scanner.Text())
 				}
+
+				if err := scanner.Err(); err != nil {
+					log.Fatal(err)
+				}
+
+				fileBak.Close()
+
+				// remove original file
+				e := os.Remove(tc.path)
+				if e != nil {
+					fmt.Println(e)
+				}
+
+				// remove backup file
+				e = os.Remove(tc.path + ".bak")
+				if e != nil {
+					fmt.Println(e)
+				}
+
+				assert.Equal(t, tc.wantedData, backupFile)
+				// backup file content should be equal to original file
+				assert.Equal(t, "hey_man", strings.Join(readLines, ""))
 			}
 			backupFile := actions.BackupFile(tc.path, tc.perm)
 			assert.Equal(t, tc.wantedData, backupFile)
+		})
+	}
+}
+
+func TestApplyPermissionsToFile(t *testing.T) {
+	cases := []struct {
+		name       string
+		path       string
+		perm       uint32
+		wantedData error
+		wantedPerm os.FileMode
+	}{
+		{
+			name:       "perm does not match regex",
+			path:       "./dummyfile",
+			perm:       1755,
+			wantedData: nil,
+			wantedPerm: os.FileMode(0644),
+		},
+		{
+			name:       "perm matches regex",
+			path:       "./dummyfile",
+			perm:       0755,
+			wantedData: nil,
+			wantedPerm: os.FileMode(0755),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			// create file with perm 0666
+			file, err := os.Create(tc.path)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			// add text and close
+			fmt.Fprintln(file, "hey_man")
+			file.Close()
+
+			// apply permissions to file
+			applyPerm := actions.ApplyPermissionsToFile(tc.path, tc.perm)
+
+			// check the perm after applying them
+			info, err := os.Stat(tc.path)
+			if err != nil {
+				log.Fatal(err)
+			}
+			filePerm := info.Mode()
+			fmt.Println(filePerm)
+
+			// remove file
+			e := os.Remove(tc.path)
+			if e != nil {
+				log.Fatal(err)
+			}
+
+			assert.Equal(t, tc.wantedData, applyPerm)
+			assert.Equal(t, tc.wantedPerm, filePerm)
 		})
 	}
 }
@@ -1182,7 +1270,7 @@ func TestOverwriteToFile(t *testing.T) {
 				Data:      []string{"text_1", "text_2", "text_3"},
 				Multiline: false,
 			},
-			wantedData: fmt.Errorf("creating file failed"),
+			wantedData: fmt.Errorf("creating and opening file failed"),
 		},
 	}
 

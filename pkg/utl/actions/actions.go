@@ -21,7 +21,7 @@ import (
 
 var (
 	// Default file permission
-	DefaultFilePerm = 0644
+	DefaultFilePerm = uint32(0644)
 
 	// Separator separates parent and child execution
 	Separator = "<|>"
@@ -483,7 +483,7 @@ type OverwriteToFileArg struct {
 	File        string
 	Data        []string
 	Multiline   bool
-	Permissions int // 0644, 0666, etc.
+	Permissions uint32 // 0644, 0666, etc.
 }
 
 // IsDirectory check is a file is a directory or not
@@ -497,15 +497,14 @@ type OverwriteToFileArg struct {
 
 // BackupFile copy a file and add suffix .bak to the copied file
 // defer close file is not used here: https://www.joeshaw.org/dont-defer-close-on-writable-files/
-func BackupFile(path string, perm int) error {
+func BackupFile(path string, perm uint32) error {
 	newPath := path + ".bak"
 
 	// info, _ := os.Stat(path)
 	// fmt.Println(info)
 
 	// copy the file if the file exists
-	if _, err := os.Stat(path); os.IsExist(err) {
-		fmt.Println("---> this exeist")
+	if _, err := os.Stat(path); err == nil {
 		in, err := os.Open(path)
 		if err != nil {
 			return fmt.Errorf("opening source file failed")
@@ -538,25 +537,30 @@ func BackupFile(path string, perm int) error {
 	return nil
 }
 
-func ApplyPermissionsToFile(path string, perm int) error {
+func ApplyPermissionsToFile(path string, perm uint32) error {
 	// check if permission if of type 0755, 0644 etc.
 	// min number = 1
 	// max number = 7
 	// doesn't check the first zero as the integer is converted to string
-	re := regexp.MustCompile(`[0-7]{3}`)
-	if re.MatchString(strconv.Itoa(perm)) {
+	re := regexp.MustCompile(`[0][0-7]{3}`)
+	fmt.Println(strconv.Itoa(int(perm)))
+	if re.MatchString(strconv.Itoa(int(perm))) {
+		fmt.Println("if 1")
 		if err := os.Chmod(path, os.FileMode(perm)); err != nil {
+			fmt.Println("error 1")
 			return fmt.Errorf("chmoding file failed")
 		}
 	} else {
+		fmt.Println("if 2")
 		if err := os.Chmod(path, os.FileMode(DefaultFilePerm)); err != nil {
+			fmt.Println("error 2")
 			return fmt.Errorf("chmoding default file permissions failed")
 		}
 	}
 	return nil
 }
 
-func CreateAndOpenFile(path string, perm int) (*os.File, error) {
+func CreateAndOpenFile(path string, perm uint32) (*os.File, error) {
 	f, err := os.Create(path)
 	if err != nil {
 		f.Close()
