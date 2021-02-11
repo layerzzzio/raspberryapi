@@ -20,8 +20,12 @@ import (
 // TODO: to test this method by simulating different OS scenarios in a Docker container (raspbian/strech)
 
 var (
-	// Default file permission
+	// DefaultFilePerm is the default file permission
 	DefaultFilePerm = uint32(0644)
+
+	// IpRegex is the regex used to detect ip addresses in strings
+	IpRegex = "^127.0.1.1"
+	// IpRegex = "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
 
 	// Separator separates parent and child execution
 	Separator = "<|>"
@@ -495,13 +499,11 @@ type OverwriteToFileArg struct {
 // 	return fileInfo.IsDir(), err
 // }
 
-// BackupFile copy a file and add suffix .bak to the copied file
-// defer close file is not used here: https://www.joeshaw.org/dont-defer-close-on-writable-files/
+// BackupFile copies a file and adds suffix .bak to the copied file
+// !!! "defer close" should absolutely not be used here !!!
+// source: https://www.joeshaw.org/dont-defer-close-on-writable-files/
 func BackupFile(path string, perm uint32) error {
 	newPath := path + ".bak"
-
-	// info, _ := os.Stat(path)
-	// fmt.Println(info)
 
 	// copy the file if the file exists
 	if _, err := os.Stat(path); err == nil {
@@ -537,30 +539,30 @@ func BackupFile(path string, perm uint32) error {
 	return nil
 }
 
+// ApplyPermissionsToFile apply permissions to a given file
 func ApplyPermissionsToFile(path string, perm uint32) error {
-	// check if permission if of type 0755, 0644 etc.
-	// min number = 1
+	// !!! the permissions are octal numbers !!!
+	// https://yourbasic.org/golang/gotcha-octal-decimal-hexadecimal-literal/
+	// first number = 0 (true for every octal)
+	// min number = 0
 	// max number = 7
-	// doesn't check the first zero as the integer is converted to string
-	re := regexp.MustCompile(`[0][0-7]{3}`)
-	fmt.Println(strconv.Itoa(int(perm)))
-	if re.MatchString(strconv.Itoa(int(perm))) {
-		fmt.Println("if 1")
+	// The reason for Go to use octal is that it makes it impossible
+	// to have numbers higher than 7 which is the max for permissions (rwx)
+
+	re := regexp.MustCompile(`^0[0-7]{3}$`)
+	if re.MatchString("0" + strconv.FormatInt(int64(perm), 8)) {
 		if err := os.Chmod(path, os.FileMode(perm)); err != nil {
-			fmt.Println("error 1")
 			return fmt.Errorf("chmoding file failed")
 		}
 	} else {
-		fmt.Println("if 2")
 		if err := os.Chmod(path, os.FileMode(DefaultFilePerm)); err != nil {
-			fmt.Println("error 2")
 			return fmt.Errorf("chmoding default file permissions failed")
 		}
 	}
 	return nil
 }
 
-func CreateAndOpenFile(path string, perm uint32) (*os.File, error) {
+func CreateOrTruncate(path string, perm uint32) (*os.File, error) {
 	f, err := os.Create(path)
 	if err != nil {
 		f.Close()
@@ -583,7 +585,7 @@ func CloseAndRemoveBakFile(file *os.File, path string) error {
 
 	// remove bak file
 	pathBak := path + ".bak"
-	if _, err = os.Stat(pathBak); os.IsExist(err) {
+	if _, err := os.Stat(pathBak); err == nil {
 		if err = os.Remove(pathBak); err != nil {
 			return fmt.Errorf("removing bak file failed")
 		}
@@ -599,7 +601,7 @@ func OverwriteToFile(args OverwriteToFileArg) error {
 		return fmt.Errorf("backuping file failed")
 	}
 
-	f, err := CreateAndOpenFile(args.File, args.Permissions)
+	f, err := CreateOrTruncate(args.File, args.Permissions)
 	if err != nil {
 		return fmt.Errorf("creating and opening file failed")
 	}
@@ -626,21 +628,22 @@ func OverwriteToFile(args OverwriteToFileArg) error {
 }
 
 // ReplaceLineFile is the argument to function ReplaceLineFile
-type ReplaceLineFileArg struct {
+type ReplaceLineInFileArg struct {
 	File        string
 	Data        string
-	Permissions int // 0644, 0666, etc.
+	Regex       string
+	Permissions uint32 // 0644, 0666, etc.
 }
 
-// ReplaceLineFile replace one or multiple line in file
-func ReplaceLineFile(args OverwriteToFileArg) error {
+// ReplaceLineInFile replace one or multiple line in file
+func ReplaceLineInFile(args ReplaceLineInFileArg) error {
 	if err := BackupFile(args.File, DefaultFilePerm); err != nil {
 		return fmt.Errorf("backuping file failed")
 	}
 
-	f, err := CreateAndOpenFile(args.File, args.Permissions)
+	f, err := os.Open(args.File)
 	if err != nil {
-		return fmt.Errorf("creating and opening file failed")
+		return fmt.Errorf("opening file failed")
 	}
 
 	// replacing line logic
@@ -653,8 +656,18 @@ func ReplaceLineFile(args OverwriteToFileArg) error {
 			break
 		}
 
-		// Process the line here.
-		fmt.Printf(" > Read %d characters\n", len(line))
+		// Process the line here
+		// re := regexp.MustCompile("`" + args.Regex + "`")
+
+		fmt.Println(line)
+
+		re := regexp.MustCompile("`^127.0.1.1.*`")
+		fmt.Println(re.MatchString(line))
+
+		if re.MatchString(line) {
+			fmt.Println("yo")
+		}
+
 		if err != nil {
 			break
 		}

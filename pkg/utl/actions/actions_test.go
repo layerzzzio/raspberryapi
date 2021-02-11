@@ -1186,43 +1186,98 @@ func TestApplyPermissionsToFile(t *testing.T) {
 			wantedPerm: os.FileMode(0644),
 		},
 		{
-			name:       "perm matches regex",
+			name:       "success: simple perm matches regex",
 			path:       "./dummyfile",
 			perm:       0755,
 			wantedData: nil,
 			wantedPerm: os.FileMode(0755),
 		},
+		{
+			name:       "success: another simple perm matches regex",
+			path:       "./dummyfile",
+			perm:       0100,
+			wantedData: nil,
+			wantedPerm: os.FileMode(0100),
+		},
+		{
+			name:       "edge case: perm is 0",
+			path:       "./dummyfile",
+			perm:       0,
+			wantedData: nil,
+			wantedPerm: os.FileMode(0644),
+		},
+		{
+			name:       "edge case: perm is 00",
+			path:       "./dummyfile",
+			perm:       00,
+			wantedData: nil,
+			wantedPerm: os.FileMode(0644),
+		},
+		{
+			name:       "edge case: perm is 000",
+			path:       "./dummyfile",
+			perm:       000,
+			wantedData: nil,
+			wantedPerm: os.FileMode(0644),
+		},
+		{
+			name:       "edge case: perm is 0000",
+			path:       "./dummyfile",
+			perm:       0000,
+			wantedData: nil,
+			wantedPerm: os.FileMode(0644),
+		},
+		{
+			name:       "regex matches but chmoding failed",
+			path:       "./dummyfile",
+			perm:       0755,
+			wantedData: fmt.Errorf("chmoding file failed"),
+			wantedPerm: os.FileMode(0000),
+		},
+		{
+			name:       "regex does not match and chmoding failed",
+			path:       "./dummyfile",
+			perm:       1755,
+			wantedData: fmt.Errorf("chmoding default file permissions failed"),
+			wantedPerm: os.FileMode(0000),
+		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			// create file with perm 0666
-			file, err := os.Create(tc.path)
-			if err != nil {
-				log.Fatal(err)
+			var applyPerm error
+			var filePerm os.FileMode
+
+			if tc.name == "regex matches but chmoding failed" ||
+				tc.name == "regex does not match and chmoding failed" {
+				applyPerm = actions.ApplyPermissionsToFile(tc.path, tc.perm)
+			} else {
+				// create file with perm 0666
+				file, err := os.Create(tc.path)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				// add text and close
+				fmt.Fprintln(file, "hey_man")
+				file.Close()
+
+				// apply permissions to file
+				applyPerm = actions.ApplyPermissionsToFile(tc.path, tc.perm)
+
+				// check the perm after applying them
+				info, err := os.Stat(tc.path)
+				if err != nil {
+					log.Fatal(err)
+				}
+				filePerm = info.Mode()
+
+				// remove file
+				e := os.Remove(tc.path)
+				if e != nil {
+					log.Fatal(err)
+				}
 			}
-
-			// add text and close
-			fmt.Fprintln(file, "hey_man")
-			file.Close()
-
-			// apply permissions to file
-			applyPerm := actions.ApplyPermissionsToFile(tc.path, tc.perm)
-
-			// check the perm after applying them
-			info, err := os.Stat(tc.path)
-			if err != nil {
-				log.Fatal(err)
-			}
-			filePerm := info.Mode()
-			fmt.Println(filePerm)
-
-			// remove file
-			e := os.Remove(tc.path)
-			if e != nil {
-				log.Fatal(err)
-			}
-
 			assert.Equal(t, tc.wantedData, applyPerm)
 			assert.Equal(t, tc.wantedPerm, filePerm)
 		})
@@ -1311,6 +1366,75 @@ func TestOverwriteToFile(t *testing.T) {
 				}
 			}
 			assert.Equal(t, tc.wantedData, overwriteToFile)
+		})
+	}
+}
+
+func TestReplaceLineInFile(t *testing.T) {
+	cases := []struct {
+		name       string
+		initData   string
+		args       actions.ReplaceLineInFileArg
+		wantedData error
+	}{
+		{
+			name: "success with multiline",
+			initData: "127.0.1.1		raspberrypi",
+			args: actions.ReplaceLineInFileArg{
+				File:        "./test_write_to_file",
+				Data:        "text_3",
+				Regex:       actions.IpRegex,
+				Permissions: 0755,
+			},
+			wantedData: nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.name == "success with multiline" ||
+				tc.name == "success not multiline" ||
+				tc.name == "success permissions not nill" {
+				// create file
+				file, err := os.Create(tc.args.File)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				// add text and close the file
+				fmt.Fprint(file, tc.initData)
+				file.Close()
+
+				// replace line in file
+				replaceLineInFile := actions.ReplaceLineInFile(tc.args)
+
+				// read the new line
+				file, err = os.Create(tc.args.File)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				var readLines = []string{}
+				scanner := bufio.NewScanner(file)
+				for scanner.Scan() {
+					readLines = append(readLines, scanner.Text())
+				}
+
+				if err := scanner.Err(); err != nil {
+					log.Fatal(err)
+				}
+
+				file.Close()
+
+				e := os.Remove(tc.args.File)
+				if e != nil {
+					fmt.Println(e)
+				}
+
+				// assert statements
+				assert.Equal(t, tc.args.Data, readLines)
+				assert.Equal(t, tc.wantedData, replaceLineInFile)
+			}
 		})
 	}
 }
