@@ -1,10 +1,18 @@
 package api
 
 import (
+	"github.com/raspibuddy/rpi/pkg/api/actions/configure"
+	acl "github.com/raspibuddy/rpi/pkg/api/actions/configure/logging"
+	acs "github.com/raspibuddy/rpi/pkg/api/actions/configure/platform/sys"
+	act "github.com/raspibuddy/rpi/pkg/api/actions/configure/transport"
 	"github.com/raspibuddy/rpi/pkg/api/actions/destroy"
 	adl "github.com/raspibuddy/rpi/pkg/api/actions/destroy/logging"
 	ads "github.com/raspibuddy/rpi/pkg/api/actions/destroy/platform/sys"
 	adt "github.com/raspibuddy/rpi/pkg/api/actions/destroy/transport"
+	"github.com/raspibuddy/rpi/pkg/api/infos/humanuser"
+	ihul "github.com/raspibuddy/rpi/pkg/api/infos/humanuser/logging"
+	ihus "github.com/raspibuddy/rpi/pkg/api/infos/humanuser/platform/sys"
+	ihut "github.com/raspibuddy/rpi/pkg/api/infos/humanuser/transport"
 	"github.com/raspibuddy/rpi/pkg/api/metrics/cpu"
 	cl "github.com/raspibuddy/rpi/pkg/api/metrics/cpu/logging"
 	cs "github.com/raspibuddy/rpi/pkg/api/metrics/cpu/platform/sys"
@@ -47,6 +55,7 @@ import (
 	vt "github.com/raspibuddy/rpi/pkg/api/metrics/vcore/transport"
 	"github.com/raspibuddy/rpi/pkg/utl/actions"
 	"github.com/raspibuddy/rpi/pkg/utl/config"
+	"github.com/raspibuddy/rpi/pkg/utl/infos"
 	"github.com/raspibuddy/rpi/pkg/utl/metrics"
 	"github.com/raspibuddy/rpi/pkg/utl/server"
 	"github.com/raspibuddy/rpi/pkg/utl/zlog"
@@ -59,7 +68,9 @@ func Start(cfg *config.Configuration) error {
 	v1 := e.Group("/v1")
 	m := metrics.New(metrics.Service{})
 	a := actions.New()
+	i := infos.New()
 
+	// metrics
 	ct.NewHTTP(cl.New(cpu.New(cs.CPU{}, m), log).Service, v1)
 	vt.NewHTTP(vl.New(vcore.New(vs.VCore{}, m), log).Service, v1)
 	mt.NewHTTP(ml.New(mem.New(ms.Mem{}, m), log).Service, v1)
@@ -70,7 +81,13 @@ func Start(cfg *config.Configuration) error {
 	ut.NewHTTP(ul.New(user.New(us.User{}, m), log).Service, v1)
 	nt.NewHTTP(nl.New(net.New(ns.Net{}, m), log).Service, v1)
 	fst.NewHTTP(fsl.New(filestructure.New(fss.FileStructure{}, m), log).Service, v1)
+
+	// actions
 	adt.NewHTTP(adl.New(destroy.New(ads.Destroy{}, a), log).Service, v1)
+	act.NewHTTP(acl.New(configure.New(acs.Configure{}, a), log).Service, v1)
+
+	// infos
+	ihut.NewHTTP(ihul.New(humanuser.New(ihus.HumanUser{}, i), log).Service, v1)
 
 	server.Start(e, &server.Config{
 		Port:                cfg.Server.Port,

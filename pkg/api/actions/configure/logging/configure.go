@@ -41,16 +41,18 @@ func (ls *LogService) ExecuteCH(ctx echo.Context, hostname string) (resp rpi.Act
 }
 
 // ExecuteCP is the logging function attached to the execute change password service and responsible for logging it out.
-func (ls *LogService) ExecuteCP(ctx echo.Context, password string) (resp rpi.Action, err error) {
+func (ls *LogService) ExecuteCP(ctx echo.Context, password string, username string) (resp rpi.Action, err error) {
 	defer func(begin time.Time) {
 		ls.logger.Log(
 			ctx,
-			name, fmt.Sprintf("request: execute change hostname #%v", password), err,
+			name,
+			fmt.Sprintf("request: execute change hostname #%v for user %v", password, username),
+			err,
 			map[string]interface{}{
 				"resp": resp,
 				"took": time.Since(begin),
 			},
 		)
 	}(time.Now())
-	return ls.Service.ExecuteCP(password)
+	return ls.Service.ExecuteCP(password, username)
 }

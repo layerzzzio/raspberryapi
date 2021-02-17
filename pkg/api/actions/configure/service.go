@@ -8,7 +8,7 @@ import (
 // Service represents all Configure application services.
 type Service interface {
 	ExecuteCH(string) (rpi.Action, error)
-	ExecuteCP(string) (rpi.Action, error)
+	ExecuteCP(string, string) (rpi.Action, error)
 }
 
 // Configure represents a Configure application service.
@@ -25,7 +25,8 @@ type CONSYS interface {
 
 // Actions represents the actions interface
 type Actions interface {
-	ChangeHostname(interface{}) (rpi.Exec, error)
+	ChangeHostnameInHostnameFile(interface{}) (rpi.Exec, error)
+	ChangeHostnameInHostsFile(interface{}) (rpi.Exec, error)
 	ChangePassword(interface{}) (rpi.Exec, error)
 }
 

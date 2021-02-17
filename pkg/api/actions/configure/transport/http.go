@@ -40,7 +40,12 @@ func (h *HTTP) changepassword(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "Not found - password is null")
 	}
 
-	result, err := h.svc.ExecuteCP(password)
+	username := ctx.QueryParam("username")
+	if password == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - username is null")
+	}
+
+	result, err := h.svc.ExecuteCP(password, username)
 	if err != nil {
 		return err
 	}

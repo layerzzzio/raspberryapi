@@ -11,10 +11,21 @@ func (con *Configure) ExecuteCH(hostname string) (rpi.Action, error) {
 		1: {
 			1: {
 				Name:      actions.ChangeHostname,
-				Reference: con.a.ChangeHostname,
+				Reference: con.a.ChangeHostnameInHostsFile,
 				Argument: []interface{}{
-					actions.CH{
-						Hostname: hostname,
+					actions.DataToFile{
+						TargetFile: "/etc/hosts",
+						Data:       hostname,
+					},
+				},
+			},
+			2: {
+				Name:      actions.ChangeHostname,
+				Reference: con.a.ChangeHostnameInHostnameFile,
+				Argument: []interface{}{
+					actions.DataToFile{
+						TargetFile: "/etc/hostname",
+						Data:       hostname,
 					},
 				},
 			},
@@ -25,7 +36,7 @@ func (con *Configure) ExecuteCH(hostname string) (rpi.Action, error) {
 }
 
 // ExecuteCP changes password and returns an action.
-func (con *Configure) ExecuteCP(password string) (rpi.Action, error) {
+func (con *Configure) ExecuteCP(password string, username string) (rpi.Action, error) {
 	plan := map[int](map[int]actions.Func){
 		1: {
 			1: {
@@ -34,6 +45,7 @@ func (con *Configure) ExecuteCP(password string) (rpi.Action, error) {
 				Argument: []interface{}{
 					actions.CP{
 						Password: password,
+						Username: username,
 					},
 				},
 			},

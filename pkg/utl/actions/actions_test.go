@@ -13,7 +13,9 @@ import (
 
 	"github.com/raspibuddy/rpi"
 	"github.com/raspibuddy/rpi/pkg/utl/actions"
+	"github.com/raspibuddy/rpi/pkg/utl/infos"
 	"github.com/raspibuddy/rpi/pkg/utl/test_utl"
+	"github.com/shirou/gopsutil/host"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -1075,7 +1077,6 @@ func TestExecutePlanWithDependency(t *testing.T) {
 
 	counter := 1
 	for {
-		fmt.Println("===========> Testing round " + fmt.Sprint(counter))
 		for _, tc := range cases {
 			t.Run(tc.name, func(t *testing.T) {
 				start := int(time.Now().Unix())
@@ -1172,11 +1173,12 @@ func TestBackupFile(t *testing.T) {
 
 func TestApplyPermissionsToFile(t *testing.T) {
 	cases := []struct {
-		name       string
-		path       string
-		perm       uint32
-		wantedData error
-		wantedPerm os.FileMode
+		name             string
+		path             string
+		perm             uint32
+		isChmodingFailed bool
+		wantedData       error
+		wantedPerm       os.FileMode
 	}{
 		{
 			name:       "perm does not match regex",
@@ -1228,18 +1230,20 @@ func TestApplyPermissionsToFile(t *testing.T) {
 			wantedPerm: os.FileMode(0644),
 		},
 		{
-			name:       "regex matches but chmoding failed",
-			path:       "./dummyfile",
-			perm:       0755,
-			wantedData: fmt.Errorf("chmoding file failed"),
-			wantedPerm: os.FileMode(0000),
+			name:             "regex matches but chmoding failed",
+			path:             "./dummyfile",
+			perm:             0755,
+			isChmodingFailed: true,
+			wantedData:       fmt.Errorf("chmoding file failed"),
+			wantedPerm:       os.FileMode(0000),
 		},
 		{
-			name:       "regex does not match and chmoding failed",
-			path:       "./dummyfile",
-			perm:       1755,
-			wantedData: fmt.Errorf("chmoding default file permissions failed"),
-			wantedPerm: os.FileMode(0000),
+			name:             "regex does not match and chmoding failed",
+			path:             "./dummyfile",
+			perm:             1755,
+			isChmodingFailed: true,
+			wantedData:       fmt.Errorf("chmoding default file permissions failed"),
+			wantedPerm:       os.FileMode(0000),
 		},
 	}
 
@@ -1248,8 +1252,7 @@ func TestApplyPermissionsToFile(t *testing.T) {
 			var applyPerm error
 			var filePerm os.FileMode
 
-			if tc.name == "regex matches but chmoding failed" ||
-				tc.name == "regex does not match and chmoding failed" {
+			if tc.isChmodingFailed {
 				applyPerm = actions.ApplyPermissionsToFile(tc.path, tc.perm)
 			} else {
 				// create file with perm 0666
@@ -1288,6 +1291,7 @@ func TestOverwriteToFile(t *testing.T) {
 	cases := []struct {
 		name       string
 		args       actions.OverwriteToFileArg
+		isSuccess  bool
 		wantedData error
 	}{
 		{
@@ -1297,6 +1301,7 @@ func TestOverwriteToFile(t *testing.T) {
 				Data:      []string{"text_1", "text_2", "text_3"},
 				Multiline: true,
 			},
+			isSuccess:  true,
 			wantedData: nil,
 		},
 		{
@@ -1306,6 +1311,7 @@ func TestOverwriteToFile(t *testing.T) {
 				Data:      []string{"text_1", "text_2", "text_3"},
 				Multiline: false,
 			},
+			isSuccess:  true,
 			wantedData: nil,
 		},
 		{
@@ -1316,6 +1322,7 @@ func TestOverwriteToFile(t *testing.T) {
 				Multiline:   false,
 				Permissions: 0755,
 			},
+			isSuccess:  true,
 			wantedData: nil,
 		},
 		{
@@ -1333,25 +1340,11 @@ func TestOverwriteToFile(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			overwriteToFile := actions.OverwriteToFile(tc.args)
 
-			if tc.name == "success with multiline" ||
-				tc.name == "success not multiline" ||
-				tc.name == "success permissions not nill" {
-				file, err := os.Open(tc.args.File)
+			if tc.isSuccess {
+				readLines, err := infos.New().ReadFile(tc.args.File)
 				if err != nil {
 					log.Fatal(err)
 				}
-
-				var readLines = []string{}
-				scanner := bufio.NewScanner(file)
-				for scanner.Scan() {
-					readLines = append(readLines, scanner.Text())
-				}
-
-				if err := scanner.Err(); err != nil {
-					log.Fatal(err)
-				}
-
-				file.Close()
 
 				e := os.Remove(tc.args.File)
 				if e != nil {
@@ -1370,71 +1363,408 @@ func TestOverwriteToFile(t *testing.T) {
 	}
 }
 
-func TestReplaceLineInFile(t *testing.T) {
+func TestGetReplaceType(t *testing.T) {
 	cases := []struct {
 		name       string
-		initData   string
-		args       actions.ReplaceLineInFileArg
-		wantedData error
+		repType    actions.ReplaceType
+		wantedData *string
+		wantedErr  error
 	}{
 		{
-			name: "success with multiline",
-			initData: "127.0.1.1		raspberrypi",
-			args: actions.ReplaceLineInFileArg{
-				File:        "./test_write_to_file",
-				Data:        "text_3",
-				Regex:       actions.IpRegex,
-				Permissions: 0755,
+			name: "error: only one replace type required",
+			repType: actions.ReplaceType{
+				&actions.AllOccurrences{Occurrence: "occ", NewData: "new_data"},
+				&actions.EntireLine{NewData: "new_data"},
 			},
 			wantedData: nil,
+			wantedErr:  fmt.Errorf("only one replace type allowed"),
+		},
+		{
+			name:       "error: at least one replace type required",
+			repType:    actions.ReplaceType{},
+			wantedData: nil,
+			wantedErr:  fmt.Errorf("at least one replace type required"),
+		},
+		{
+			name: "success: all_occurrences",
+			repType: actions.ReplaceType{
+				&actions.AllOccurrences{Occurrence: "occ", NewData: "new_data"},
+				nil,
+			},
+			wantedData: &actions.RepTypeAllOccurrences,
+			wantedErr:  nil,
+		},
+		{
+			name: "success: entire_line",
+			repType: actions.ReplaceType{
+				nil,
+				&actions.EntireLine{NewData: "new_data"},
+			},
+			wantedData: &actions.RepTypeEntireLine,
+			wantedErr:  nil,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			if tc.name == "success with multiline" ||
-				tc.name == "success not multiline" ||
-				tc.name == "success permissions not nill" {
-				// create file
-				file, err := os.Create(tc.args.File)
-				if err != nil {
+			repType, err := actions.GetReplaceType(tc.repType)
+			assert.Equal(t, tc.wantedErr, err)
+			assert.Equal(t, tc.wantedData, repType)
+		})
+	}
+}
+
+func TestReplaceLineInFile(t *testing.T) {
+	cases := []struct {
+		name               string
+		args               actions.ReplaceLineInFileArg
+		isSuccess          bool
+		originalLine       string
+		modifiedLine       string
+		wantedData         error
+		wantedNewDataFound bool
+	}{
+		{
+			name:      "success with replace type all_occurrences",
+			isSuccess: true,
+			args: actions.ReplaceLineInFileArg{
+				File:        "./test_write_to_file",
+				Permissions: 0755,
+				Regex:       actions.HostnameChangeInHostsRegex,
+				ReplaceType: actions.ReplaceType{
+					&actions.AllOccurrences{
+						Occurrence: "raspberrypi",
+						NewData:    "new_hostname",
+					},
+					nil,
+				},
+			},
+			originalLine: "127.0.1.1		raspberrypi",
+			modifiedLine: "127.0.1.1		new_hostname",
+			wantedData:         nil,
+			wantedNewDataFound: true,
+		},
+		{
+			name:      "success with replace type entire_line",
+			isSuccess: true,
+			args: actions.ReplaceLineInFileArg{
+				File:        "./test_write_to_file",
+				Permissions: 0755,
+				Regex:       actions.HostnameChangeInHostsRegex,
+				ReplaceType: actions.ReplaceType{
+					nil,
+					&actions.EntireLine{
+						NewData: "new_hostname",
+					},
+				},
+			},
+			originalLine: "127.0.1.1		raspberrypi",
+			modifiedLine:       "new_hostname",
+			wantedData:         nil,
+			wantedNewDataFound: true,
+		},
+		{
+			name:      "success but no replacement because no match",
+			isSuccess: true,
+			args: actions.ReplaceLineInFileArg{
+				File:        "./test_write_to_file",
+				Permissions: 0755,
+				Regex:       actions.HostnameChangeInHostsRegex,
+				ReplaceType: actions.ReplaceType{
+					nil,
+					&actions.EntireLine{
+						NewData: "new_hostname",
+					},
+				},
+			},
+			originalLine: "0.0.0.0		raspberrypi",
+			modifiedLine:       "",
+			wantedData:         nil,
+			wantedNewDataFound: true,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.isSuccess {
+				// create and populate file
+				if err := actions.OverwriteToFile(actions.OverwriteToFileArg{
+					File: tc.args.File,
+					Data: []string{
+						"dummy line 1",
+						"dummy line 2 127.0.1.1",
+						tc.originalLine,
+						"127.0.1.1		raspberrypi",
+					},
+					Multiline:   true,
+					Permissions: 0755,
+				}); err != nil {
 					log.Fatal(err)
 				}
-
-				// add text and close the file
-				fmt.Fprint(file, tc.initData)
-				file.Close()
 
 				// replace line in file
 				replaceLineInFile := actions.ReplaceLineInFile(tc.args)
 
 				// read the new line
-				file, err = os.Create(tc.args.File)
+				readLines, err := infos.New().ReadFile(tc.args.File)
 				if err != nil {
 					log.Fatal(err)
 				}
 
-				var readLines = []string{}
-				scanner := bufio.NewScanner(file)
-				for scanner.Scan() {
-					readLines = append(readLines, scanner.Text())
-				}
+				fmt.Println(readLines)
+				// --> replace all occurrences:
+				// [dummy line 1  dummy line 2 127.0.1.1  127.0.1.1		new_hostname  127.0.1.1		new_hostname  ]
+				// --> replace entire line:
+				// [dummy line 1  dummy line 2 127.0.1.1  new_hostname new_hostname ]
 
-				if err := scanner.Err(); err != nil {
-					log.Fatal(err)
-				}
-
-				file.Close()
-
-				e := os.Remove(tc.args.File)
-				if e != nil {
+				if e := os.Remove(tc.args.File); e != nil {
 					fmt.Println(e)
 				}
 
 				// assert statements
-				assert.Equal(t, tc.args.Data, readLines)
+				isFound := false
+				for _, s := range readLines {
+					if tc.modifiedLine == s {
+						isFound = true
+					}
+				}
+
+				assert.Equal(t, tc.wantedNewDataFound, isFound)
 				assert.Equal(t, tc.wantedData, replaceLineInFile)
 			}
+		})
+	}
+}
+
+func TestChangeHostnameInHostnameFile(t *testing.T) {
+	cases := []struct {
+		name               string
+		argument           interface{}
+		isSuccess          bool
+		originalLine       string
+		wantedModifiedLine string
+		wantedExitStatus   uint8
+		wantedStderr       string
+		wantedErr          error
+	}{
+		{
+			name: "error : no such file or directory",
+			argument: actions.DataToFile{
+				TargetFile: "",
+				Data:       "dummydata",
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "creating and opening file failed",
+			wantedErr:        nil,
+		},
+		{
+			name: "error : too many arguments",
+			argument: []actions.OtherParams{
+				{Value: map[string]string{"targetFile": dummypath}},
+				{Value: map[string]string{"hostname": dummypath}},
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "",
+			wantedErr:        &actions.Error{Arguments: []string{"hostname", "targetFile"}},
+		},
+		{
+			name: "success with otherParams",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"targetFile": dummypath,
+					"hostname":   "new_hostname",
+				},
+			},
+			isSuccess: true,
+			originalLine: "127.0.1.1		raspberrypi",
+			wantedModifiedLine: "new_hostname",
+			wantedExitStatus:   0,
+			wantedStderr:       "",
+			wantedErr:          nil,
+		},
+		{
+			name: "success with regular params",
+			argument: actions.DataToFile{
+				TargetFile: dummypath,
+				Data:       "new_hostname",
+			},
+			isSuccess: true,
+			originalLine: "127.0.1.1		raspberrypi",
+			wantedModifiedLine: "new_hostname",
+			wantedExitStatus:   0,
+			wantedStderr:       "",
+			wantedErr:          nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var chHostnameInHostnameFile rpi.Exec
+			var err error
+			a := actions.New()
+
+			if tc.isSuccess {
+				// create and populate file
+				if err := actions.OverwriteToFile(actions.OverwriteToFileArg{
+					File: dummypath,
+					Data: []string{"dummy line 1", "dummy line 2 127.0.1.1", "127.0.1.1		raspberrypi"},
+					Multiline:   true,
+					Permissions: 0755,
+				}); err != nil {
+					log.Fatal(err)
+				}
+
+				chHostnameInHostnameFile, err = a.ChangeHostnameInHostnameFile(tc.argument)
+
+				// read the new line and delete
+				readLines, err := infos.New().ReadFile(dummypath)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				if e := os.Remove(dummypath); e != nil {
+					fmt.Println(e)
+				}
+
+				assert.Equal(t, tc.wantedModifiedLine, readLines[0])
+			} else {
+				chHostnameInHostnameFile, err = a.ChangeHostnameInHostnameFile(tc.argument)
+			}
+
+			assert.Equal(t, tc.wantedExitStatus, chHostnameInHostnameFile.ExitStatus)
+			assert.Equal(t, tc.wantedStderr, chHostnameInHostnameFile.Stderr)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
+func TestChangeHostnameInHostsFile(t *testing.T) {
+	cases := []struct {
+		name                  string
+		argument              interface{}
+		isSuccess             bool
+		originalLineStartWith string
+		modifiedLine          string
+		wantedNewDataFound    bool
+		wantedExitStatus      uint8
+		wantedStderr          string
+		wantedErr             error
+	}{
+		{
+			name: "error : no such file or directory",
+			argument: actions.DataToFile{
+				TargetFile: "",
+				Data:       "dummydata",
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "opening file failed",
+			wantedErr:        nil,
+		},
+		{
+			name: "error : too many arguments",
+			argument: []actions.OtherParams{
+				{Value: map[string]string{"targetFile": dummypath}},
+				{Value: map[string]string{"hostname": dummypath}},
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "",
+			wantedErr:        &actions.Error{Arguments: []string{"hostname", "targetFile"}},
+		},
+		{
+			name: "success with otherParams",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"targetFile": dummypath,
+					"hostname":   "new_hostname",
+				},
+			},
+			isSuccess: true,
+			originalLineStartWith: "127.0.1.1		",
+			modifiedLine: "127.0.1.1		new_hostname",
+			wantedNewDataFound: true,
+			wantedExitStatus:   0,
+			wantedStderr:       "",
+			wantedErr:          nil,
+		},
+		{
+			name: "success with regular params",
+			argument: actions.DataToFile{
+				TargetFile: dummypath,
+				Data:       "new_hostname",
+			},
+			isSuccess: true,
+			originalLineStartWith: "127.0.1.1		",
+			modifiedLine: "127.0.1.1		new_hostname",
+			wantedNewDataFound: true,
+			wantedExitStatus:   0,
+			wantedStderr:       "",
+			wantedErr:          nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var chHostnameInHostnameFile rpi.Exec
+			var err error
+			a := actions.New()
+
+			if tc.isSuccess {
+				info, err := host.Info()
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				// create and populate file
+				if err := actions.OverwriteToFile(actions.OverwriteToFileArg{
+					File: dummypath,
+					Data: []string{
+						"dummy line 1",
+						"dummy line 2 127.0.1.1",
+						tc.originalLineStartWith + info.Hostname,
+						"yessss man",
+					},
+					Multiline:   true,
+					Permissions: 0755,
+				}); err != nil {
+					log.Fatal(err)
+				}
+
+				chHostnameInHostnameFile, err = a.ChangeHostnameInHostsFile(tc.argument)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				// read the new line and delete
+				readLines, err := infos.New().ReadFile(dummypath)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				fmt.Println(readLines)
+
+				if e := os.Remove(dummypath); e != nil {
+					fmt.Println(e)
+				}
+
+				// assert statements
+				isFound := false
+				for _, s := range readLines {
+					if tc.modifiedLine == s {
+						isFound = true
+					}
+				}
+				assert.Equal(t, tc.wantedNewDataFound, isFound)
+			} else {
+				chHostnameInHostnameFile, err = a.ChangeHostnameInHostsFile(tc.argument)
+			}
+
+			assert.Equal(t, tc.wantedExitStatus, chHostnameInHostnameFile.ExitStatus)
+			assert.Equal(t, tc.wantedStderr, chHostnameInHostnameFile.Stderr)
+			assert.Equal(t, tc.wantedErr, err)
 		})
 	}
 }
