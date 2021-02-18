@@ -41,7 +41,7 @@ func (h *HTTP) changepassword(ctx echo.Context) error {
 	}
 
 	username := ctx.QueryParam("username")
-	if password == "" {
+	if username == "" {
 		return echo.NewHTTPError(http.StatusNotFound, "Not found - username is null")
 	}
 

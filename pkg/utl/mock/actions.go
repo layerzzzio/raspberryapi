@@ -6,9 +6,12 @@ import (
 
 // Actions mock
 type Actions struct {
-	DeleteFileFn        func(arg interface{}) (rpi.Exec, error)
-	KillProcessByNameFn func(arg interface{}) (rpi.Exec, error)
-	KillProcessFn       func(arg interface{}) (rpi.Exec, error)
+	DeleteFileFn                   func(arg interface{}) (rpi.Exec, error)
+	KillProcessByNameFn            func(arg interface{}) (rpi.Exec, error)
+	KillProcessFn                  func(arg interface{}) (rpi.Exec, error)
+	ChangeHostnameInHostnameFileFn func(arg interface{}) (rpi.Exec, error)
+	ChangeHostnameInHostsFileFn    func(arg interface{}) (rpi.Exec, error)
+	ChangePasswordFn               func(arg interface{}) (rpi.Exec, error)
 }
 
 // DeleteFile mock
@@ -24,4 +27,19 @@ func (a Actions) KillProcessByName(arg interface{}) (rpi.Exec, error) {
 // KillProcess mock
 func (a Actions) KillProcess(arg interface{}) (rpi.Exec, error) {
 	return a.KillProcessFn(arg)
+}
+
+// ChangeHostnameInHostnameFile mock
+func (a Actions) ChangeHostnameInHostnameFile(arg interface{}) (rpi.Exec, error) {
+	return a.ChangeHostnameInHostnameFileFn(arg)
+}
+
+// ChangeHostnameInHostsFile mock
+func (a Actions) ChangeHostnameInHostsFile(arg interface{}) (rpi.Exec, error) {
+	return a.ChangeHostnameInHostsFileFn(arg)
+}
+
+// ChangePassword mock
+func (a Actions) ChangePassword(arg interface{}) (rpi.Exec, error) {
+	return a.ChangePasswordFn(arg)
 }
