@@ -1,22 +1,39 @@
 package actions
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/raspibuddy/rpi"
+	"github.com/shirou/gopsutil/host"
 )
 
 // TODO: to test this method by simulating different OS scenarios in a Docker container (raspbian/strech)
 
 var (
+	// DefaultFilePerm is the default file permission
+	DefaultFilePerm = uint32(0644)
+
+	// RepTypeAllOccurrences is a flag meaning all occurrences of a word should be replaced
+	RepTypeAllOccurrences = "all_occurrences"
+
+	// RepTypeEntireLine is a flag meaning all occurrences of an entire file line should be replaced
+	RepTypeEntireLine = "entire_line"
+
+	// IpRegex is the regex used to detect ip addresses in strings
+	HostnameChangeInHostsRegex = `^127.0.1.1.*`
+	// IpRegex = "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
+
 	// Separator separates parent and child execution
 	Separator = "<|>"
 
@@ -31,6 +48,18 @@ var (
 
 	// StopUserSession is the name of the disconnect user action
 	StopUserSession = "stop_user_sessions"
+
+	// ChangeHostname is the name of the change username action
+	ChangeHostname = "change_hostname"
+
+	// ChangeHostnameInHostnameFile is the name of the change username action
+	ChangeHostnameInHostnameFile = "change_hostname_in_hostname_file"
+
+	// ChangeHostnameInHostFile is the name of the change username action
+	ChangeHostnameInHostsFile = "change_hostname_in_hosts_file"
+
+	// ChangePassword is the name of the change password action
+	ChangePassword = "change_password"
 )
 
 // Service represents several system scripts.
@@ -142,6 +171,7 @@ func (s Service) KillProcessByName(arg interface{}) (rpi.Exec, error) {
 		return rpi.Exec{ExitStatus: 1}, &Error{[]string{"processname", "processtype"}}
 	}
 
+	// execution start time
 	startTime := uint64(time.Now().Unix())
 	exitStatus := 0
 	var stdErr string
@@ -170,6 +200,7 @@ func (s Service) KillProcessByName(arg interface{}) (rpi.Exec, error) {
 	}, nil
 }
 
+// DF is the argument used when deleting a file
 type DF struct {
 	Path string
 }
@@ -209,6 +240,171 @@ func (s Service) DeleteFile(arg interface{}) (rpi.Exec, error) {
 	}, nil
 }
 
+// DataToFile is an argument used when wanting to add new data to a file
+type DataToFile struct {
+	TargetFile string
+	Data       string
+}
+
+// ChangeHostnameInHostnameFile changes the hostname in /etc/hostname
+// It should completely overwrite the file with the new hostname
+func (s Service) ChangeHostnameInHostnameFile(arg interface{}) (rpi.Exec, error) {
+	var hostname string
+	var targetFile string
+
+	switch v := arg.(type) {
+	case DataToFile:
+		targetFile = v.TargetFile
+		hostname = v.Data
+	case OtherParams:
+		targetFile = arg.(OtherParams).Value["targetFile"]
+		hostname = arg.(OtherParams).Value["hostname"]
+	default:
+		return rpi.Exec{ExitStatus: 1}, &Error{[]string{"hostname", "targetFile"}}
+	}
+
+	// execution start time
+	startTime := uint64(time.Now().Unix())
+	exitStatus := 0
+	var stdErr string
+
+	err := OverwriteToFile(OverwriteToFileArg{
+		File:      targetFile,
+		Data:      []string{hostname},
+		Multiline: false,
+	})
+
+	if err != nil {
+		exitStatus = 1
+		stdErr = fmt.Sprint(err)
+	}
+
+	// execution end time
+	endTime := uint64(time.Now().Unix())
+
+	return rpi.Exec{
+		Name:       ChangeHostnameInHostnameFile,
+		StartTime:  startTime,
+		EndTime:    endTime,
+		ExitStatus: uint8(exitStatus),
+		Stderr:     stdErr,
+	}, nil
+}
+
+// ChangeHostnameInHostsFile changes the hostname in /etc/hosts
+// It should replace the old hostname value with new hostname value
+func (s Service) ChangeHostnameInHostsFile(arg interface{}) (rpi.Exec, error) {
+	var hostname string
+	var targetFile string
+
+	switch v := arg.(type) {
+	case DataToFile:
+		targetFile = v.TargetFile
+		hostname = v.Data
+	case OtherParams:
+		targetFile = arg.(OtherParams).Value["targetFile"]
+		hostname = arg.(OtherParams).Value["hostname"]
+	default:
+		return rpi.Exec{ExitStatus: 1}, &Error{[]string{"hostname", "targetFile"}}
+	}
+
+	// execution start time
+	startTime := uint64(time.Now().Unix())
+	exitStatus := 0
+	var stdErr string
+
+	info, err := host.Info()
+	if err != nil {
+		exitStatus = 1
+		stdErr = fmt.Sprint(err)
+	} else {
+		err = ReplaceLineInFile(ReplaceLineInFileArg{
+			File:  targetFile,
+			Regex: HostnameChangeInHostsRegex,
+			ReplaceType: ReplaceType{
+				// old hostname is not passed as an argument from the application
+				// indeed it can changed between the moment the user ask for a change
+				// and the moment it actually changes
+				&AllOccurrences{
+					Occurrence: info.Hostname,
+					NewData:    hostname,
+				},
+				nil,
+			},
+		})
+
+		if err != nil {
+			exitStatus = 1
+			stdErr = fmt.Sprint(err)
+		}
+	}
+
+	// execution end time
+	endTime := uint64(time.Now().Unix())
+
+	return rpi.Exec{
+		Name:       ChangeHostnameInHostsFile,
+		StartTime:  startTime,
+		EndTime:    endTime,
+		ExitStatus: uint8(exitStatus),
+		Stderr:     stdErr,
+	}, nil
+}
+
+// CP is the argument when changing the password
+type CP struct {
+	Password string
+	Username string
+}
+
+// ChangePassword changes a password without a prompt
+func (s Service) ChangePassword(arg interface{}) (rpi.Exec, error) {
+	var password string
+	var username string
+
+	switch v := arg.(type) {
+	case CP:
+		password = v.Password
+		username = v.Username
+	case OtherParams:
+		password = arg.(OtherParams).Value["password"]
+		username = arg.(OtherParams).Value["username"]
+	default:
+		return rpi.Exec{ExitStatus: 1}, &Error{[]string{"password", "username"}}
+	}
+
+	// execution start time
+	startTime := uint64(time.Now().Unix())
+	exitStatus := 0
+	var stdErr string
+
+	var err error
+	// the command was found here:
+	// https://askubuntu.com/questions/80444/how-to-set-user-passwords-using-passwd-without-a-prompt
+	_, err = exec.Command(
+		"sh",
+		"-c",
+		"usermod --password $(echo "+password+" | openssl passwd -1 -stdin) "+username,
+	).Output()
+
+	if err != nil {
+		exitStatus = 1
+		stdErr = fmt.Sprint(err)
+	}
+
+	// execution end time
+	endTime := uint64(time.Now().Unix())
+
+	return rpi.Exec{
+		Name:       ChangePassword,
+		StartTime:  startTime,
+		EndTime:    endTime,
+		ExitStatus: uint8(exitStatus),
+		Stderr:     stdErr,
+	}, nil
+}
+
+// Call calls a function by its name and params
 func Call(funcName interface{}, params []interface{}) (result interface{}, err error) {
 	// defer wg.Done()
 	f := reflect.ValueOf(funcName)
@@ -226,6 +422,7 @@ func Call(funcName interface{}, params []interface{}) (result interface{}, err e
 	return
 }
 
+// FlattenPlan flattens out an execute plan
 func FlattenPlan(execPlan map[int](map[int]Func)) map[string]rpi.Exec {
 	progress := map[string]rpi.Exec{}
 	for kp, parentExec := range execPlan {
@@ -309,6 +506,7 @@ func concurrentExec(execs map[int]Func, index string, progress map[string]rpi.Ex
 	return res
 }
 
+// ExecutePlan execute an action plan sequentially and in parallel
 func ExecutePlan(execPlan map[int](map[int]Func), progress map[string]rpi.Exec) (map[string]rpi.Exec, uint8) {
 	var exitStatus uint8
 	var index string
@@ -332,4 +530,249 @@ func ExecutePlan(execPlan map[int](map[int]Func), progress map[string]rpi.Exec) 
 	}
 
 	return progress, exitStatus
+}
+
+// OverwriteToFileArg is the argument to function OverwriteToFile
+type OverwriteToFileArg struct {
+	File        string
+	Data        []string
+	Multiline   bool
+	Permissions uint32 // 0644, 0666, etc.
+}
+
+// BackupFile copies a file and adds suffix .bak to the copied file
+// !!! "defer close" should absolutely not be used here !!!
+// source: https://www.joeshaw.org/dont-defer-close-on-writable-files/
+func BackupFile(path string, perm uint32) error {
+	newPath := path + ".bak"
+
+	// copy the file if the file exists
+	if _, err := os.Stat(path); err == nil {
+		in, err := os.Open(path)
+		if err != nil {
+			return fmt.Errorf("opening source file failed")
+		}
+
+		out, err := os.Create(newPath)
+		if err != nil {
+			out.Close()
+			return fmt.Errorf("creating bak file failed")
+		}
+
+		if _, err = io.Copy(out, in); err != nil {
+			return fmt.Errorf("copying to bak file failed")
+		}
+
+		err = in.Close()
+		if err != nil {
+			return fmt.Errorf("closing file failed")
+		}
+
+		err = out.Close()
+		if err != nil {
+			return fmt.Errorf("closing new file failed")
+		}
+
+		if err := ApplyPermissionsToFile(newPath, perm); err != nil {
+			return fmt.Errorf("applying permission failed")
+		}
+	}
+	return nil
+}
+
+// ApplyPermissionsToFile apply permissions to a given file
+func ApplyPermissionsToFile(path string, perm uint32) error {
+	// !!! the permissions are octal numbers !!!
+	// https://yourbasic.org/golang/gotcha-octal-decimal-hexadecimal-literal/
+	// first number = 0 (true for every octal)
+	// min number = 0
+	// max number = 7
+	// The reason for Go to use octal is that it makes it impossible
+	// to have numbers higher than 7 which is the max for permissions (rwx)
+
+	re := regexp.MustCompile(`^0[0-7]{3}$`)
+	if re.MatchString("0" + strconv.FormatInt(int64(perm), 8)) {
+		if err := os.Chmod(path, os.FileMode(perm)); err != nil {
+			return fmt.Errorf("chmoding file failed")
+		}
+	} else {
+		if err := os.Chmod(path, os.FileMode(DefaultFilePerm)); err != nil {
+			return fmt.Errorf("chmoding default file permissions failed")
+		}
+	}
+	return nil
+}
+
+func CreateOrTruncate(path string, perm uint32) (*os.File, error) {
+	f, err := os.Create(path)
+	if err != nil {
+		f.Close()
+		return nil, fmt.Errorf("creating file failed")
+	}
+
+	if err := ApplyPermissionsToFile(path, perm); err != nil {
+		return nil, fmt.Errorf("applying permission failed")
+	}
+
+	return f, nil
+}
+
+func CloseAndRemoveBakFile(file *os.File, path string) error {
+	// closing file
+	err := file.Close()
+	if err != nil {
+		return fmt.Errorf("closing file failed")
+	}
+
+	// remove bak file
+	pathBak := path + ".bak"
+	if _, err := os.Stat(pathBak); err == nil {
+		if err = os.Remove(pathBak); err != nil {
+			return fmt.Errorf("removing bak file failed")
+		}
+	}
+
+	return nil
+}
+
+// OverwriteToFile overwrite data in a given file
+func OverwriteToFile(args OverwriteToFileArg) error {
+	err := BackupFile(args.File, DefaultFilePerm)
+	if err != nil {
+		return fmt.Errorf("backuping file failed")
+	}
+
+	f, err := CreateOrTruncate(args.File, args.Permissions)
+	if err != nil {
+		return fmt.Errorf("creating and opening file failed")
+	}
+
+	// overwriting logic
+	for _, v := range args.Data {
+		if args.Multiline {
+			fmt.Fprintln(f, v)
+		} else {
+			fmt.Fprint(f, v)
+		}
+
+		if err != nil {
+			return fmt.Errorf("writing to file failed")
+		}
+	}
+
+	// close file and remove bak file
+	if err := CloseAndRemoveBakFile(f, args.File); err != nil {
+		return fmt.Errorf("closing file and removing bak file failed")
+	}
+
+	return nil
+}
+
+// ReplaceLineFile is the argument to function ReplaceLineFile
+type ReplaceLineInFileArg struct {
+	File        string
+	Permissions uint32 // 0644, 0666, etc.
+	Regex       string
+	ReplaceType ReplaceType
+}
+
+// ReplaceType lists all the possible replace types
+type ReplaceType struct {
+	AllOccurrences *AllOccurrences
+	EntireLine     *EntireLine
+}
+
+// AllOccurrences is a replace type that defines an occurrence to be replaced with new data
+type AllOccurrences struct {
+	Occurrence string
+	NewData    string
+}
+
+// EntireLine is a replace type that replaces an entire file line with new data
+type EntireLine struct {
+	NewData string
+}
+
+func GetReplaceType(repType ReplaceType) (*string, error) {
+	result := ""
+
+	if repType.AllOccurrences != nil && repType.EntireLine != nil {
+		return nil, fmt.Errorf("only one replace type allowed")
+	} else if repType.AllOccurrences != nil && repType.EntireLine == nil {
+		result = RepTypeAllOccurrences
+	} else if repType.AllOccurrences == nil && repType.EntireLine != nil {
+		result = RepTypeEntireLine
+	} else {
+		return nil, fmt.Errorf("at least one replace type required")
+	}
+
+	return &result, nil
+}
+
+// ReplaceLineInFile replace one or multiple line in file
+func ReplaceLineInFile(args ReplaceLineInFileArg) error {
+	repType, err := GetReplaceType(args.ReplaceType)
+	if err != nil {
+		return fmt.Errorf("getting replace type failed")
+	}
+
+	f, err := os.Open(args.File)
+	if err != nil {
+		return fmt.Errorf("opening file failed")
+	}
+
+	// replacing line logic
+	// source: https://stackoverflow.com/questions/8757389/reading-a-file-line-by-line-in-go
+	reader := bufio.NewReader(f)
+	var line string
+	allLines := []string{}
+
+	for {
+		line, err = reader.ReadString('\n')
+		if err != nil && err != io.EOF {
+			break
+		}
+
+		// apply the replace type here
+		re := regexp.MustCompile(args.Regex)
+		if re.MatchString(line) {
+			switch *repType {
+			case RepTypeAllOccurrences:
+				line = strings.ReplaceAll(
+					line,
+					args.ReplaceType.AllOccurrences.Occurrence,
+					args.ReplaceType.AllOccurrences.NewData)
+			case RepTypeEntireLine:
+				line = args.ReplaceType.EntireLine.NewData
+			default:
+				line = args.ReplaceType.EntireLine.NewData
+			}
+		}
+
+		// save each line (replaced or non-replaced) in an array
+		allLines = append(allLines, line)
+
+		if err != nil {
+			break
+		}
+	}
+
+	if err != io.EOF {
+		return fmt.Errorf("reading file failed")
+	}
+
+	if err = f.Close(); err != nil {
+		return fmt.Errorf("closing file failed")
+	}
+
+	if err = OverwriteToFile(OverwriteToFileArg{
+		File:        args.File,
+		Data:        allLines,
+		Multiline:   true,
+		Permissions: args.Permissions,
+	}); err != nil {
+		return fmt.Errorf("overwriting to file failed")
+	}
+
+	return nil
 }

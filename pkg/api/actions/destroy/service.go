@@ -25,7 +25,7 @@ type DESSYS interface {
 	ExecuteKP(map[int](map[int]actions.Func)) (rpi.Action, error)
 }
 
-// Actions represents the system metrics interface
+// Actions represents the actions interface
 type Actions interface {
 	DeleteFile(interface{}) (rpi.Exec, error)
 	KillProcessByName(interface{}) (rpi.Exec, error)
