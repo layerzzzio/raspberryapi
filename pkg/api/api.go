@@ -9,6 +9,10 @@ import (
 	adl "github.com/raspibuddy/rpi/pkg/api/actions/destroy/logging"
 	ads "github.com/raspibuddy/rpi/pkg/api/actions/destroy/platform/sys"
 	adt "github.com/raspibuddy/rpi/pkg/api/actions/destroy/transport"
+	"github.com/raspibuddy/rpi/pkg/api/infos/boot"
+	ibol "github.com/raspibuddy/rpi/pkg/api/infos/boot/logging"
+	ibos "github.com/raspibuddy/rpi/pkg/api/infos/boot/platform/sys"
+	ibot "github.com/raspibuddy/rpi/pkg/api/infos/boot/transport"
 	"github.com/raspibuddy/rpi/pkg/api/infos/humanuser"
 	ihul "github.com/raspibuddy/rpi/pkg/api/infos/humanuser/logging"
 	ihus "github.com/raspibuddy/rpi/pkg/api/infos/humanuser/platform/sys"
@@ -88,6 +92,7 @@ func Start(cfg *config.Configuration) error {
 
 	// infos
 	ihut.NewHTTP(ihul.New(humanuser.New(ihus.HumanUser{}, i), log).Service, v1)
+	ibot.NewHTTP(ibol.New(boot.New(ibos.Boot{}, i), log).Service, v1)
 
 	server.Start(e, &server.Config{
 		Port:                cfg.Server.Port,

@@ -20,7 +20,8 @@ import (
 )
 
 var (
-	dummypath = "./dummyfile"
+	dummyfilepath      = "./dummyfile"
+	dummydirectorypath = "./dummydirectory"
 )
 
 func TestDeleteFile(t *testing.T) {
@@ -41,8 +42,8 @@ func TestDeleteFile(t *testing.T) {
 		{
 			name: "error : too many arguments",
 			argument: []actions.OtherParams{
-				{Value: map[string]string{"path": dummypath}},
-				{Value: map[string]string{"dummy": dummypath}},
+				{Value: map[string]string{"path": dummyfilepath}},
+				{Value: map[string]string{"dummy": dummyfilepath}},
 			},
 			wantedExitStatus: 1,
 			wantedStderr:     "",
@@ -52,7 +53,7 @@ func TestDeleteFile(t *testing.T) {
 			name: "success",
 			argument: actions.OtherParams{
 				Value: map[string]string{
-					"path": dummypath,
+					"path": dummyfilepath,
 				},
 			},
 			wantedExitStatus: 0,
@@ -61,7 +62,7 @@ func TestDeleteFile(t *testing.T) {
 		},
 		{
 			name:             "success",
-			argument:         actions.DF{Path: dummypath},
+			argument:         actions.DF{Path: dummyfilepath},
 			wantedExitStatus: 0,
 			wantedStderr:     "",
 			wantedErr:        nil,
@@ -71,7 +72,7 @@ func TestDeleteFile(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			a := actions.New()
-			test_utl.CreateFile(dummypath)
+			test_utl.CreateFile(dummyfilepath)
 			deletefile, err := a.DeleteFile(tc.argument)
 			assert.Equal(t, tc.wantedExitStatus, deletefile.ExitStatus)
 			assert.Equal(t, tc.wantedStderr, deletefile.Stderr)
@@ -1290,13 +1291,13 @@ func TestApplyPermissionsToFile(t *testing.T) {
 func TestOverwriteToFile(t *testing.T) {
 	cases := []struct {
 		name       string
-		args       actions.OverwriteToFileArg
+		args       actions.WriteToFileArg
 		isSuccess  bool
 		wantedData error
 	}{
 		{
 			name: "success with multiline",
-			args: actions.OverwriteToFileArg{
+			args: actions.WriteToFileArg{
 				File:      "./test_write_to_file",
 				Data:      []string{"text_1", "text_2", "text_3"},
 				Multiline: true,
@@ -1306,7 +1307,7 @@ func TestOverwriteToFile(t *testing.T) {
 		},
 		{
 			name: "success not multiline",
-			args: actions.OverwriteToFileArg{
+			args: actions.WriteToFileArg{
 				File:      "./test_write_to_file",
 				Data:      []string{"text_1", "text_2", "text_3"},
 				Multiline: false,
@@ -1316,7 +1317,7 @@ func TestOverwriteToFile(t *testing.T) {
 		},
 		{
 			name: "success permissions not nill",
-			args: actions.OverwriteToFileArg{
+			args: actions.WriteToFileArg{
 				File:        "./test_write_to_file",
 				Data:        []string{"text_1", "text_2", "text_3"},
 				Multiline:   false,
@@ -1327,7 +1328,7 @@ func TestOverwriteToFile(t *testing.T) {
 		},
 		{
 			name: "failure creating file",
-			args: actions.OverwriteToFileArg{
+			args: actions.WriteToFileArg{
 				File:      "",
 				Data:      []string{"text_1", "text_2", "text_3"},
 				Multiline: false,
@@ -1488,7 +1489,7 @@ func TestReplaceLineInFile(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.isSuccess {
 				// create and populate file
-				if err := actions.OverwriteToFile(actions.OverwriteToFileArg{
+				if err := actions.OverwriteToFile(actions.WriteToFileArg{
 					File: tc.args.File,
 					Data: []string{
 						"dummy line 1",
@@ -1561,8 +1562,8 @@ func TestChangeHostnameInHostnameFile(t *testing.T) {
 		{
 			name: "error : too many arguments",
 			argument: []actions.OtherParams{
-				{Value: map[string]string{"targetFile": dummypath}},
-				{Value: map[string]string{"hostname": dummypath}},
+				{Value: map[string]string{"targetFile": dummyfilepath}},
+				{Value: map[string]string{"hostname": dummyfilepath}},
 			},
 			isSuccess:        false,
 			wantedExitStatus: 1,
@@ -1573,7 +1574,7 @@ func TestChangeHostnameInHostnameFile(t *testing.T) {
 			name: "success with otherParams",
 			argument: actions.OtherParams{
 				Value: map[string]string{
-					"targetFile": dummypath,
+					"targetFile": dummyfilepath,
 					"hostname":   "new_hostname",
 				},
 			},
@@ -1587,7 +1588,7 @@ func TestChangeHostnameInHostnameFile(t *testing.T) {
 		{
 			name: "success with regular params",
 			argument: actions.DataToFile{
-				TargetFile: dummypath,
+				TargetFile: dummyfilepath,
 				Data:       "new_hostname",
 			},
 			isSuccess: true,
@@ -1607,8 +1608,8 @@ func TestChangeHostnameInHostnameFile(t *testing.T) {
 
 			if tc.isSuccess {
 				// create and populate file
-				if err := actions.OverwriteToFile(actions.OverwriteToFileArg{
-					File: dummypath,
+				if err := actions.OverwriteToFile(actions.WriteToFileArg{
+					File: dummyfilepath,
 					Data: []string{"dummy line 1", "dummy line 2 127.0.1.1", "127.0.1.1		raspberrypi"},
 					Multiline:   true,
 					Permissions: 0755,
@@ -1619,12 +1620,12 @@ func TestChangeHostnameInHostnameFile(t *testing.T) {
 				chHostnameInHostnameFile, err = a.ChangeHostnameInHostnameFile(tc.argument)
 
 				// read the new line and delete
-				readLines, err := infos.New().ReadFile(dummypath)
+				readLines, err := infos.New().ReadFile(dummyfilepath)
 				if err != nil {
 					log.Fatal(err)
 				}
 
-				if e := os.Remove(dummypath); e != nil {
+				if e := os.Remove(dummyfilepath); e != nil {
 					fmt.Println(e)
 				}
 
@@ -1666,8 +1667,8 @@ func TestChangeHostnameInHostsFile(t *testing.T) {
 		{
 			name: "error : too many arguments",
 			argument: []actions.OtherParams{
-				{Value: map[string]string{"targetFile": dummypath}},
-				{Value: map[string]string{"hostname": dummypath}},
+				{Value: map[string]string{"targetFile": dummyfilepath}},
+				{Value: map[string]string{"hostname": dummyfilepath}},
 			},
 			isSuccess:        false,
 			wantedExitStatus: 1,
@@ -1678,7 +1679,7 @@ func TestChangeHostnameInHostsFile(t *testing.T) {
 			name: "success with otherParams",
 			argument: actions.OtherParams{
 				Value: map[string]string{
-					"targetFile": dummypath,
+					"targetFile": dummyfilepath,
 					"hostname":   "new_hostname",
 				},
 			},
@@ -1693,7 +1694,7 @@ func TestChangeHostnameInHostsFile(t *testing.T) {
 		{
 			name: "success with regular params",
 			argument: actions.DataToFile{
-				TargetFile: dummypath,
+				TargetFile: dummyfilepath,
 				Data:       "new_hostname",
 			},
 			isSuccess: true,
@@ -1719,8 +1720,8 @@ func TestChangeHostnameInHostsFile(t *testing.T) {
 				}
 
 				// create and populate file
-				if err := actions.OverwriteToFile(actions.OverwriteToFileArg{
-					File: dummypath,
+				if err := actions.OverwriteToFile(actions.WriteToFileArg{
+					File: dummyfilepath,
 					Data: []string{
 						"dummy line 1",
 						"dummy line 2 127.0.1.1",
@@ -1739,14 +1740,14 @@ func TestChangeHostnameInHostsFile(t *testing.T) {
 				}
 
 				// read the new line and delete
-				readLines, err := infos.New().ReadFile(dummypath)
+				readLines, err := infos.New().ReadFile(dummyfilepath)
 				if err != nil {
 					log.Fatal(err)
 				}
 
 				fmt.Println(readLines)
 
-				if e := os.Remove(dummypath); e != nil {
+				if e := os.Remove(dummyfilepath); e != nil {
 					fmt.Println(e)
 				}
 
@@ -1764,6 +1765,261 @@ func TestChangeHostnameInHostsFile(t *testing.T) {
 
 			assert.Equal(t, tc.wantedExitStatus, chHostnameInHostnameFile.ExitStatus)
 			assert.Equal(t, tc.wantedStderr, chHostnameInHostnameFile.Stderr)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
+func TestAddLinesEndOfFile(t *testing.T) {
+	cases := []struct {
+		name       string
+		arg        actions.WriteToFileArg
+		isSuccess  bool
+		wantedData []string
+		wantedErr  error
+	}{
+		{
+			name: "success",
+			arg: actions.WriteToFileArg{
+				File:      dummyfilepath,
+				Data:      []string{"dummy line 4", "dummy line 5"},
+				Multiline: true,
+			},
+			isSuccess: true,
+			wantedData: []string{
+				"dummy line 1",
+				"dummy line 2",
+				"dummy line 3",
+				"dummy line 4",
+				"dummy line 5",
+			},
+			wantedErr: nil,
+		},
+		{
+			name: "error: file not found",
+			arg: actions.WriteToFileArg{
+				File:      dummyfilepath + "xxxx",
+				Data:      []string{"dummy line 4", "dummy line 5"},
+				Multiline: true,
+			},
+			isSuccess: false,
+			wantedErr: fmt.Errorf("reading file failed"),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			if tc.isSuccess {
+				// create and populate file
+				if err := actions.OverwriteToFile(actions.WriteToFileArg{
+					File: dummyfilepath,
+					Data: []string{
+						"dummy line 1",
+						"dummy line 2",
+						"dummy line 3",
+					},
+					Multiline:   true,
+					Permissions: 0755,
+				}); err != nil {
+					fmt.Print(err)
+				}
+
+				if err = actions.AddLinesEndOfFile(tc.arg); err != nil {
+					fmt.Print(err)
+				}
+
+				// read the new line and delete
+				readLines, err := infos.New().ReadFile(dummyfilepath)
+				if err != nil {
+					fmt.Print(err)
+				}
+
+				if err = os.Remove(dummyfilepath); err != nil {
+					fmt.Print(err)
+				}
+
+				assert.Equal(t, tc.wantedData, readLines)
+
+			} else {
+				if err = actions.AddLinesEndOfFile(tc.arg); err != nil {
+					fmt.Print(err)
+				}
+			}
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
+func TestWaitForNetworkAtBoot(t *testing.T) {
+	cases := []struct {
+		name             string
+		argument         interface{}
+		isSuccess        bool
+		enable           bool
+		wantedData       []string
+		wantedErr        error
+		wantedExitStatus uint8
+		wantedStderr     string
+	}{
+		{
+			name: "error : no such file or directory (enable)",
+			argument: actions.WNB{
+				Directory: "",
+				Action:    actions.Enable,
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "creating and opening file failed",
+			wantedErr:        nil,
+		},
+		{
+			name: "error : no such file or directory (disable)",
+			argument: actions.WNB{
+				Directory: "",
+				Action:    actions.Disable,
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "remove /wait.conf: no such file or directory",
+			wantedErr:        nil,
+		},
+		{
+			name: "error : bad action type",
+			argument: actions.WNB{
+				Directory: dummydirectorypath,
+				Action:    "dummyactiontype",
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "bad action type",
+			wantedErr:        nil,
+		},
+		{
+			name: "error : too many arguments",
+			argument: []actions.OtherParams{
+				{Value: map[string]string{"directory": dummydirectorypath}},
+				{Value: map[string]string{"action": "dummyaction"}},
+				{Value: map[string]string{"dummyextraarg": "dummyextraarg"}},
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "",
+			wantedErr:        &actions.Error{Arguments: []string{"directory", "action"}},
+		},
+		{
+			name: "success enabling with otherParams",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"directory": dummydirectorypath,
+					"action":    actions.Enable,
+				},
+			},
+			isSuccess: true,
+			enable:    true,
+			wantedData: []string{
+				"[Service]",
+				"ExecStart=",
+				"ExecStart=/usr/lib/dhcpcd5/dhcpcd -q -w",
+			},
+			wantedErr:        nil,
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+		},
+		{
+			name: "success enabling with regular params",
+			argument: actions.WNB{
+				Directory: dummydirectorypath,
+				Action:    actions.Enable,
+			},
+			isSuccess: true,
+			enable:    true,
+			wantedData: []string{
+				"[Service]",
+				"ExecStart=",
+				"ExecStart=/usr/lib/dhcpcd5/dhcpcd -q -w",
+			},
+			wantedErr:        nil,
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+		},
+		{
+			name: "success disable with otherParams",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"directory": dummydirectorypath,
+					"action":    actions.Disable,
+				},
+			},
+			isSuccess:        true,
+			enable:           false,
+			wantedErr:        nil,
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+		},
+		{
+			name: "success disable with regular params",
+			argument: actions.WNB{
+				Directory: dummydirectorypath,
+				Action:    actions.Disable,
+			},
+			isSuccess:        true,
+			enable:           false,
+			wantedErr:        nil,
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var waitForNetworkAtBoot rpi.Exec
+			var err error
+			a := actions.New()
+
+			if tc.isSuccess {
+				if tc.enable == false {
+					_ = os.MkdirAll(dummydirectorypath, 0755)
+					if err := actions.OverwriteToFile(actions.WriteToFileArg{
+						File:      "./" + dummydirectorypath + "/wait.conf",
+						Data:      []string{"dummydata"},
+						Multiline: true,
+					}); err != nil {
+						fmt.Println(err)
+					}
+				}
+
+				waitForNetworkAtBoot, err = a.WaitForNetworkAtBoot(tc.argument)
+				if err != nil {
+					fmt.Println(err)
+				}
+
+				if tc.enable {
+					// read the new line and delete
+					readLines, err := infos.New().ReadFile("./" + dummydirectorypath + "/wait.conf")
+					if err != nil {
+						fmt.Println(err)
+					}
+
+					fmt.Println(readLines)
+
+					// assert statements
+					assert.Equal(t, tc.wantedData, readLines)
+				}
+
+				if err = os.RemoveAll(dummydirectorypath); err != nil {
+					fmt.Println(err)
+				}
+
+			} else {
+				waitForNetworkAtBoot, err = a.WaitForNetworkAtBoot(tc.argument)
+				if e := os.RemoveAll(dummydirectorypath); err != nil {
+					fmt.Println(e)
+				}
+			}
+
+			assert.Equal(t, tc.wantedExitStatus, waitForNetworkAtBoot.ExitStatus)
+			assert.Equal(t, tc.wantedStderr, waitForNetworkAtBoot.Stderr)
 			assert.Equal(t, tc.wantedErr, err)
 		})
 	}

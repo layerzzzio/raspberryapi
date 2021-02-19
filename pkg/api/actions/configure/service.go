@@ -9,6 +9,7 @@ import (
 type Service interface {
 	ExecuteCH(string) (rpi.Action, error)
 	ExecuteCP(string, string) (rpi.Action, error)
+	ExecuteWNB(string) (rpi.Action, error)
 }
 
 // Configure represents a Configure application service.
@@ -21,6 +22,7 @@ type Configure struct {
 type CONSYS interface {
 	ExecuteCH(map[int](map[int]actions.Func)) (rpi.Action, error)
 	ExecuteCP(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteWNB(map[int](map[int]actions.Func)) (rpi.Action, error)
 }
 
 // Actions represents the actions interface
@@ -28,6 +30,7 @@ type Actions interface {
 	ChangeHostnameInHostnameFile(interface{}) (rpi.Exec, error)
 	ChangeHostnameInHostsFile(interface{}) (rpi.Exec, error)
 	ChangePassword(interface{}) (rpi.Exec, error)
+	WaitForNetworkAtBoot(interface{}) (rpi.Exec, error)
 }
 
 // New creates a CONSYS application service instance.

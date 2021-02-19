@@ -12,6 +12,7 @@ type Action struct {
 	ExecuteKPFn  func(map[int](map[int]actions.Func)) (rpi.Action, error)
 	ExecuteCHFn  func(map[int](map[int]actions.Func)) (rpi.Action, error)
 	ExecuteCPFn  func(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteWNBFn func(map[int](map[int]actions.Func)) (rpi.Action, error)
 }
 
 // ExecuteDF mock
@@ -37,4 +38,9 @@ func (a *Action) ExecuteCH(plan map[int](map[int]actions.Func)) (rpi.Action, err
 // ExecuteCP mock
 func (a *Action) ExecuteCP(plan map[int](map[int]actions.Func)) (rpi.Action, error) {
 	return a.ExecuteCPFn(plan)
+}
+
+// ExecuteWNB mock
+func (a *Action) ExecuteWNB(plan map[int](map[int]actions.Func)) (rpi.Action, error) {
+	return a.ExecuteWNBFn(plan)
 }

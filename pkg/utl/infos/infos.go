@@ -58,3 +58,12 @@ func (s Service) ReadFile(filePath string) ([]string, error) {
 
 	return result, nil
 }
+
+// IsFileExists checks if a file exists
+func (s Service) IsFileExists(filePath string) bool {
+	if _, err := os.Stat(filePath); err == nil {
+		return true
+	} else {
+		return false
+	}
+}

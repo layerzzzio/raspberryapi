@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/raspibuddy/rpi"
+	"github.com/raspibuddy/rpi/pkg/utl/infos"
 	"github.com/shirou/gopsutil/host"
 )
 
@@ -29,6 +30,12 @@ var (
 
 	// RepTypeEntireLine is a flag meaning all occurrences of an entire file line should be replaced
 	RepTypeEntireLine = "entire_line"
+
+	// Enable is a flag to enable a configuration
+	Enable = "enable"
+
+	// Disable is a flag to enable a configuration
+	Disable = "disable"
 
 	// IpRegex is the regex used to detect ip addresses in strings
 	HostnameChangeInHostsRegex = `^127.0.1.1.*`
@@ -60,6 +67,9 @@ var (
 
 	// ChangePassword is the name of the change password action
 	ChangePassword = "change_password"
+
+	// WaitForNetworkAtBoot is the name of the wait for network at boot
+	WaitForNetworkAtBoot = "wait_for_network_at_boot"
 )
 
 // Service represents several system scripts.
@@ -268,7 +278,7 @@ func (s Service) ChangeHostnameInHostnameFile(arg interface{}) (rpi.Exec, error)
 	exitStatus := 0
 	var stdErr string
 
-	err := OverwriteToFile(OverwriteToFileArg{
+	err := OverwriteToFile(WriteToFileArg{
 		File:      targetFile,
 		Data:      []string{hostname},
 		Multiline: false,
@@ -404,6 +414,79 @@ func (s Service) ChangePassword(arg interface{}) (rpi.Exec, error) {
 	}, nil
 }
 
+// WNB is the do boot wait argument
+type WNB struct {
+	Directory string
+	Action    string
+}
+
+// WaitForNetworkAtBoot enable or disable wait for network at boot
+func (s Service) WaitForNetworkAtBoot(arg interface{}) (rpi.Exec, error) {
+	var directory string
+	var action string
+
+	switch v := arg.(type) {
+	case WNB:
+		directory = v.Directory
+		action = v.Action
+	case OtherParams:
+		directory = arg.(OtherParams).Value["directory"]
+		action = arg.(OtherParams).Value["action"]
+	default:
+		return rpi.Exec{ExitStatus: 1}, &Error{[]string{"directory", "action"}}
+	}
+
+	// execution start time
+	startTime := uint64(time.Now().Unix())
+	exitStatus := 0
+	var stdErr string
+
+	if action == Enable {
+		// create the directory and the parent directories
+		_ = os.MkdirAll(directory, 0755)
+
+		// create a file wait.conf and populate it
+		err := OverwriteToFile(WriteToFileArg{
+			File: directory + "/wait.conf",
+			Data: []string{
+				"[Service]",
+				"ExecStart=",
+				"ExecStart=/usr/lib/dhcpcd5/dhcpcd -q -w",
+			},
+			Multiline: true,
+		})
+
+		// if error, it is logged here
+		if err != nil {
+			exitStatus = 1
+			stdErr = fmt.Sprint(err)
+		}
+	} else if action == Disable {
+		// remove the file
+		err := os.Remove(directory + "/wait.conf")
+
+		// if error, it is logged here
+		if err != nil {
+			exitStatus = 1
+			stdErr = fmt.Sprint(err)
+		}
+	} else {
+		exitStatus = 1
+		stdErr = "bad action type"
+	}
+
+	// execution end time
+	endTime := uint64(time.Now().Unix())
+
+	return rpi.Exec{
+		Name:       WaitForNetworkAtBoot,
+		StartTime:  startTime,
+		EndTime:    endTime,
+		ExitStatus: uint8(exitStatus),
+		Stderr:     stdErr,
+	}, nil
+}
+
 // Call calls a function by its name and params
 func Call(funcName interface{}, params []interface{}) (result interface{}, err error) {
 	// defer wg.Done()
@@ -532,8 +615,8 @@ func ExecutePlan(execPlan map[int](map[int]Func), progress map[string]rpi.Exec) 
 	return progress, exitStatus
 }
 
-// OverwriteToFileArg is the argument to function OverwriteToFile
-type OverwriteToFileArg struct {
+// WriteToFileArg is the argument to function OverwriteToFile
+type WriteToFileArg struct {
 	File        string
 	Data        []string
 	Multiline   bool
@@ -636,7 +719,7 @@ func CloseAndRemoveBakFile(file *os.File, path string) error {
 }
 
 // OverwriteToFile overwrite data in a given file
-func OverwriteToFile(args OverwriteToFileArg) error {
+func OverwriteToFile(args WriteToFileArg) error {
 	err := BackupFile(args.File, DefaultFilePerm)
 	if err != nil {
 		return fmt.Errorf("backuping file failed")
@@ -765,9 +848,33 @@ func ReplaceLineInFile(args ReplaceLineInFileArg) error {
 		return fmt.Errorf("closing file failed")
 	}
 
-	if err = OverwriteToFile(OverwriteToFileArg{
+	if err = OverwriteToFile(WriteToFileArg{
 		File:        args.File,
 		Data:        allLines,
+		Multiline:   true,
+		Permissions: args.Permissions,
+	}); err != nil {
+		return fmt.Errorf("overwriting to file failed")
+	}
+
+	return nil
+}
+
+// AddLinesEndOfFile adds one or multiple lines at the end of a file
+func AddLinesEndOfFile(args WriteToFileArg) error {
+	// read all lines of original file
+	readLines, err := infos.New().ReadFile(args.File)
+	if err != nil {
+		return fmt.Errorf("reading file failed")
+	}
+
+	// populate the array at the end with the data
+	readLines = append(readLines, args.Data...)
+
+	// then create a file and overwrite the data from the modified array
+	if err = OverwriteToFile(WriteToFileArg{
+		File:        args.File,
+		Data:        readLines,
 		Multiline:   true,
 		Permissions: args.Permissions,
 	}); err != nil {

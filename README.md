@@ -197,7 +197,7 @@ Then let's create a directory for the conf. file:
     sudo mkdir /etc/raspibuddy
 	
 	# create the conf file:
-    vi raspibuddy.conf.yaml
+    vi raspibuddy.yaml
     
     # include this content:
     server:
