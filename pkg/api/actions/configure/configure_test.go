@@ -222,3 +222,91 @@ func TestExecuteCP(t *testing.T) {
 		})
 	}
 }
+
+func TestExecuteWNB(t *testing.T) {
+	cases := []struct {
+		name       string
+		action     string
+		plan       map[int](map[int]actions.Func)
+		actions    *mock.Actions
+		consys     *mocksys.Action
+		wantedData rpi.Action
+		wantedErr  error
+	}{
+		{
+			name:   "success",
+			action: "dummyaction",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      "FuncA",
+						Reference: test_utl.FuncA,
+						Argument: []interface{}{
+							test_utl.ArgFuncA{
+								Arg0: "string0",
+								Arg1: "string1",
+							},
+						},
+					},
+				},
+			},
+			actions: &mock.Actions{
+				WaitForNetworkAtBootFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       "FuncA",
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "string0-string1",
+					}, nil
+				},
+			},
+			consys: &mocksys.Action{
+				ExecuteWNBFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          "FuncA",
+						NumberOfSteps: 1,
+						Progress: map[string]rpi.Exec{
+							"1": {
+								Name:       "FuncA",
+								StartTime:  1,
+								EndTime:    2,
+								ExitStatus: 0,
+								Stdout:     "string0-string1",
+							},
+						},
+						ExitStatus: 0,
+						StartTime:  2,
+						EndTime:    uint64(time.Now().Unix()),
+					}, nil
+				},
+			},
+			wantedData: rpi.Action{
+				Name:          "FuncA",
+				NumberOfSteps: 1,
+				Progress: map[string]rpi.Exec{
+					"1": {
+						Name:       "FuncA",
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "string0-string1",
+					},
+				},
+				ExitStatus: 0,
+				StartTime:  2,
+				EndTime:    uint64(time.Now().Unix()),
+			},
+			wantedErr: nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := configure.New(tc.consys, tc.actions)
+			changePassword, err := s.ExecuteWNB(tc.action)
+			assert.Equal(t, tc.wantedData, changePassword)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}

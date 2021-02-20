@@ -184,3 +184,88 @@ func TestExecuteCP(t *testing.T) {
 		})
 	}
 }
+
+func TestExecuteWNB(t *testing.T) {
+	var response rpi.Action
+
+	cases := []struct {
+		name         string
+		req          string
+		consys       *mocksys.Action
+		wantedStatus int
+		wantedResp   rpi.Action
+	}{
+		{
+			name:         "error: invalid request response (no action)",
+			req:          "",
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name:         "error: action enable is empty",
+			req:          "?action=",
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name: "error: ExecuteWNB result is nil",
+			req:  "?action=enable",
+			consys: &mocksys.Action{
+				ExecuteWNBFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{}, errors.New("test error")
+				},
+			},
+			wantedStatus: http.StatusInternalServerError,
+		},
+		{
+			name:         "success",
+			wantedStatus: http.StatusOK,
+			req:          "?action=enable",
+			consys: &mocksys.Action{
+				ExecuteWNBFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.WaitForNetworkAtBoot,
+						NumberOfSteps: 1,
+						StartTime:     uint64(time.Now().Unix()),
+						EndTime:       uint64(time.Now().Unix()),
+						ExitStatus:    0,
+					}, nil
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			r := server.New()
+			rg := r.Group("")
+			a := actions.New()
+			s := configure.New(tc.consys, a)
+			transport.NewHTTP(s, rg)
+			ts := httptest.NewServer(r)
+
+			defer ts.Close()
+			path := ts.URL + "/configure/waitfornetworkatboot" + tc.req
+
+			fmt.Println(path)
+
+			res, err := http.Post(path, "application/json", bytes.NewBufferString(tc.req))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			defer res.Body.Close()
+
+			body, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				panic(err)
+			}
+
+			if tc.wantedResp.Name != "" {
+				if err := json.Unmarshal(body, &response); err != nil {
+					t.Fatal(err)
+				}
+				assert.Equal(t, tc.wantedResp, response)
+			}
+			assert.Equal(t, tc.wantedStatus, res.StatusCode)
+		})
+	}
+}

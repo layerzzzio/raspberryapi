@@ -70,3 +70,31 @@ func TestReadFile(t *testing.T) {
 		})
 	}
 }
+
+func TestIsFileExists(t *testing.T) {
+	cases := []struct {
+		name       string
+		filepath   string
+		wantedData bool
+		wantedErr  error
+	}{
+		{
+			name:       "success: file does exist",
+			filepath:   "./testdata/passwd",
+			wantedData: true,
+		},
+		{
+			name:       "success: file does not exist",
+			filepath:   "./testdata/passwd-xxxxxxxx",
+			wantedData: false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			i := infos.New()
+			isFileExists := i.IsFileExists(tc.filepath)
+			assert.Equal(t, tc.wantedData, isFileExists)
+		})
+	}
+}

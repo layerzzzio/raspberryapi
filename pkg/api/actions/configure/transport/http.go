@@ -18,7 +18,8 @@ func NewHTTP(svc configure.Service, r *echo.Group) {
 	cr := r.Group("/configure")
 	cr.POST("/changehostname", h.changehostname)
 	cr.POST("/changepassword", h.changepassword)
-
+	cr.POST("/changepassword", h.changepassword)
+	cr.POST("/waitfornetworkatboot", h.waitfornetworkatboot)
 }
 
 func (h *HTTP) changehostname(ctx echo.Context) error {
@@ -31,6 +32,7 @@ func (h *HTTP) changehostname(ctx echo.Context) error {
 	if err != nil {
 		return err
 	}
+
 	return ctx.JSON(http.StatusOK, result)
 }
 
@@ -49,5 +51,20 @@ func (h *HTTP) changepassword(ctx echo.Context) error {
 	if err != nil {
 		return err
 	}
+
+	return ctx.JSON(http.StatusOK, result)
+}
+
+func (h *HTTP) waitfornetworkatboot(ctx echo.Context) error {
+	action := ctx.QueryParam("action")
+	if action == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - action is null")
+	}
+
+	result, err := h.svc.ExecuteWNB(action)
+	if err != nil {
+		return err
+	}
+
 	return ctx.JSON(http.StatusOK, result)
 }

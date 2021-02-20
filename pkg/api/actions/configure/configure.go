@@ -54,3 +54,23 @@ func (con *Configure) ExecuteCP(password string, username string) (rpi.Action, e
 
 	return con.consys.ExecuteCP(plan)
 }
+
+// ExecuteWNB enable or disable wait for network at boot and returns an action
+func (con *Configure) ExecuteWNB(action string) (rpi.Action, error) {
+	plan := map[int](map[int]actions.Func){
+		1: {
+			1: {
+				Name:      actions.WaitForNetworkAtBoot,
+				Reference: con.a.WaitForNetworkAtBoot,
+				Argument: []interface{}{
+					actions.WNB{
+						Directory: "/etc/systemd/system/dhcpcd.service.d",
+						Action:    action,
+					},
+				},
+			},
+		},
+	}
+
+	return con.consys.ExecuteWNB(plan)
+}
