@@ -5,12 +5,17 @@ import (
 	"github.com/raspibuddy/rpi/pkg/utl/actions"
 )
 
+var (
+	// BootConfig contains the boot configs
+	BootConfig = "/boot/config.txt"
+)
+
 // ExecuteCH changes hostname and returns an action.
 func (con *Configure) ExecuteCH(hostname string) (rpi.Action, error) {
 	plan := map[int](map[int]actions.Func){
 		1: {
 			1: {
-				Name:      actions.ChangeHostname,
+				Name:      actions.ChangeHostnameInHostsFile,
 				Reference: con.a.ChangeHostnameInHostsFile,
 				Argument: []interface{}{
 					actions.DataToFile{
@@ -20,7 +25,7 @@ func (con *Configure) ExecuteCH(hostname string) (rpi.Action, error) {
 				},
 			},
 			2: {
-				Name:      actions.ChangeHostname,
+				Name:      actions.ChangeHostnameInHostnameFile,
 				Reference: con.a.ChangeHostnameInHostnameFile,
 				Argument: []interface{}{
 					actions.DataToFile{
@@ -73,4 +78,24 @@ func (con *Configure) ExecuteWNB(action string) (rpi.Action, error) {
 	}
 
 	return con.consys.ExecuteWNB(plan)
+}
+
+// ExecuteOV enable or disable overscan and returns an action
+func (con *Configure) ExecuteOV(action string) (rpi.Action, error) {
+	plan := map[int](map[int]actions.Func){
+		1: {
+			1: {
+				Name:      actions.Overscan,
+				Reference: con.a.Overscan,
+				Argument: []interface{}{
+					actions.WNB{
+						Directory: BootConfig,
+						Action:    action,
+					},
+				},
+			},
+		},
+	}
+
+	return con.consys.ExecuteOV(plan)
 }

@@ -29,7 +29,7 @@ func TestExecuteCH(t *testing.T) {
 			plan: map[int](map[int]actions.Func){
 				1: {
 					1: {
-						Name:      "FuncA",
+						Name:      actions.ChangeHostnameInHostsFile,
 						Reference: test_utl.FuncA,
 						Argument: []interface{}{
 							test_utl.ArgFuncA{
@@ -39,7 +39,7 @@ func TestExecuteCH(t *testing.T) {
 						},
 					},
 					2: {
-						Name:      "FuncB",
+						Name:      actions.ChangeHostnameInHostnameFile,
 						Reference: test_utl.FuncB,
 						Argument: []interface{}{
 							test_utl.ArgFuncB{
@@ -52,7 +52,7 @@ func TestExecuteCH(t *testing.T) {
 			actions: &mock.Actions{
 				ChangeHostnameInHostnameFileFn: func(interface{}) (rpi.Exec, error) {
 					return rpi.Exec{
-						Name:       "FuncA",
+						Name:       actions.ChangeHostnameInHostsFile,
 						StartTime:  1,
 						EndTime:    2,
 						ExitStatus: 0,
@@ -61,7 +61,7 @@ func TestExecuteCH(t *testing.T) {
 				},
 				ChangeHostnameInHostsFileFn: func(interface{}) (rpi.Exec, error) {
 					return rpi.Exec{
-						Name:       "FuncB",
+						Name:       actions.ChangeHostnameInHostnameFile,
 						StartTime:  1,
 						EndTime:    2,
 						ExitStatus: 0,
@@ -72,18 +72,18 @@ func TestExecuteCH(t *testing.T) {
 			consys: &mocksys.Action{
 				ExecuteCHFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
 					return rpi.Action{
-						Name:          "FuncA",
+						Name:          actions.ChangeHostname,
 						NumberOfSteps: 1,
 						Progress: map[string]rpi.Exec{
 							"1": {
-								Name:       "FuncA",
+								Name:       actions.ChangeHostnameInHostsFile,
 								StartTime:  1,
 								EndTime:    2,
 								ExitStatus: 0,
 								Stdout:     "string0-string1",
 							},
 							"2": {
-								Name:       "FuncB",
+								Name:       actions.ChangeHostnameInHostnameFile,
 								StartTime:  1,
 								EndTime:    2,
 								ExitStatus: 0,
@@ -97,18 +97,18 @@ func TestExecuteCH(t *testing.T) {
 				},
 			},
 			wantedData: rpi.Action{
-				Name:          "FuncA",
+				Name:          actions.ChangeHostname,
 				NumberOfSteps: 1,
 				Progress: map[string]rpi.Exec{
 					"1": {
-						Name:       "FuncA",
+						Name:       actions.ChangeHostnameInHostsFile,
 						StartTime:  1,
 						EndTime:    2,
 						ExitStatus: 0,
 						Stdout:     "string0-string1",
 					},
 					"2": {
-						Name:       "FuncB",
+						Name:       actions.ChangeHostnameInHostnameFile,
 						StartTime:  1,
 						EndTime:    2,
 						ExitStatus: 0,
@@ -151,7 +151,7 @@ func TestExecuteCP(t *testing.T) {
 			plan: map[int](map[int]actions.Func){
 				1: {
 					1: {
-						Name:      "FuncA",
+						Name:      actions.ChangePassword,
 						Reference: test_utl.FuncA,
 						Argument: []interface{}{
 							test_utl.ArgFuncA{
@@ -165,7 +165,7 @@ func TestExecuteCP(t *testing.T) {
 			actions: &mock.Actions{
 				ChangePasswordFn: func(interface{}) (rpi.Exec, error) {
 					return rpi.Exec{
-						Name:       "FuncA",
+						Name:       actions.ChangePassword,
 						StartTime:  1,
 						EndTime:    2,
 						ExitStatus: 0,
@@ -176,11 +176,11 @@ func TestExecuteCP(t *testing.T) {
 			consys: &mocksys.Action{
 				ExecuteCPFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
 					return rpi.Action{
-						Name:          "FuncA",
+						Name:          actions.ChangePassword,
 						NumberOfSteps: 1,
 						Progress: map[string]rpi.Exec{
 							"1": {
-								Name:       "FuncA",
+								Name:       actions.ChangePassword,
 								StartTime:  1,
 								EndTime:    2,
 								ExitStatus: 0,
@@ -194,11 +194,11 @@ func TestExecuteCP(t *testing.T) {
 				},
 			},
 			wantedData: rpi.Action{
-				Name:          "FuncA",
+				Name:          actions.ChangePassword,
 				NumberOfSteps: 1,
 				Progress: map[string]rpi.Exec{
 					"1": {
-						Name:       "FuncA",
+						Name:       actions.ChangePassword,
 						StartTime:  1,
 						EndTime:    2,
 						ExitStatus: 0,
@@ -239,7 +239,7 @@ func TestExecuteWNB(t *testing.T) {
 			plan: map[int](map[int]actions.Func){
 				1: {
 					1: {
-						Name:      "FuncA",
+						Name:      actions.WaitForNetworkAtBoot,
 						Reference: test_utl.FuncA,
 						Argument: []interface{}{
 							test_utl.ArgFuncA{
@@ -253,7 +253,7 @@ func TestExecuteWNB(t *testing.T) {
 			actions: &mock.Actions{
 				WaitForNetworkAtBootFn: func(interface{}) (rpi.Exec, error) {
 					return rpi.Exec{
-						Name:       "FuncA",
+						Name:       actions.WaitForNetworkAtBoot,
 						StartTime:  1,
 						EndTime:    2,
 						ExitStatus: 0,
@@ -264,11 +264,11 @@ func TestExecuteWNB(t *testing.T) {
 			consys: &mocksys.Action{
 				ExecuteWNBFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
 					return rpi.Action{
-						Name:          "FuncA",
+						Name:          actions.WaitForNetworkAtBoot,
 						NumberOfSteps: 1,
 						Progress: map[string]rpi.Exec{
 							"1": {
-								Name:       "FuncA",
+								Name:       actions.WaitForNetworkAtBoot,
 								StartTime:  1,
 								EndTime:    2,
 								ExitStatus: 0,
@@ -282,11 +282,11 @@ func TestExecuteWNB(t *testing.T) {
 				},
 			},
 			wantedData: rpi.Action{
-				Name:          "FuncA",
+				Name:          actions.WaitForNetworkAtBoot,
 				NumberOfSteps: 1,
 				Progress: map[string]rpi.Exec{
 					"1": {
-						Name:       "FuncA",
+						Name:       actions.WaitForNetworkAtBoot,
 						StartTime:  1,
 						EndTime:    2,
 						ExitStatus: 0,
@@ -306,6 +306,94 @@ func TestExecuteWNB(t *testing.T) {
 			s := configure.New(tc.consys, tc.actions)
 			changePassword, err := s.ExecuteWNB(tc.action)
 			assert.Equal(t, tc.wantedData, changePassword)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
+func TestExecuteOV(t *testing.T) {
+	cases := []struct {
+		name       string
+		action     string
+		plan       map[int](map[int]actions.Func)
+		actions    *mock.Actions
+		consys     *mocksys.Action
+		wantedData rpi.Action
+		wantedErr  error
+	}{
+		{
+			name:   "success",
+			action: "dummyaction",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      actions.Overscan,
+						Reference: test_utl.FuncA,
+						Argument: []interface{}{
+							test_utl.ArgFuncA{
+								Arg0: "string0",
+								Arg1: "string1",
+							},
+						},
+					},
+				},
+			},
+			actions: &mock.Actions{
+				OverscanFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       actions.Overscan,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "string0-string1",
+					}, nil
+				},
+			},
+			consys: &mocksys.Action{
+				ExecuteOVFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.Overscan,
+						NumberOfSteps: 1,
+						Progress: map[string]rpi.Exec{
+							"1": {
+								Name:       actions.Overscan,
+								StartTime:  1,
+								EndTime:    2,
+								ExitStatus: 0,
+								Stdout:     "string0-string1",
+							},
+						},
+						ExitStatus: 0,
+						StartTime:  2,
+						EndTime:    uint64(time.Now().Unix()),
+					}, nil
+				},
+			},
+			wantedData: rpi.Action{
+				Name:          actions.Overscan,
+				NumberOfSteps: 1,
+				Progress: map[string]rpi.Exec{
+					"1": {
+						Name:       actions.Overscan,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "string0-string1",
+					},
+				},
+				ExitStatus: 0,
+				StartTime:  2,
+				EndTime:    uint64(time.Now().Unix()),
+			},
+			wantedErr: nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := configure.New(tc.consys, tc.actions)
+			overscan, err := s.ExecuteOV(tc.action)
+			assert.Equal(t, tc.wantedData, overscan)
 			assert.Equal(t, tc.wantedErr, err)
 		})
 	}

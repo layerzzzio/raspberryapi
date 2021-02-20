@@ -2024,3 +2024,173 @@ func TestWaitForNetworkAtBoot(t *testing.T) {
 		})
 	}
 }
+
+func TestOverscan(t *testing.T) {
+	cases := []struct {
+		name               string
+		argument           interface{}
+		isSuccess          bool
+		originalLine       string
+		modifiedLine       string
+		wantedNewDataFound bool
+		wantedExitStatus   uint8
+		wantedStderr       string
+		wantedErr          error
+	}{
+		{
+			name: "error : no such file or directory (enable)",
+			argument: actions.OV{
+				Path:   "",
+				Action: "enable",
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "opening file failed",
+			wantedErr:        nil,
+		},
+		{
+			name: "error : no such file or directory (disable)",
+			argument: actions.OV{
+				Path:   "",
+				Action: "disable",
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "opening file failed",
+			wantedErr:        nil,
+		},
+		{
+			name: "error : too many arguments",
+			argument: []actions.OtherParams{
+				{Value: map[string]string{"path": dummyfilepath}},
+				{Value: map[string]string{"action": "enable"}},
+				{Value: map[string]string{"dummyarg": "dummyargvalue"}},
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "",
+			wantedErr:        &actions.Error{Arguments: []string{"path", "action"}},
+		},
+		{
+			name: "success with otherParams (enable)",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"path":   dummyfilepath,
+					"action": "enable",
+				},
+			},
+			isSuccess:          true,
+			originalLine:       "#disable_overscan=1",
+			modifiedLine:       "disable_overscan=0",
+			wantedNewDataFound: true,
+			wantedExitStatus:   0,
+			wantedStderr:       "",
+			wantedErr:          nil,
+		},
+		{
+			name: "success with regular params (enable)",
+			argument: actions.OV{
+				Path:   dummyfilepath,
+				Action: "enable",
+			},
+			isSuccess:          true,
+			originalLine:       "#disable_overscan=1",
+			modifiedLine:       "disable_overscan=0",
+			wantedNewDataFound: true,
+			wantedExitStatus:   0,
+			wantedStderr:       "",
+			wantedErr:          nil,
+		},
+		{
+			name: "success with otherParams (disable)",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"path":   dummyfilepath,
+					"action": "disable",
+				},
+			},
+			isSuccess:          true,
+			originalLine:       "disable_overscan=0",
+			modifiedLine:       "#disable_overscan=1",
+			wantedNewDataFound: true,
+			wantedExitStatus:   0,
+			wantedStderr:       "",
+			wantedErr:          nil,
+		},
+		{
+			name: "success with regular params (disable)",
+			argument: actions.OV{
+				Path:   dummyfilepath,
+				Action: "disable",
+			},
+			isSuccess:          true,
+			originalLine:       "disable_overscan=0",
+			modifiedLine:       "#disable_overscan=1",
+			wantedNewDataFound: true,
+			wantedExitStatus:   0,
+			wantedStderr:       "",
+			wantedErr:          nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var overscan rpi.Exec
+			var err error
+			a := actions.New()
+
+			if tc.isSuccess {
+				// create and populate file
+				if err := actions.OverwriteToFile(actions.WriteToFileArg{
+					File: dummyfilepath,
+					Data: []string{
+						"# uncomment if you get no picture on HDMI for a default safe mode",
+						"#hdmi_safe=1",
+						"# uncomment this if your display has a black border of unused pixels visible",
+						"# and your display can output without overscan",
+						tc.originalLine,
+						"# uncomment the following to adjust overscan. Use positive numbers if console",
+						"# goes off screen, and negative if there is too much border",
+						"#overscan_left=16",
+					},
+					Multiline:   true,
+					Permissions: 0755,
+				}); err != nil {
+					log.Fatal(err)
+				}
+
+				overscan, err = a.Overscan(tc.argument)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				// read the new line and delete
+				readLines, err := infos.New().ReadFile(dummyfilepath)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				fmt.Println(readLines)
+
+				if e := os.Remove(dummyfilepath); e != nil {
+					fmt.Println(e)
+				}
+
+				// assert statements
+				isFound := false
+				for _, s := range readLines {
+					if tc.modifiedLine == s {
+						isFound = true
+					}
+				}
+				assert.Equal(t, tc.wantedNewDataFound, isFound)
+			} else {
+				overscan, err = a.Overscan(tc.argument)
+			}
+
+			assert.Equal(t, tc.wantedExitStatus, overscan.ExitStatus)
+			assert.Equal(t, tc.wantedStderr, overscan.Stderr)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}

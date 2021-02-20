@@ -41,6 +41,9 @@ var (
 	HostnameChangeInHostsRegex = `^127.0.1.1.*`
 	// IpRegex = "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
 
+	// OverscanRegex is the regex used to detect overscan variable in /boot/config.txt
+	OverscanRegex = `^#overscan_*`
+
 	// Separator separates parent and child execution
 	Separator = "<|>"
 
@@ -70,6 +73,9 @@ var (
 
 	// WaitForNetworkAtBoot is the name of the wait for network at boot
 	WaitForNetworkAtBoot = "wait_for_network_at_boot"
+
+	// Overscan is the name of the overscan method
+	Overscan = "overscan"
 )
 
 // Service represents several system scripts.
@@ -480,6 +486,71 @@ func (s Service) WaitForNetworkAtBoot(arg interface{}) (rpi.Exec, error) {
 
 	return rpi.Exec{
 		Name:       WaitForNetworkAtBoot,
+		StartTime:  startTime,
+		EndTime:    endTime,
+		ExitStatus: uint8(exitStatus),
+		Stderr:     stdErr,
+	}, nil
+}
+
+// OV is the overscan argument
+type OV struct {
+	Path   string
+	Action string
+}
+
+// Overscan enable or disable overscan
+func (s Service) Overscan(arg interface{}) (rpi.Exec, error) {
+	var path string
+	var action string
+
+	switch v := arg.(type) {
+	case OV:
+		path = v.Path
+		action = v.Action
+	case OtherParams:
+		path = arg.(OtherParams).Value["path"]
+		action = arg.(OtherParams).Value["action"]
+	default:
+		return rpi.Exec{ExitStatus: 1}, &Error{[]string{"path", "action"}}
+	}
+
+	// execution start time
+	startTime := uint64(time.Now().Unix())
+	exitStatus := 0
+	var stdErr string
+	var newData string
+
+	if action == Enable {
+		newData = "disable_overscan=0"
+	} else if action == Disable {
+		newData = "#disable_overscan=1"
+	} else {
+		exitStatus = 1
+		stdErr = "bad action type"
+	}
+
+	if exitStatus == 0 {
+		err := ReplaceLineInFile(ReplaceLineInFileArg{
+			File:  path,
+			Regex: OverscanRegex,
+			ReplaceType: ReplaceType{
+				nil,
+				&EntireLine{NewData: newData},
+			},
+		})
+
+		if err != nil {
+			exitStatus = 1
+			stdErr = fmt.Sprint(err)
+		}
+	}
+
+	// execution end time
+	endTime := uint64(time.Now().Unix())
+
+	return rpi.Exec{
+		Name:       Overscan,
 		StartTime:  startTime,
 		EndTime:    endTime,
 		ExitStatus: uint8(exitStatus),

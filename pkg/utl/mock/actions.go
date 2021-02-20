@@ -13,6 +13,7 @@ type Actions struct {
 	ChangeHostnameInHostsFileFn    func(arg interface{}) (rpi.Exec, error)
 	ChangePasswordFn               func(arg interface{}) (rpi.Exec, error)
 	WaitForNetworkAtBootFn         func(arg interface{}) (rpi.Exec, error)
+	OverscanFn                     func(arg interface{}) (rpi.Exec, error)
 }
 
 // DeleteFile mock
@@ -48,4 +49,9 @@ func (a Actions) ChangePassword(arg interface{}) (rpi.Exec, error) {
 // WaitForNetworkAtBoot mock
 func (a Actions) WaitForNetworkAtBoot(arg interface{}) (rpi.Exec, error) {
 	return a.WaitForNetworkAtBootFn(arg)
+}
+
+// Overscan mock
+func (a Actions) Overscan(arg interface{}) (rpi.Exec, error) {
+	return a.OverscanFn(arg)
 }
