@@ -9,7 +9,6 @@ import (
 	"github.com/raspibuddy/rpi/pkg/utl/actions"
 	"github.com/raspibuddy/rpi/pkg/utl/mock"
 	"github.com/raspibuddy/rpi/pkg/utl/mock/mocksys"
-	"github.com/raspibuddy/rpi/pkg/utl/test_utl"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -30,20 +29,21 @@ func TestExecuteCH(t *testing.T) {
 				1: {
 					1: {
 						Name:      actions.ChangeHostnameInHostsFile,
-						Reference: test_utl.FuncA,
+						Reference: actions.ChangeHostnameInHostsFile,
 						Argument: []interface{}{
-							test_utl.ArgFuncA{
-								Arg0: "string0",
-								Arg1: "string1",
+							actions.DataToFile{
+								TargetFile: "path",
+								Data:       "data",
 							},
 						},
 					},
 					2: {
 						Name:      actions.ChangeHostnameInHostnameFile,
-						Reference: test_utl.FuncB,
+						Reference: actions.ChangeHostnameInHostnameFile,
 						Argument: []interface{}{
-							test_utl.ArgFuncB{
-								Arg2: "string2",
+							actions.DataToFile{
+								TargetFile: "path",
+								Data:       "data",
 							},
 						},
 					},
@@ -56,7 +56,7 @@ func TestExecuteCH(t *testing.T) {
 						StartTime:  1,
 						EndTime:    2,
 						ExitStatus: 0,
-						Stdout:     "string0-string1",
+						Stdout:     "path-data",
 					}, nil
 				},
 				ChangeHostnameInHostsFileFn: func(interface{}) (rpi.Exec, error) {
@@ -65,7 +65,7 @@ func TestExecuteCH(t *testing.T) {
 						StartTime:  1,
 						EndTime:    2,
 						ExitStatus: 0,
-						Stdout:     "string2",
+						Stdout:     "path-data",
 					}, nil
 				},
 			},
@@ -80,14 +80,14 @@ func TestExecuteCH(t *testing.T) {
 								StartTime:  1,
 								EndTime:    2,
 								ExitStatus: 0,
-								Stdout:     "string0-string1",
+								Stdout:     "path-data",
 							},
 							"2": {
 								Name:       actions.ChangeHostnameInHostnameFile,
 								StartTime:  1,
 								EndTime:    2,
 								ExitStatus: 0,
-								Stdout:     "string2",
+								Stdout:     "path-data",
 							},
 						},
 						ExitStatus: 0,
@@ -105,14 +105,14 @@ func TestExecuteCH(t *testing.T) {
 						StartTime:  1,
 						EndTime:    2,
 						ExitStatus: 0,
-						Stdout:     "string0-string1",
+						Stdout:     "path-data",
 					},
 					"2": {
 						Name:       actions.ChangeHostnameInHostnameFile,
 						StartTime:  1,
 						EndTime:    2,
 						ExitStatus: 0,
-						Stdout:     "string2",
+						Stdout:     "path-data",
 					},
 				},
 				ExitStatus: 0,
@@ -152,11 +152,11 @@ func TestExecuteCP(t *testing.T) {
 				1: {
 					1: {
 						Name:      actions.ChangePassword,
-						Reference: test_utl.FuncA,
+						Reference: actions.ChangePassword,
 						Argument: []interface{}{
-							test_utl.ArgFuncA{
-								Arg0: "string0",
-								Arg1: "string1",
+							actions.CP{
+								Password: "password",
+								Username: "username",
 							},
 						},
 					},
@@ -169,7 +169,7 @@ func TestExecuteCP(t *testing.T) {
 						StartTime:  1,
 						EndTime:    2,
 						ExitStatus: 0,
-						Stdout:     "string0-string1",
+						Stdout:     "password-username",
 					}, nil
 				},
 			},
@@ -184,7 +184,7 @@ func TestExecuteCP(t *testing.T) {
 								StartTime:  1,
 								EndTime:    2,
 								ExitStatus: 0,
-								Stdout:     "string0-string1",
+								Stdout:     "password-username",
 							},
 						},
 						ExitStatus: 0,
@@ -202,7 +202,7 @@ func TestExecuteCP(t *testing.T) {
 						StartTime:  1,
 						EndTime:    2,
 						ExitStatus: 0,
-						Stdout:     "string0-string1",
+						Stdout:     "password-username",
 					},
 				},
 				ExitStatus: 0,
@@ -240,11 +240,11 @@ func TestExecuteWNB(t *testing.T) {
 				1: {
 					1: {
 						Name:      actions.WaitForNetworkAtBoot,
-						Reference: test_utl.FuncA,
+						Reference: actions.WaitForNetworkAtBoot,
 						Argument: []interface{}{
-							test_utl.ArgFuncA{
-								Arg0: "string0",
-								Arg1: "string1",
+							actions.EnableOrDisableConfig{
+								DirOrFilePath: "directory",
+								Action:        "enable",
 							},
 						},
 					},
@@ -257,7 +257,7 @@ func TestExecuteWNB(t *testing.T) {
 						StartTime:  1,
 						EndTime:    2,
 						ExitStatus: 0,
-						Stdout:     "string0-string1",
+						Stdout:     "directory-enable",
 					}, nil
 				},
 			},
@@ -272,7 +272,7 @@ func TestExecuteWNB(t *testing.T) {
 								StartTime:  1,
 								EndTime:    2,
 								ExitStatus: 0,
-								Stdout:     "string0-string1",
+								Stdout:     "directory-enable",
 							},
 						},
 						ExitStatus: 0,
@@ -290,7 +290,7 @@ func TestExecuteWNB(t *testing.T) {
 						StartTime:  1,
 						EndTime:    2,
 						ExitStatus: 0,
-						Stdout:     "string0-string1",
+						Stdout:     "directory-enable",
 					},
 				},
 				ExitStatus: 0,
@@ -327,25 +327,25 @@ func TestExecuteOV(t *testing.T) {
 			plan: map[int](map[int]actions.Func){
 				1: {
 					1: {
-						Name:      actions.Overscan,
-						Reference: test_utl.FuncA,
+						Name:      actions.DisableOrEnableOverscan,
+						Reference: actions.DisableOrEnableOverscan,
 						Argument: []interface{}{
-							test_utl.ArgFuncA{
-								Arg0: "string0",
-								Arg1: "string1",
+							actions.EnableOrDisableConfig{
+								DirOrFilePath: "path",
+								Action:        "action",
 							},
 						},
 					},
 				},
 			},
 			actions: &mock.Actions{
-				OverscanFn: func(interface{}) (rpi.Exec, error) {
+				DisableOrEnableOverscanFn: func(interface{}) (rpi.Exec, error) {
 					return rpi.Exec{
-						Name:       actions.Overscan,
+						Name:       actions.DisableOrEnableOverscan,
 						StartTime:  1,
 						EndTime:    2,
 						ExitStatus: 0,
-						Stdout:     "string0-string1",
+						Stdout:     "path-enable",
 					}, nil
 				},
 			},
@@ -356,11 +356,11 @@ func TestExecuteOV(t *testing.T) {
 						NumberOfSteps: 1,
 						Progress: map[string]rpi.Exec{
 							"1": {
-								Name:       actions.Overscan,
+								Name:       actions.DisableOrEnableOverscan,
 								StartTime:  1,
 								EndTime:    2,
 								ExitStatus: 0,
-								Stdout:     "string0-string1",
+								Stdout:     "path-enable",
 							},
 						},
 						ExitStatus: 0,
@@ -374,11 +374,11 @@ func TestExecuteOV(t *testing.T) {
 				NumberOfSteps: 1,
 				Progress: map[string]rpi.Exec{
 					"1": {
-						Name:       actions.Overscan,
+						Name:       actions.DisableOrEnableOverscan,
 						StartTime:  1,
 						EndTime:    2,
 						ExitStatus: 0,
-						Stdout:     "string0-string1",
+						Stdout:     "path-enable",
 					},
 				},
 				ExitStatus: 0,

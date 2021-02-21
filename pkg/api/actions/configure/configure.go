@@ -68,9 +68,9 @@ func (con *Configure) ExecuteWNB(action string) (rpi.Action, error) {
 				Name:      actions.WaitForNetworkAtBoot,
 				Reference: con.a.WaitForNetworkAtBoot,
 				Argument: []interface{}{
-					actions.WNB{
-						Directory: "/etc/systemd/system/dhcpcd.service.d",
-						Action:    action,
+					actions.EnableOrDisableConfig{
+						DirOrFilePath: "/etc/systemd/system/dhcpcd.service.d",
+						Action:        action,
 					},
 				},
 			},
@@ -85,12 +85,12 @@ func (con *Configure) ExecuteOV(action string) (rpi.Action, error) {
 	plan := map[int](map[int]actions.Func){
 		1: {
 			1: {
-				Name:      actions.Overscan,
-				Reference: con.a.Overscan,
+				Name:      actions.DisableOrEnableOverscan,
+				Reference: con.a.DisableOrEnableOverscan,
 				Argument: []interface{}{
-					actions.WNB{
-						Directory: BootConfig,
-						Action:    action,
+					actions.EnableOrDisableConfig{
+						DirOrFilePath: BootConfig,
+						Action:        action,
 					},
 				},
 			},

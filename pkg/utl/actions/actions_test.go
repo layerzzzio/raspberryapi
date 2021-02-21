@@ -34,7 +34,7 @@ func TestDeleteFile(t *testing.T) {
 	}{
 		{
 			name:             "error : no such file or directory",
-			argument:         actions.DF{Path: ""},
+			argument:         actions.FileOrDirectory{Path: ""},
 			wantedExitStatus: 1,
 			wantedStderr:     "remove : no such file or directory",
 			wantedErr:        nil,
@@ -62,7 +62,7 @@ func TestDeleteFile(t *testing.T) {
 		},
 		{
 			name:             "success",
-			argument:         actions.DF{Path: dummyfilepath},
+			argument:         actions.FileOrDirectory{Path: dummyfilepath},
 			wantedExitStatus: 0,
 			wantedStderr:     "",
 			wantedErr:        nil,
@@ -1481,7 +1481,7 @@ func TestReplaceLineInFile(t *testing.T) {
 			originalLine: "0.0.0.0		raspberrypi",
 			modifiedLine:       "",
 			wantedData:         nil,
-			wantedNewDataFound: true,
+			wantedNewDataFound: false,
 		},
 	}
 
@@ -1512,7 +1512,7 @@ func TestReplaceLineInFile(t *testing.T) {
 					log.Fatal(err)
 				}
 
-				fmt.Println(readLines)
+				// fmt.Println(readLines)
 				// --> replace all occurrences:
 				// [dummy line 1  dummy line 2 127.0.1.1  127.0.1.1		new_hostname  127.0.1.1		new_hostname  ]
 				// --> replace entire line:
@@ -1864,9 +1864,9 @@ func TestWaitForNetworkAtBoot(t *testing.T) {
 	}{
 		{
 			name: "error : no such file or directory (enable)",
-			argument: actions.WNB{
-				Directory: "",
-				Action:    actions.Enable,
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: "",
+				Action:        actions.Enable,
 			},
 			isSuccess:        false,
 			wantedExitStatus: 1,
@@ -1875,9 +1875,9 @@ func TestWaitForNetworkAtBoot(t *testing.T) {
 		},
 		{
 			name: "error : no such file or directory (disable)",
-			argument: actions.WNB{
-				Directory: "",
-				Action:    actions.Disable,
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: "",
+				Action:        actions.Disable,
 			},
 			isSuccess:        false,
 			wantedExitStatus: 1,
@@ -1886,9 +1886,9 @@ func TestWaitForNetworkAtBoot(t *testing.T) {
 		},
 		{
 			name: "error : bad action type",
-			argument: actions.WNB{
-				Directory: dummydirectorypath,
-				Action:    "dummyactiontype",
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: dummydirectorypath,
+				Action:        "dummyactiontype",
 			},
 			isSuccess:        false,
 			wantedExitStatus: 1,
@@ -1928,9 +1928,9 @@ func TestWaitForNetworkAtBoot(t *testing.T) {
 		},
 		{
 			name: "success enabling with regular params",
-			argument: actions.WNB{
-				Directory: dummydirectorypath,
-				Action:    actions.Enable,
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: dummydirectorypath,
+				Action:        actions.Enable,
 			},
 			isSuccess: true,
 			enable:    true,
@@ -1959,9 +1959,9 @@ func TestWaitForNetworkAtBoot(t *testing.T) {
 		},
 		{
 			name: "success disable with regular params",
-			argument: actions.WNB{
-				Directory: dummydirectorypath,
-				Action:    actions.Disable,
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: dummydirectorypath,
+				Action:        actions.Disable,
 			},
 			isSuccess:        true,
 			enable:           false,
@@ -2025,7 +2025,7 @@ func TestWaitForNetworkAtBoot(t *testing.T) {
 	}
 }
 
-func TestOverscan(t *testing.T) {
+func TestDisableOrEnableOverscan(t *testing.T) {
 	cases := []struct {
 		name               string
 		argument           interface{}
@@ -2039,9 +2039,9 @@ func TestOverscan(t *testing.T) {
 	}{
 		{
 			name: "error : no such file or directory (enable)",
-			argument: actions.OV{
-				Path:   "",
-				Action: "enable",
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: "",
+				Action:        "enable",
 			},
 			isSuccess:        false,
 			wantedExitStatus: 1,
@@ -2050,9 +2050,9 @@ func TestOverscan(t *testing.T) {
 		},
 		{
 			name: "error : no such file or directory (disable)",
-			argument: actions.OV{
-				Path:   "",
-				Action: "disable",
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: "",
+				Action:        "disable",
 			},
 			isSuccess:        false,
 			wantedExitStatus: 1,
@@ -2072,6 +2072,19 @@ func TestOverscan(t *testing.T) {
 			wantedErr:        &actions.Error{Arguments: []string{"path", "action"}},
 		},
 		{
+			name: "error : action not right",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"path":   dummyfilepath,
+					"action": "enable-xxx",
+				},
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "bad action type",
+			wantedErr:        nil,
+		},
+		{
 			name: "success with otherParams (enable)",
 			argument: actions.OtherParams{
 				Value: map[string]string{
@@ -2089,9 +2102,9 @@ func TestOverscan(t *testing.T) {
 		},
 		{
 			name: "success with regular params (enable)",
-			argument: actions.OV{
-				Path:   dummyfilepath,
-				Action: "enable",
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: dummyfilepath,
+				Action:        "enable",
 			},
 			isSuccess:          true,
 			originalLine:       "#disable_overscan=1",
@@ -2119,9 +2132,9 @@ func TestOverscan(t *testing.T) {
 		},
 		{
 			name: "success with regular params (disable)",
-			argument: actions.OV{
-				Path:   dummyfilepath,
-				Action: "disable",
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: dummyfilepath,
+				Action:        "disable",
 			},
 			isSuccess:          true,
 			originalLine:       "disable_overscan=0",
@@ -2159,7 +2172,7 @@ func TestOverscan(t *testing.T) {
 					log.Fatal(err)
 				}
 
-				overscan, err = a.Overscan(tc.argument)
+				overscan, err = a.DisableOrEnableOverscan(tc.argument)
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -2169,8 +2182,6 @@ func TestOverscan(t *testing.T) {
 				if err != nil {
 					log.Fatal(err)
 				}
-
-				fmt.Println(readLines)
 
 				if e := os.Remove(dummyfilepath); e != nil {
 					fmt.Println(e)
@@ -2185,11 +2196,271 @@ func TestOverscan(t *testing.T) {
 				}
 				assert.Equal(t, tc.wantedNewDataFound, isFound)
 			} else {
-				overscan, err = a.Overscan(tc.argument)
+				overscan, err = a.DisableOrEnableOverscan(tc.argument)
 			}
 
 			assert.Equal(t, tc.wantedExitStatus, overscan.ExitStatus)
 			assert.Equal(t, tc.wantedStderr, overscan.Stderr)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
+func TestCommentOrUncommentLineInFile(t *testing.T) {
+	cases := []struct {
+		name               string
+		args               actions.CommentLineInFileArg
+		isSuccess          bool
+		originalLine       string
+		modifiedLine       string
+		wantedData         error
+		wantedNewDataFound bool
+	}{
+		{
+			name:      "error: no file",
+			isSuccess: false,
+			args: actions.CommentLineInFileArg{
+				File:        "",
+				Permissions: 0755,
+				Regex:       `^#?overscan_.*`,
+				Action:      "dummyaction",
+			},
+			wantedData: fmt.Errorf("opening file failed"),
+		},
+		{
+			name:      "error: action not right",
+			isSuccess: false,
+			args: actions.CommentLineInFileArg{
+				File:        dummyfilepath,
+				Permissions: 0755,
+				Regex:       `^#?overscan_.*`,
+				Action:      "dummyaction",
+			},
+			wantedData: fmt.Errorf("bad action: comment or uncomment"),
+		},
+		{
+			name:      "success commenting",
+			isSuccess: true,
+			args: actions.CommentLineInFileArg{
+				File:        dummyfilepath,
+				Permissions: 0755,
+				Regex:       `^overscan_.*`,
+				Action:      actions.Comment,
+			},
+			originalLine:       "overscan_left=16",
+			modifiedLine:       "#overscan_left=16",
+			wantedData:         nil,
+			wantedNewDataFound: true,
+		},
+		{
+			name:      "success uncommenting",
+			isSuccess: true,
+			args: actions.CommentLineInFileArg{
+				File:        dummyfilepath,
+				Permissions: 0755,
+				Regex:       `^#?overscan_.*`,
+				Action:      actions.Uncomment,
+			},
+			originalLine:       "#overscan_left=16",
+			modifiedLine:       "overscan_left=16",
+			wantedData:         nil,
+			wantedNewDataFound: true,
+		},
+		{
+			name:      "success but no replacement because no match",
+			isSuccess: true,
+			args: actions.CommentLineInFileArg{
+				File:        dummyfilepath,
+				Permissions: 0755,
+				Regex:       actions.CommentOverscan,
+			},
+			originalLine:       "dummycul",
+			modifiedLine:       "",
+			wantedData:         nil,
+			wantedNewDataFound: false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.isSuccess {
+				// create and populate file
+				if err := actions.OverwriteToFile(actions.WriteToFileArg{
+					File: tc.args.File,
+					Data: []string{
+						"# uncomment the following to adjust overscan. Use positive numbers if console",
+						"# goes off screen, and negative if there is too much border",
+						tc.originalLine,
+						"dummy man",
+					},
+					Multiline:   true,
+					Permissions: 0755,
+				}); err != nil {
+					log.Fatal(err)
+				}
+
+				// comment line in file
+				commentLineInFile := actions.CommentOrUncommentLineInFile(tc.args)
+
+				// read the new line
+				readLines, err := infos.New().ReadFile(tc.args.File)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				if e := os.Remove(tc.args.File); e != nil {
+					fmt.Println(e)
+				}
+
+				// assert statements
+				isFound := false
+				for _, s := range readLines {
+					if tc.modifiedLine == s {
+						isFound = true
+					}
+				}
+
+				assert.Equal(t, tc.wantedNewDataFound, isFound)
+				assert.Equal(t, tc.wantedData, commentLineInFile)
+			}
+		})
+	}
+}
+
+func TestCommentOverscan(t *testing.T) {
+	cases := []struct {
+		name               string
+		argument           interface{}
+		isSuccess          bool
+		originalLine       string
+		modifiedLine       string
+		wantedNewDataFound bool
+		wantedExitStatus   uint8
+		wantedStderr       string
+		wantedErr          error
+	}{
+		{
+			name: "error : no such file or directory",
+			argument: actions.CommentOrUncommentConfig{
+				DirOrFilePath: "",
+				Action:        "comment",
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "opening file failed",
+			wantedErr:        nil,
+		},
+		{
+			name: "error : too many arguments",
+			argument: []actions.OtherParams{
+				{Value: map[string]string{"path": dummyfilepath}},
+				{Value: map[string]string{"action": "enable"}},
+				{Value: map[string]string{"dummyarg": "dummyargvalue"}},
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "",
+			wantedErr:        &actions.Error{Arguments: []string{"path", "action"}},
+		},
+		{
+			name: "error : action not right",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"path":   dummyfilepath,
+					"action": "comment-xxx",
+				},
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "bad action type",
+			wantedErr:        nil,
+		},
+		{
+			name: "success with otherParams (uncomment)",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"path":   dummyfilepath,
+					"action": "uncomment",
+				},
+			},
+			isSuccess:          true,
+			originalLine:       "#overscan_yeahman=1",
+			modifiedLine:       "overscan_yeahman=1",
+			wantedNewDataFound: true,
+			wantedExitStatus:   0,
+			wantedStderr:       "",
+			wantedErr:          nil,
+		},
+		{
+			name: "success with regular params (comment)",
+			argument: actions.CommentOrUncommentConfig{
+				DirOrFilePath: dummyfilepath,
+				Action:        "comment",
+			},
+			isSuccess:          true,
+			originalLine:       "overscan_yeahman=1",
+			modifiedLine:       "#overscan_yeahman=1",
+			wantedNewDataFound: true,
+			wantedExitStatus:   0,
+			wantedStderr:       "",
+			wantedErr:          nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var commentOverscan rpi.Exec
+			var err error
+			a := actions.New()
+
+			if tc.isSuccess {
+				// create and populate file
+				if err := actions.OverwriteToFile(actions.WriteToFileArg{
+					File: dummyfilepath,
+					Data: []string{
+						"# uncomment if you get no picture on HDMI for a default safe mode",
+						"#hdmi_safe=1",
+						"# uncomment this if your display has a black border of unused pixels visible",
+						"# and your display can output without overscan",
+						tc.originalLine,
+						"# uncomment the following to adjust overscan. Use positive numbers if console",
+						"# goes off screen, and negative if there is too much border",
+					},
+					Multiline:   true,
+					Permissions: 0755,
+				}); err != nil {
+					log.Fatal(err)
+				}
+
+				commentOverscan, err = a.CommentOverscan(tc.argument)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				// read the new line and delete
+				readLines, err := infos.New().ReadFile(dummyfilepath)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				if e := os.Remove(dummyfilepath); e != nil {
+					fmt.Println(e)
+				}
+
+				// assert statements
+				isFound := false
+				for _, s := range readLines {
+					if tc.modifiedLine == s {
+						isFound = true
+					}
+				}
+				assert.Equal(t, tc.wantedNewDataFound, isFound)
+			} else {
+				commentOverscan, err = a.CommentOverscan(tc.argument)
+			}
+
+			assert.Equal(t, tc.wantedExitStatus, commentOverscan.ExitStatus)
+			assert.Equal(t, tc.wantedStderr, commentOverscan.Stderr)
 			assert.Equal(t, tc.wantedErr, err)
 		})
 	}

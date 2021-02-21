@@ -37,12 +37,24 @@ var (
 	// Disable is a flag to enable a configuration
 	Disable = "disable"
 
+	// Comment is a flag to comment lines
+	Comment = "comment"
+
+	// Uncomment is a flag to uncomment lines
+	Uncomment = "uncomment"
+
 	// IpRegex is the regex used to detect ip addresses in strings
 	HostnameChangeInHostsRegex = `^127.0.1.1.*`
 	// IpRegex = "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
 
-	// OverscanRegex is the regex used to detect overscan variable in /boot/config.txt
-	OverscanRegex = `^#overscan_*`
+	// OverscanRegex is the regex used to detect disable_overscan variable in /boot/config.txt
+	DisableOrEnableOverscanRegex = `^#?disable_overscan.*`
+
+	// CommentOverscanRegex is the regex used to detect overscan variable in /boot/config.txt
+	CommentOverscanRegex = `^overscan_.*`
+
+	// UncommentOverscanRegex is the regex used to detect overscan variable in /boot/config.txt
+	UncommentOverscanRegex = `^#overscan_.*`
 
 	// Separator separates parent and child execution
 	Separator = "<|>"
@@ -74,8 +86,14 @@ var (
 	// WaitForNetworkAtBoot is the name of the wait for network at boot
 	WaitForNetworkAtBoot = "wait_for_network_at_boot"
 
-	// Overscan is the name of the overscan method
+	// Overscan is the name of the overscan actions
 	Overscan = "overscan"
+
+	// DisableOrEnableOverscan is the name of the disable or enable overscan method
+	DisableOrEnableOverscan = "disable_or_enable_overscan"
+
+	// CommentOverscan is the name of the comment overscan method
+	CommentOverscan = "comment_overscan"
 )
 
 // Service represents several system scripts.
@@ -216,8 +234,8 @@ func (s Service) KillProcessByName(arg interface{}) (rpi.Exec, error) {
 	}, nil
 }
 
-// DF is the argument used when deleting a file
-type DF struct {
+// FileOrDirectory is the argument used when wanting to modified a file only (ex: comment)
+type FileOrDirectory struct {
 	Path string
 }
 
@@ -226,7 +244,7 @@ func (s Service) DeleteFile(arg interface{}) (rpi.Exec, error) {
 	var path string
 
 	switch v := arg.(type) {
-	case DF:
+	case FileOrDirectory:
 		path = v.Path
 	case OtherParams:
 		path = arg.(OtherParams).Value["path"]
@@ -420,10 +438,10 @@ func (s Service) ChangePassword(arg interface{}) (rpi.Exec, error) {
 	}, nil
 }
 
-// WNB is the do boot wait argument
-type WNB struct {
-	Directory string
-	Action    string
+// EnableOrDisableConfig is the argument for enable or disable methods
+type EnableOrDisableConfig struct {
+	Action        string
+	DirOrFilePath string
 }
 
 // WaitForNetworkAtBoot enable or disable wait for network at boot
@@ -432,8 +450,8 @@ func (s Service) WaitForNetworkAtBoot(arg interface{}) (rpi.Exec, error) {
 	var action string
 
 	switch v := arg.(type) {
-	case WNB:
-		directory = v.Directory
+	case EnableOrDisableConfig:
+		directory = v.DirOrFilePath
 		action = v.Action
 	case OtherParams:
 		directory = arg.(OtherParams).Value["directory"]
@@ -493,20 +511,14 @@ func (s Service) WaitForNetworkAtBoot(arg interface{}) (rpi.Exec, error) {
 	}, nil
 }
 
-// OV is the overscan argument
-type OV struct {
-	Path   string
-	Action string
-}
-
-// Overscan enable or disable overscan
-func (s Service) Overscan(arg interface{}) (rpi.Exec, error) {
+// DisableOrEnableOverscan enables or disables overscan
+func (s Service) DisableOrEnableOverscan(arg interface{}) (rpi.Exec, error) {
 	var path string
 	var action string
 
 	switch v := arg.(type) {
-	case OV:
-		path = v.Path
+	case EnableOrDisableConfig:
+		path = v.DirOrFilePath
 		action = v.Action
 	case OtherParams:
 		path = arg.(OtherParams).Value["path"]
@@ -521,6 +533,8 @@ func (s Service) Overscan(arg interface{}) (rpi.Exec, error) {
 	var stdErr string
 	var newData string
 
+	fmt.Println(action)
+
 	if action == Enable {
 		newData = "disable_overscan=0"
 	} else if action == Disable {
@@ -533,7 +547,7 @@ func (s Service) Overscan(arg interface{}) (rpi.Exec, error) {
 	if exitStatus == 0 {
 		err := ReplaceLineInFile(ReplaceLineInFileArg{
 			File:  path,
-			Regex: OverscanRegex,
+			Regex: DisableOrEnableOverscanRegex,
 			ReplaceType: ReplaceType{
 				nil,
 				&EntireLine{NewData: newData},
@@ -550,7 +564,69 @@ func (s Service) Overscan(arg interface{}) (rpi.Exec, error) {
 	endTime := uint64(time.Now().Unix())
 
 	return rpi.Exec{
-		Name:       Overscan,
+		Name:       DisableOrEnableOverscan,
+		StartTime:  startTime,
+		EndTime:    endTime,
+		ExitStatus: uint8(exitStatus),
+		Stderr:     stdErr,
+	}, nil
+}
+
+// CommentOrUncommentConfig is the argument for comment or uncomment methods
+type CommentOrUncommentConfig struct {
+	Action        string
+	DirOrFilePath string
+}
+
+// CommentOverscan comments overscan lines
+func (s Service) CommentOverscan(arg interface{}) (rpi.Exec, error) {
+	var path string
+	var action string
+
+	switch v := arg.(type) {
+	case CommentOrUncommentConfig:
+		path = v.DirOrFilePath
+		action = v.Action
+	case OtherParams:
+		path = arg.(OtherParams).Value["path"]
+		action = arg.(OtherParams).Value["action"]
+	default:
+		return rpi.Exec{ExitStatus: 1}, &Error{[]string{"path", "action"}}
+	}
+
+	// execution start time
+	startTime := uint64(time.Now().Unix())
+	exitStatus := 0
+	var stdErr string
+
+	var regex string
+	if action == "comment" {
+		regex = CommentOverscanRegex
+	} else if action == "uncomment" {
+		regex = UncommentOverscanRegex
+	} else {
+		exitStatus = 1
+		stdErr = "bad action type"
+	}
+
+	if exitStatus == 0 {
+		err := CommentOrUncommentLineInFile(CommentLineInFileArg{
+			File:   path,
+			Regex:  regex,
+			Action: action,
+		})
+
+		if err != nil {
+			exitStatus = 1
+			stdErr = fmt.Sprint(err)
+		}
+	}
+
+	// execution end time
+	endTime := uint64(time.Now().Unix())
+
+	return rpi.Exec{
+		Name:       CommentOverscan,
 		StartTime:  startTime,
 		EndTime:    endTime,
 		ExitStatus: uint8(exitStatus),
@@ -887,24 +963,26 @@ func ReplaceLineInFile(args ReplaceLineInFileArg) error {
 			break
 		}
 
-		// apply the replace type here
-		re := regexp.MustCompile(args.Regex)
-		if re.MatchString(line) {
-			switch *repType {
-			case RepTypeAllOccurrences:
-				line = strings.ReplaceAll(
-					line,
-					args.ReplaceType.AllOccurrences.Occurrence,
-					args.ReplaceType.AllOccurrences.NewData)
-			case RepTypeEntireLine:
-				line = args.ReplaceType.EntireLine.NewData
-			default:
-				line = args.ReplaceType.EntireLine.NewData
-			}
-		}
+		if line != "" {
 
-		// save each line (replaced or non-replaced) in an array
-		allLines = append(allLines, line)
+			// apply the replace type here
+			re := regexp.MustCompile(args.Regex)
+			if re.MatchString(line) {
+				switch *repType {
+				case RepTypeAllOccurrences:
+					line = strings.ReplaceAll(
+						line,
+						args.ReplaceType.AllOccurrences.Occurrence,
+						args.ReplaceType.AllOccurrences.NewData)
+				case RepTypeEntireLine:
+					line = args.ReplaceType.EntireLine.NewData
+				default:
+					line = args.ReplaceType.EntireLine.NewData
+				}
+			}
+
+			allLines = append(allLines, strings.TrimSuffix(line, "\n"))
+		}
 
 		if err != nil {
 			break
@@ -946,6 +1024,75 @@ func AddLinesEndOfFile(args WriteToFileArg) error {
 	if err = OverwriteToFile(WriteToFileArg{
 		File:        args.File,
 		Data:        readLines,
+		Multiline:   true,
+		Permissions: args.Permissions,
+	}); err != nil {
+		return fmt.Errorf("overwriting to file failed")
+	}
+
+	return nil
+}
+
+// CommentLineInFileArg is the argument to function CommentLineInFile
+type CommentLineInFileArg struct {
+	File        string
+	Permissions uint32 // 0644, 0666, etc.
+	Regex       string
+	Action      string
+}
+
+// CommentLineInFile comments one or multiple line in file
+func CommentOrUncommentLineInFile(args CommentLineInFileArg) error {
+	f, err := os.Open(args.File)
+	if err != nil {
+		return fmt.Errorf("opening file failed")
+	}
+
+	// replacing line logic
+	// source: https://stackoverflow.com/questions/8757389/reading-a-file-line-by-line-in-go
+	reader := bufio.NewReader(f)
+	var line string
+	allLines := []string{}
+
+	for {
+		line, err = reader.ReadString('\n')
+		if err != nil && err != io.EOF {
+			break
+		}
+
+		if line != "" {
+			// apply the replace type here
+			re := regexp.MustCompile(args.Regex)
+			if re.MatchString(line) {
+				if args.Action == Comment {
+					line = "#" + line
+				} else if args.Action == Uncomment {
+					fmt.Println(line)
+					line = strings.Replace(line, "#", "", 1)
+				} else {
+					return fmt.Errorf("bad action: comment or uncomment")
+				}
+			}
+
+			allLines = append(allLines, strings.TrimSuffix(line, "\n"))
+		}
+
+		if err != nil {
+			break
+		}
+	}
+
+	if err != io.EOF {
+		return fmt.Errorf("reading file failed")
+	}
+
+	if err = f.Close(); err != nil {
+		return fmt.Errorf("closing file failed")
+	}
+
+	if err = OverwriteToFile(WriteToFileArg{
+		File:        args.File,
+		Data:        allLines,
 		Multiline:   true,
 		Permissions: args.Permissions,
 	}); err != nil {

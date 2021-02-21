@@ -15,7 +15,7 @@ type HTTP struct {
 // NewHTTP creates new boot http service
 func NewHTTP(svc boot.Service, r *echo.Group) {
 	h := HTTP{svc}
-	cr := r.Group("/boots")
+	cr := r.Group("/displays")
 	cr.GET("", h.list)
 }
 

@@ -156,7 +156,7 @@ func TestCreateFile(t *testing.T) {
 			res := test_utl.CreateFile(tc.path)
 			fmt.Println(res)
 			if res {
-				del, err := a.DeleteFile(actions.DF{Path: tc.path})
+				del, err := a.DeleteFile(actions.FileOrDirectory{Path: tc.path})
 				if err != nil {
 					fmt.Println(del)
 					fmt.Println(err)
