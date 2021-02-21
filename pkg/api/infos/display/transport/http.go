@@ -4,16 +4,16 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/raspibuddy/rpi/pkg/api/infos/boot"
+	"github.com/raspibuddy/rpi/pkg/api/infos/display"
 )
 
-// HTTP is a struct implementing a boot application service.
+// HTTP is a struct implementing a display application service.
 type HTTP struct {
-	svc boot.Service
+	svc display.Service
 }
 
-// NewHTTP creates new boot http service
-func NewHTTP(svc boot.Service, r *echo.Group) {
+// NewHTTP creates new display http service
+func NewHTTP(svc display.Service, r *echo.Group) {
 	h := HTTP{svc}
 	cr := r.Group("/displays")
 	cr.GET("", h.list)

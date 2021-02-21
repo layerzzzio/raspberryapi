@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/raspibuddy/rpi"
-	"github.com/raspibuddy/rpi/pkg/api/infos/boot"
-	"github.com/raspibuddy/rpi/pkg/api/infos/boot/transport"
+	"github.com/raspibuddy/rpi/pkg/api/infos/display"
+	"github.com/raspibuddy/rpi/pkg/api/infos/display/transport"
 	"github.com/raspibuddy/rpi/pkg/utl/infos"
 	"github.com/raspibuddy/rpi/pkg/utl/mock/mocksys"
 	"github.com/raspibuddy/rpi/pkg/utl/server"
@@ -18,13 +18,13 @@ import (
 )
 
 func TestList(t *testing.T) {
-	var response rpi.Boot
+	var response rpi.Display
 
 	cases := []struct {
 		name         string
-		boosys       *mocksys.Boot
+		dissys       *mocksys.Display
 		wantedStatus int
-		wantedResp   rpi.Boot
+		wantedResp   rpi.Display
 	}{
 		{
 			name:         "error: invalid request response",
@@ -32,27 +32,27 @@ func TestList(t *testing.T) {
 		},
 		{
 			name: "error: List result is nil",
-			boosys: &mocksys.Boot{
-				ListFn: func(bool) (rpi.Boot, error) {
-					return rpi.Boot{}, errors.New("test error")
+			dissys: &mocksys.Display{
+				ListFn: func([]string) (rpi.Display, error) {
+					return rpi.Display{}, errors.New("test error")
 				},
 			},
 			wantedStatus: http.StatusInternalServerError,
 		},
-		{
-			name: "success",
-			boosys: &mocksys.Boot{
-				ListFn: func(bool) (rpi.Boot, error) {
-					return rpi.Boot{
-						IsWaitForNetwork: true,
-					}, nil
-				},
-			},
-			wantedStatus: http.StatusOK,
-			wantedResp: rpi.Boot{
-				IsWaitForNetwork: true,
-			},
-		},
+		// {
+		// 	name: "success",
+		// 	dissys: &mocksys.Display{
+		// 		ListFn: func([]string) (rpi.Display, error) {
+		// 			return rpi.Display{
+		// 				IsOverscan: true,
+		// 			}, nil
+		// 		},
+		// 	},
+		// 	wantedStatus: http.StatusOK,
+		// 	wantedResp: rpi.Display{
+		// 		IsOverscan: true,
+		// 	},
+		// },
 	}
 
 	for _, tc := range cases {
@@ -60,12 +60,12 @@ func TestList(t *testing.T) {
 			r := server.New()
 			rg := r.Group("")
 			i := infos.New()
-			s := boot.New(tc.boosys, i)
+			s := display.New(tc.dissys, i)
 			transport.NewHTTP(s, rg)
 			ts := httptest.NewServer(r)
 
 			defer ts.Close()
-			path := ts.URL + "/boots"
+			path := ts.URL + "/displays"
 			res, err := http.Get(path)
 			if err != nil {
 				t.Fatal(err)
@@ -78,7 +78,7 @@ func TestList(t *testing.T) {
 				panic(err)
 			}
 
-			if (tc.wantedResp != rpi.Boot{}) {
+			if (tc.wantedResp != rpi.Display{}) {
 				if err := json.Unmarshal(body, &response); err != nil {
 					t.Fatal(err)
 				}

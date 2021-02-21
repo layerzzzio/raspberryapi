@@ -6,11 +6,7 @@ import (
 	"github.com/labstack/echo"
 	"github.com/raspibuddy/rpi"
 	"github.com/raspibuddy/rpi/pkg/utl/actions"
-)
-
-var (
-	// BootConfig contains the boot configs
-	BootConfig = "/boot/config.txt"
+	"github.com/raspibuddy/rpi/pkg/utl/infos"
 )
 
 // ExecuteCH changes hostname and returns an action.
@@ -95,7 +91,7 @@ func (con *Configure) ExecuteOV(action string) (rpi.Action, error) {
 					Reference: con.a.DisableOrEnableOverscan,
 					Argument: []interface{}{
 						actions.EnableOrDisableConfig{
-							DirOrFilePath: BootConfig,
+							DirOrFilePath: infos.BootConfig,
 							Action:        action,
 						},
 					},
@@ -110,7 +106,7 @@ func (con *Configure) ExecuteOV(action string) (rpi.Action, error) {
 					Reference: con.a.DisableOrEnableOverscan,
 					Argument: []interface{}{
 						actions.EnableOrDisableConfig{
-							DirOrFilePath: BootConfig,
+							DirOrFilePath: infos.BootConfig,
 							Action:        action,
 						},
 					},
@@ -122,7 +118,7 @@ func (con *Configure) ExecuteOV(action string) (rpi.Action, error) {
 					Reference: con.a.CommentOverscan,
 					Argument: []interface{}{
 						actions.CommentOrUncommentConfig{
-							DirOrFilePath: BootConfig,
+							DirOrFilePath: infos.BootConfig,
 							Action:        "comment",
 						},
 					},

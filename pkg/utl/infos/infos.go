@@ -8,6 +8,11 @@ import (
 	"strings"
 )
 
+var (
+	// BootConfig contains the boot configs
+	BootConfig = "/boot/config.txt"
+)
+
 // Service represents several system scripts.
 type Service struct{}
 

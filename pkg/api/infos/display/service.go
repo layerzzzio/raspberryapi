@@ -1,31 +1,31 @@
-package boot
+package display
 
 import (
 	"github.com/raspibuddy/rpi"
 )
 
-// Service represents all boot application services.
+// Service represents all display application services.
 type Service interface {
-	List() (rpi.Boot, error)
+	List() (rpi.Display, error)
 }
 
-// Boot represents a Boot application service.
-type Boot struct {
-	boosys BOOSYS
+// Display represents a Display application service.
+type Display struct {
+	dissys DISSYS
 	i      Infos
 }
 
-// BOOSYS represents a Boot repository service.
-type BOOSYS interface {
-	List(bool) (rpi.Boot, error)
+// DISSYS represents a Display repository service.
+type DISSYS interface {
+	List([]string) (rpi.Display, error)
 }
 
 // Infos represents the infos interface
 type Infos interface {
-	IsFileExists(string) bool
+	ReadFile(string) ([]string, error)
 }
 
-// New creates a Boot application service instance.
-func New(boosys BOOSYS, i Infos) *Boot {
-	return &Boot{boosys: boosys, i: i}
+// New creates a Display application service instance.
+func New(boosys DISSYS, i Infos) *Display {
+	return &Display{dissys: boosys, i: i}
 }
