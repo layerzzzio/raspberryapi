@@ -1,6 +1,9 @@
 package configure
 
 import (
+	"net/http"
+
+	"github.com/labstack/echo"
 	"github.com/raspibuddy/rpi"
 	"github.com/raspibuddy/rpi/pkg/utl/actions"
 )
@@ -82,19 +85,52 @@ func (con *Configure) ExecuteWNB(action string) (rpi.Action, error) {
 
 // ExecuteOV enable or disable overscan and returns an action
 func (con *Configure) ExecuteOV(action string) (rpi.Action, error) {
-	plan := map[int](map[int]actions.Func){
-		1: {
+	var plan map[int]map[int]actions.Func
+
+	if action == "enable" {
+		plan = map[int](map[int]actions.Func){
 			1: {
-				Name:      actions.DisableOrEnableOverscan,
-				Reference: con.a.DisableOrEnableOverscan,
-				Argument: []interface{}{
-					actions.EnableOrDisableConfig{
-						DirOrFilePath: BootConfig,
-						Action:        action,
+				1: {
+					Name:      actions.DisableOrEnableOverscan,
+					Reference: con.a.DisableOrEnableOverscan,
+					Argument: []interface{}{
+						actions.EnableOrDisableConfig{
+							DirOrFilePath: BootConfig,
+							Action:        action,
+						},
 					},
 				},
 			},
-		},
+		}
+	} else if action == "disable" {
+		plan = map[int](map[int]actions.Func){
+			1: {
+				1: {
+					Name:      actions.DisableOrEnableOverscan,
+					Reference: con.a.DisableOrEnableOverscan,
+					Argument: []interface{}{
+						actions.EnableOrDisableConfig{
+							DirOrFilePath: BootConfig,
+							Action:        action,
+						},
+					},
+				},
+			},
+			2: {
+				1: {
+					Name:      actions.CommentOverscan,
+					Reference: con.a.CommentOverscan,
+					Argument: []interface{}{
+						actions.CommentOrUncommentConfig{
+							DirOrFilePath: BootConfig,
+							Action:        "comment",
+						},
+					},
+				},
+			},
+		}
+	} else {
+		return rpi.Action{}, echo.NewHTTPError(http.StatusInternalServerError, "bad action type: enable or disable overscan failed")
 	}
 
 	return con.consys.ExecuteOV(plan)

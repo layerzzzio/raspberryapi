@@ -2,6 +2,7 @@ package transport
 
 import (
 	"net/http"
+	"regexp"
 
 	"github.com/labstack/echo/v4"
 	"github.com/raspibuddy/rpi/pkg/api/actions/configure"
@@ -24,8 +25,10 @@ func NewHTTP(svc configure.Service, r *echo.Group) {
 
 func (h *HTTP) changehostname(ctx echo.Context) error {
 	hostname := ctx.QueryParam("hostname")
-	if hostname == "" {
-		return echo.NewHTTPError(http.StatusNotFound, "Not found - hostname is null")
+
+	re := regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9\-]+[a-zA-Z0-9]$`)
+	if !re.MatchString(hostname) || hostname == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - hostname badly formatted or null")
 	}
 
 	result, err := h.svc.ExecuteCH(hostname)
@@ -57,8 +60,8 @@ func (h *HTTP) changepassword(ctx echo.Context) error {
 
 func (h *HTTP) waitfornetworkatboot(ctx echo.Context) error {
 	action := ctx.QueryParam("action")
-	if action == "" {
-		return echo.NewHTTPError(http.StatusNotFound, "Not found - action is null")
+	if err := ActionCheck(action); err != nil {
+		return err
 	}
 
 	result, err := h.svc.ExecuteWNB(action)
@@ -71,8 +74,8 @@ func (h *HTTP) waitfornetworkatboot(ctx echo.Context) error {
 
 func (h *HTTP) overscan(ctx echo.Context) error {
 	action := ctx.QueryParam("action")
-	if action == "" {
-		return echo.NewHTTPError(http.StatusNotFound, "Not found - action is null")
+	if err := ActionCheck(action); err != nil {
+		return err
 	}
 
 	result, err := h.svc.ExecuteOV(action)
@@ -81,4 +84,13 @@ func (h *HTTP) overscan(ctx echo.Context) error {
 	}
 
 	return ctx.JSON(http.StatusOK, result)
+}
+
+func ActionCheck(action string) error {
+	re := regexp.MustCompile(`enable|disable`)
+	if !re.MatchString(action) || action == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - bad action type or action type is null")
+	} else {
+		return nil
+	}
 }

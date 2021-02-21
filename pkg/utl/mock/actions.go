@@ -14,6 +14,7 @@ type Actions struct {
 	ChangePasswordFn               func(arg interface{}) (rpi.Exec, error)
 	WaitForNetworkAtBootFn         func(arg interface{}) (rpi.Exec, error)
 	DisableOrEnableOverscanFn      func(arg interface{}) (rpi.Exec, error)
+	CommentOverscanFn              func(arg interface{}) (rpi.Exec, error)
 }
 
 // DeleteFile mock
@@ -54,4 +55,9 @@ func (a Actions) WaitForNetworkAtBoot(arg interface{}) (rpi.Exec, error) {
 // DisableOrEnableOverscan mock
 func (a Actions) DisableOrEnableOverscan(arg interface{}) (rpi.Exec, error) {
 	return a.DisableOrEnableOverscanFn(arg)
+}
+
+// CommentOverscan mock
+func (a Actions) CommentOverscan(arg interface{}) (rpi.Exec, error) {
+	return a.CommentOverscanFn(arg)
 }

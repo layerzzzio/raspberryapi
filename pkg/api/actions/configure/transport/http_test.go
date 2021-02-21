@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/labstack/echo/v4"
 	"github.com/raspibuddy/rpi"
 	"github.com/raspibuddy/rpi/pkg/api/actions/configure"
 	"github.com/raspibuddy/rpi/pkg/api/actions/configure/transport"
@@ -36,8 +37,18 @@ func TestExecuteCH(t *testing.T) {
 			wantedStatus: http.StatusNotFound,
 		},
 		{
+			name:         "error: hostname badly formatted",
+			req:          "?hostname=jkfd@jkfdkd.com",
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name:         "error: hostname nil",
+			req:          "?hostname=",
+			wantedStatus: http.StatusNotFound,
+		},
+		{
 			name: "error: ExecuteCH result is nil",
-			req:  "?hostname=new_hostname",
+			req:  "?hostname=new-hostname",
 			consys: &mocksys.Action{
 				ExecuteCHFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
 					return rpi.Action{}, errors.New("test error")
@@ -48,7 +59,7 @@ func TestExecuteCH(t *testing.T) {
 		{
 			name:         "success",
 			wantedStatus: http.StatusOK,
-			req:          "?hostname=new_hostname",
+			req:          "?hostname=new-hostname",
 			consys: &mocksys.Action{
 				ExecuteCHFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
 					return rpi.Action{
@@ -185,6 +196,42 @@ func TestExecuteCP(t *testing.T) {
 	}
 }
 
+func TestActionCheck(t *testing.T) {
+	cases := []struct {
+		name       string
+		action     string
+		wantedResp error
+	}{
+		{
+			name:       "error: bad action type",
+			action:     "dummyaction",
+			wantedResp: echo.NewHTTPError(http.StatusNotFound, "Not found - bad action type or action type is null"),
+		},
+		{
+			name:       "error: null action type",
+			action:     "dummyaction",
+			wantedResp: echo.NewHTTPError(http.StatusNotFound, "Not found - bad action type or action type is null"),
+		},
+		{
+			name:       "success: enable",
+			action:     "enable",
+			wantedResp: nil,
+		},
+		{
+			name:       "success: disable",
+			action:     "disable",
+			wantedResp: nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			res := transport.ActionCheck(tc.action)
+			assert.Equal(t, tc.wantedResp, res)
+		})
+	}
+}
+
 func TestExecuteWNB(t *testing.T) {
 	var response rpi.Action
 
@@ -203,6 +250,11 @@ func TestExecuteWNB(t *testing.T) {
 		{
 			name:         "error: action enable is empty",
 			req:          "?action=",
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name:         "error: bad action type",
+			req:          "?action=dummyaction",
 			wantedStatus: http.StatusNotFound,
 		},
 		{
@@ -288,6 +340,11 @@ func TestExecuteOV(t *testing.T) {
 		{
 			name:         "error: action enable is empty",
 			req:          "?action=",
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name:         "error: bad action type",
+			req:          "?action=dummyaction",
 			wantedStatus: http.StatusNotFound,
 		},
 		{

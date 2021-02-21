@@ -34,6 +34,7 @@ type Actions interface {
 	ChangePassword(interface{}) (rpi.Exec, error)
 	WaitForNetworkAtBoot(interface{}) (rpi.Exec, error)
 	DisableOrEnableOverscan(interface{}) (rpi.Exec, error)
+	CommentOverscan(interface{}) (rpi.Exec, error)
 }
 
 // New creates a CONSYS application service instance.

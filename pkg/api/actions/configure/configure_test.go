@@ -1,9 +1,11 @@
 package configure_test
 
 import (
+	"net/http"
 	"testing"
 	"time"
 
+	"github.com/labstack/echo"
 	"github.com/raspibuddy/rpi"
 	"github.com/raspibuddy/rpi/pkg/api/actions/configure"
 	"github.com/raspibuddy/rpi/pkg/utl/actions"
@@ -322,8 +324,8 @@ func TestExecuteOV(t *testing.T) {
 		wantedErr  error
 	}{
 		{
-			name:   "success",
-			action: "dummyaction",
+			name:   "error",
+			action: "enable-xxx",
 			plan: map[int](map[int]actions.Func){
 				1: {
 					1: {
@@ -332,7 +334,27 @@ func TestExecuteOV(t *testing.T) {
 						Argument: []interface{}{
 							actions.EnableOrDisableConfig{
 								DirOrFilePath: "path",
-								Action:        "action",
+								Action:        "enable",
+							},
+						},
+					},
+				},
+			},
+			wantedData: rpi.Action{},
+			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "bad action type: enable or disable overscan failed"),
+		},
+		{
+			name:   "success",
+			action: "enable",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      actions.DisableOrEnableOverscan,
+						Reference: actions.DisableOrEnableOverscan,
+						Argument: []interface{}{
+							actions.EnableOrDisableConfig{
+								DirOrFilePath: "path",
+								Action:        "enable",
 							},
 						},
 					},
@@ -379,6 +401,107 @@ func TestExecuteOV(t *testing.T) {
 						EndTime:    2,
 						ExitStatus: 0,
 						Stdout:     "path-enable",
+					},
+				},
+				ExitStatus: 0,
+				StartTime:  2,
+				EndTime:    uint64(time.Now().Unix()),
+			},
+			wantedErr: nil,
+		},
+		{
+			name:   "success",
+			action: "disable",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      actions.DisableOrEnableOverscan,
+						Reference: actions.DisableOrEnableOverscan,
+						Argument: []interface{}{
+							actions.EnableOrDisableConfig{
+								DirOrFilePath: "path",
+								Action:        "enable",
+							},
+						},
+					},
+				},
+				2: {
+					1: {
+						Name:      actions.CommentOverscan,
+						Reference: actions.CommentOverscan,
+						Argument: []interface{}{
+							actions.CommentOrUncommentConfig{
+								DirOrFilePath: "path",
+								Action:        "comment",
+							},
+						},
+					},
+				},
+			},
+			actions: &mock.Actions{
+				DisableOrEnableOverscanFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       actions.DisableOrEnableOverscan,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					}, nil
+				},
+				CommentOverscanFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       actions.CommentOverscan,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-comment",
+					}, nil
+				},
+			},
+			consys: &mocksys.Action{
+				ExecuteOVFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.Overscan,
+						NumberOfSteps: 1,
+						Progress: map[string]rpi.Exec{
+							"1": {
+								Name:       actions.DisableOrEnableOverscan,
+								StartTime:  1,
+								EndTime:    2,
+								ExitStatus: 0,
+								Stdout:     "path-enable",
+							},
+							"2": {
+								Name:       actions.CommentOverscan,
+								StartTime:  1,
+								EndTime:    2,
+								ExitStatus: 0,
+								Stdout:     "path-comment",
+							},
+						},
+						ExitStatus: 0,
+						StartTime:  2,
+						EndTime:    uint64(time.Now().Unix()),
+					}, nil
+				},
+			},
+			wantedData: rpi.Action{
+				Name:          actions.Overscan,
+				NumberOfSteps: 1,
+				Progress: map[string]rpi.Exec{
+					"1": {
+						Name:       actions.DisableOrEnableOverscan,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					},
+					"2": {
+						Name:       actions.CommentOverscan,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-comment",
 					},
 				},
 				ExitStatus: 0,

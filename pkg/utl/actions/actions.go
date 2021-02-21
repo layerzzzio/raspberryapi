@@ -574,8 +574,8 @@ func (s Service) DisableOrEnableOverscan(arg interface{}) (rpi.Exec, error) {
 
 // CommentOrUncommentConfig is the argument for comment or uncomment methods
 type CommentOrUncommentConfig struct {
-	Action        string
 	DirOrFilePath string
+	Action        string
 }
 
 // CommentOverscan comments overscan lines
