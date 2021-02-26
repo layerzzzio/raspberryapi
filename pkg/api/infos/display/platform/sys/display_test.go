@@ -21,7 +21,8 @@ func TestList(t *testing.T) {
 			name: "success: overscan true",
 			readLines: []string{
 				"line1",
-				"disable_overscan=0",
+				" ",
+				"     disable_overscan     =    0  #random bash comment",
 				"line3",
 			},
 			wantedData: rpi.Display{IsOverscan: true},
@@ -32,6 +33,16 @@ func TestList(t *testing.T) {
 			readLines: []string{
 				"line1",
 				"#disable_overscan=1",
+				"line3",
+			},
+			wantedData: rpi.Display{IsOverscan: false},
+			wantedErr:  nil,
+		},
+		{
+			name: "success: overscan false with whitespaces",
+			readLines: []string{
+				"line1",
+				"  #disable_overscan =   1 ",
 				"line3",
 			},
 			wantedData: rpi.Display{IsOverscan: false},

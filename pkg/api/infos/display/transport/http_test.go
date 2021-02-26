@@ -39,20 +39,20 @@ func TestList(t *testing.T) {
 			},
 			wantedStatus: http.StatusInternalServerError,
 		},
-		// {
-		// 	name: "success",
-		// 	dissys: &mocksys.Display{
-		// 		ListFn: func([]string) (rpi.Display, error) {
-		// 			return rpi.Display{
-		// 				IsOverscan: true,
-		// 			}, nil
-		// 		},
-		// 	},
-		// 	wantedStatus: http.StatusOK,
-		// 	wantedResp: rpi.Display{
-		// 		IsOverscan: true,
-		// 	},
-		// },
+		{
+			name: "success",
+			dissys: &mocksys.Display{
+				ListFn: func([]string) (rpi.Display, error) {
+					return rpi.Display{
+						IsOverscan: true,
+					}, nil
+				},
+			},
+			wantedStatus: http.StatusOK,
+			wantedResp: rpi.Display{
+				IsOverscan: true,
+			},
+		},
 	}
 
 	for _, tc := range cases {

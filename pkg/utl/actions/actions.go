@@ -1,7 +1,6 @@
 package actions
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"io"
@@ -44,17 +43,17 @@ var (
 	Uncomment = "uncomment"
 
 	// IpRegex is the regex used to detect ip addresses in strings
-	HostnameChangeInHostsRegex = `^127.0.1.1.*`
+	HostnameChangeInHostsRegex = `^\s*127.0.1.1.*`
 	// IpRegex = "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
 
 	// OverscanRegex is the regex used to detect disable_overscan variable in /boot/config.txt
-	DisableOrEnableOverscanRegex = `^#?disable_overscan.*`
+	DisableOrEnableOverscanRegex = `^\s*#?\s*disable_overscan\s*=.*`
 
 	// CommentOverscanRegex is the regex used to detect overscan variable in /boot/config.txt
-	CommentOverscanRegex = `^overscan_.*`
+	CommentOverscanRegex = `^\s*overscan_(left|right|top|bottom)\s*=.*`
 
 	// UncommentOverscanRegex is the regex used to detect overscan variable in /boot/config.txt
-	UncommentOverscanRegex = `^#overscan_.*`
+	UncommentOverscanRegex = `^\s*#?\s*overscan_(left|right|bottom|top)\s*=.*`
 
 	// Separator separates parent and child execution
 	Separator = "<|>"
@@ -365,6 +364,8 @@ func (s Service) ChangeHostnameInHostsFile(arg interface{}) (rpi.Exec, error) {
 				},
 				nil,
 			},
+			ToAddIfNoMatch: []string{"127.0.1.1		" + hostname},
+			HasUniqueLines: true,
 		})
 
 		if err != nil {
@@ -533,8 +534,6 @@ func (s Service) DisableOrEnableOverscan(arg interface{}) (rpi.Exec, error) {
 	var stdErr string
 	var newData string
 
-	fmt.Println(action)
-
 	if action == Enable {
 		newData = "disable_overscan=0"
 	} else if action == Disable {
@@ -552,6 +551,8 @@ func (s Service) DisableOrEnableOverscan(arg interface{}) (rpi.Exec, error) {
 				nil,
 				&EntireLine{NewData: newData},
 			},
+			HasUniqueLines: true,
+			ToAddIfNoMatch: []string{newData},
 		})
 
 		if err != nil {
@@ -598,12 +599,18 @@ func (s Service) CommentOverscan(arg interface{}) (rpi.Exec, error) {
 	startTime := uint64(time.Now().Unix())
 	exitStatus := 0
 	var stdErr string
-
 	var regex string
+
+	var defaultData []string
+
 	if action == "comment" {
 		regex = CommentOverscanRegex
-	} else if action == "uncomment" {
-		regex = UncommentOverscanRegex
+		defaultData = []string{
+			"#overscan_left=16",
+			"#overscan_right=16",
+			"#overscan_top=16",
+			"#overscan_bottom=16",
+		}
 	} else {
 		exitStatus = 1
 		stdErr = "bad action type"
@@ -611,9 +618,11 @@ func (s Service) CommentOverscan(arg interface{}) (rpi.Exec, error) {
 
 	if exitStatus == 0 {
 		err := CommentOrUncommentLineInFile(CommentLineInFileArg{
-			File:   path,
-			Regex:  regex,
-			Action: action,
+			File:           path,
+			Regex:          regex,
+			Action:         action,
+			ToAddIfNoMatch: defaultData,
+			HasUniqueLines: true,
 		})
 
 		if err != nil {
@@ -900,10 +909,12 @@ func OverwriteToFile(args WriteToFileArg) error {
 
 // ReplaceLineFile is the argument to function ReplaceLineFile
 type ReplaceLineInFileArg struct {
-	File        string
-	Permissions uint32 // 0644, 0666, etc.
-	Regex       string
-	ReplaceType ReplaceType
+	File           string
+	Permissions    uint32 // 0644, 0666, etc.
+	Regex          string
+	ReplaceType    ReplaceType
+	ToAddIfNoMatch []string
+	HasUniqueLines bool
 }
 
 // ReplaceType lists all the possible replace types
@@ -939,6 +950,19 @@ func GetReplaceType(repType ReplaceType) (*string, error) {
 	return &result, nil
 }
 
+func RemoveDuplicateStrings(strSlice []string) []string {
+	keys := make(map[string]bool)
+	list := []string{}
+
+	for _, v := range strSlice {
+		if _, value := keys[v]; !value {
+			keys[v] = true
+			list = append(list, v)
+		}
+	}
+	return list
+}
+
 // ReplaceLineInFile replace one or multiple line in file
 func ReplaceLineInFile(args ReplaceLineInFileArg) error {
 	repType, err := GetReplaceType(args.ReplaceType)
@@ -946,25 +970,20 @@ func ReplaceLineInFile(args ReplaceLineInFileArg) error {
 		return fmt.Errorf("getting replace type failed")
 	}
 
-	f, err := os.Open(args.File)
+	rawLines, err := infos.New().ReadFile(args.File)
 	if err != nil {
 		return fmt.Errorf("opening file failed")
 	}
 
-	// replacing line logic
-	// source: https://stackoverflow.com/questions/8757389/reading-a-file-line-by-line-in-go
-	reader := bufio.NewReader(f)
-	var line string
-	allLines := []string{}
+	if args.HasUniqueLines {
+		rawLines = RemoveDuplicateStrings(rawLines)
+	}
 
-	for {
-		line, err = reader.ReadString('\n')
-		if err != nil && err != io.EOF {
-			break
-		}
+	newLines := []string{}
+	matchCounter := 0
 
+	for _, line := range rawLines {
 		if line != "" {
-
 			// apply the replace type here
 			re := regexp.MustCompile(args.Regex)
 			if re.MatchString(line) {
@@ -973,33 +992,53 @@ func ReplaceLineInFile(args ReplaceLineInFileArg) error {
 					line = strings.ReplaceAll(
 						line,
 						args.ReplaceType.AllOccurrences.Occurrence,
-						args.ReplaceType.AllOccurrences.NewData)
+						args.ReplaceType.AllOccurrences.NewData,
+					)
+					line = strings.TrimSpace(line)
 				case RepTypeEntireLine:
 					line = args.ReplaceType.EntireLine.NewData
 				default:
 					line = args.ReplaceType.EntireLine.NewData
 				}
+				matchCounter++
 			}
-
-			allLines = append(allLines, strings.TrimSuffix(line, "\n"))
-		}
-
-		if err != nil {
-			break
+			newLines = append(newLines, strings.TrimSuffix(line, "\n"))
 		}
 	}
 
-	if err != io.EOF {
-		return fmt.Errorf("reading file failed")
+	if args.ToAddIfNoMatch != nil {
+		// we want to make sure there is as much match
+		// as the number of matched lines to modify
+		// ----------------------
+		// example: only 1 match instead of 2 theoretically
+		// ----------------------
+		// overscan_top=1
+		// overscan_bottomX=2
+		// in this case there is only 1 match (with overscan_top) instead of 2
+		// indeed we also want to work with line overscan_bottomX=2
+		// so the only choice here, to make sure 2 lines are added, is to add default data.
+		// ----------------------
+		// A case that is not taken into account is when
+		// we have two identical matches and one non-match
+		// while we would like to have 2 matches for 2 different values
+		// This case can happens only is HasUniqueLine = False <- not safe
+		// ----------------------
+		// overscan_top=1
+		// overscan_top=1
+		// overscan_bottomX=2
+		if matchCounter != len(args.ToAddIfNoMatch) {
+			newLines = append(newLines, args.ToAddIfNoMatch...)
+		}
 	}
 
-	if err = f.Close(); err != nil {
-		return fmt.Errorf("closing file failed")
+	if args.HasUniqueLines {
+		newLines = RemoveDuplicateStrings(newLines)
 	}
 
+	// allLines is deduplicated
 	if err = OverwriteToFile(WriteToFileArg{
 		File:        args.File,
-		Data:        allLines,
+		Data:        newLines,
 		Multiline:   true,
 		Permissions: args.Permissions,
 	}); err != nil {
@@ -1035,64 +1074,60 @@ func AddLinesEndOfFile(args WriteToFileArg) error {
 
 // CommentLineInFileArg is the argument to function CommentLineInFile
 type CommentLineInFileArg struct {
-	File        string
-	Permissions uint32 // 0644, 0666, etc.
-	Regex       string
-	Action      string
+	File           string
+	Permissions    uint32 // 0644, 0666, etc.
+	Regex          string
+	Action         string
+	ToAddIfNoMatch []string
+	HasUniqueLines bool
 }
 
 // CommentLineInFile comments one or multiple line in file
 func CommentOrUncommentLineInFile(args CommentLineInFileArg) error {
-	f, err := os.Open(args.File)
+	rawLines, err := infos.New().ReadFile(args.File)
 	if err != nil {
 		return fmt.Errorf("opening file failed")
 	}
 
-	// replacing line logic
-	// source: https://stackoverflow.com/questions/8757389/reading-a-file-line-by-line-in-go
-	reader := bufio.NewReader(f)
-	var line string
-	allLines := []string{}
+	if args.HasUniqueLines {
+		rawLines = RemoveDuplicateStrings(rawLines)
+	}
 
-	for {
-		line, err = reader.ReadString('\n')
-		if err != nil && err != io.EOF {
-			break
-		}
+	newLines := []string{}
+	matchCounter := 0
 
+	for _, line := range rawLines {
 		if line != "" {
 			// apply the replace type here
 			re := regexp.MustCompile(args.Regex)
 			if re.MatchString(line) {
+				line = strings.TrimSpace(line)
 				if args.Action == Comment {
 					line = "#" + line
 				} else if args.Action == Uncomment {
-					fmt.Println(line)
-					line = strings.Replace(line, "#", "", 1)
+					line = strings.TrimSpace(strings.Replace(line, "#", "", 1))
 				} else {
 					return fmt.Errorf("bad action: comment or uncomment")
 				}
+				matchCounter++
 			}
-
-			allLines = append(allLines, strings.TrimSuffix(line, "\n"))
-		}
-
-		if err != nil {
-			break
+			newLines = append(newLines, strings.TrimSuffix(line, "\n"))
 		}
 	}
 
-	if err != io.EOF {
-		return fmt.Errorf("reading file failed")
+	if args.ToAddIfNoMatch != nil {
+		if len(args.ToAddIfNoMatch) != matchCounter {
+			newLines = append(newLines, args.ToAddIfNoMatch...)
+		}
 	}
 
-	if err = f.Close(); err != nil {
-		return fmt.Errorf("closing file failed")
+	if args.HasUniqueLines {
+		newLines = RemoveDuplicateStrings(newLines)
 	}
 
 	if err = OverwriteToFile(WriteToFileArg{
 		File:        args.File,
-		Data:        allLines,
+		Data:        newLines,
 		Multiline:   true,
 		Permissions: args.Permissions,
 	}); err != nil {
