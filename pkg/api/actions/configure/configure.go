@@ -1,8 +1,12 @@
 package configure
 
 import (
+	"net/http"
+
+	"github.com/labstack/echo/v4"
 	"github.com/raspibuddy/rpi"
 	"github.com/raspibuddy/rpi/pkg/utl/actions"
+	"github.com/raspibuddy/rpi/pkg/utl/infos"
 )
 
 // ExecuteCH changes hostname and returns an action.
@@ -10,7 +14,7 @@ func (con *Configure) ExecuteCH(hostname string) (rpi.Action, error) {
 	plan := map[int](map[int]actions.Func){
 		1: {
 			1: {
-				Name:      actions.ChangeHostname,
+				Name:      actions.ChangeHostnameInHostsFile,
 				Reference: con.a.ChangeHostnameInHostsFile,
 				Argument: []interface{}{
 					actions.DataToFile{
@@ -20,7 +24,7 @@ func (con *Configure) ExecuteCH(hostname string) (rpi.Action, error) {
 				},
 			},
 			2: {
-				Name:      actions.ChangeHostname,
+				Name:      actions.ChangeHostnameInHostnameFile,
 				Reference: con.a.ChangeHostnameInHostnameFile,
 				Argument: []interface{}{
 					actions.DataToFile{
@@ -63,9 +67,9 @@ func (con *Configure) ExecuteWNB(action string) (rpi.Action, error) {
 				Name:      actions.WaitForNetworkAtBoot,
 				Reference: con.a.WaitForNetworkAtBoot,
 				Argument: []interface{}{
-					actions.WNB{
-						Directory: "/etc/systemd/system/dhcpcd.service.d",
-						Action:    action,
+					actions.EnableOrDisableConfig{
+						DirOrFilePath: "/etc/systemd/system/dhcpcd.service.d",
+						Action:        action,
 					},
 				},
 			},
@@ -73,4 +77,57 @@ func (con *Configure) ExecuteWNB(action string) (rpi.Action, error) {
 	}
 
 	return con.consys.ExecuteWNB(plan)
+}
+
+// ExecuteOV enable or disable overscan and returns an action
+func (con *Configure) ExecuteOV(action string) (rpi.Action, error) {
+	var plan map[int]map[int]actions.Func
+
+	if action == "enable" {
+		plan = map[int](map[int]actions.Func){
+			1: {
+				1: {
+					Name:      actions.DisableOrEnableOverscan,
+					Reference: con.a.DisableOrEnableOverscan,
+					Argument: []interface{}{
+						actions.EnableOrDisableConfig{
+							DirOrFilePath: infos.BootConfig,
+							Action:        action,
+						},
+					},
+				},
+			},
+		}
+	} else if action == "disable" {
+		plan = map[int](map[int]actions.Func){
+			1: {
+				1: {
+					Name:      actions.DisableOrEnableOverscan,
+					Reference: con.a.DisableOrEnableOverscan,
+					Argument: []interface{}{
+						actions.EnableOrDisableConfig{
+							DirOrFilePath: infos.BootConfig,
+							Action:        action,
+						},
+					},
+				},
+			},
+			2: {
+				1: {
+					Name:      actions.CommentOverscan,
+					Reference: con.a.CommentOverscan,
+					Argument: []interface{}{
+						actions.CommentOrUncommentConfig{
+							DirOrFilePath: infos.BootConfig,
+							Action:        "comment",
+						},
+					},
+				},
+			},
+		}
+	} else {
+		return rpi.Action{}, echo.NewHTTPError(http.StatusInternalServerError, "bad action type: enable or disable overscan failed")
+	}
+
+	return con.consys.ExecuteOV(plan)
 }

@@ -34,7 +34,7 @@ func TestDeleteFile(t *testing.T) {
 	}{
 		{
 			name:             "error : no such file or directory",
-			argument:         actions.DF{Path: ""},
+			argument:         actions.FileOrDirectory{Path: ""},
 			wantedExitStatus: 1,
 			wantedStderr:     "remove : no such file or directory",
 			wantedErr:        nil,
@@ -62,7 +62,7 @@ func TestDeleteFile(t *testing.T) {
 		},
 		{
 			name:             "success",
-			argument:         actions.DF{Path: dummyfilepath},
+			argument:         actions.FileOrDirectory{Path: dummyfilepath},
 			wantedExitStatus: 0,
 			wantedStderr:     "",
 			wantedErr:        nil,
@@ -1417,13 +1417,13 @@ func TestGetReplaceType(t *testing.T) {
 
 func TestReplaceLineInFile(t *testing.T) {
 	cases := []struct {
-		name               string
-		args               actions.ReplaceLineInFileArg
-		isSuccess          bool
-		originalLine       string
-		modifiedLine       string
-		wantedData         error
-		wantedNewDataFound bool
+		name          string
+		args          actions.ReplaceLineInFileArg
+		isSuccess     bool
+		originalLines []string
+		addLines      []string
+		wantedLines   []string
+		wantedData    error
 	}{
 		{
 			name:      "success with replace type all_occurrences",
@@ -1439,11 +1439,22 @@ func TestReplaceLineInFile(t *testing.T) {
 					},
 					nil,
 				},
+				HasUniqueLines: true,
+				ToAddIfNoMatch: []string{"127.0.1.1		new_hostname"},
 			},
-			originalLine: "127.0.1.1		raspberrypi",
-			modifiedLine: "127.0.1.1		new_hostname",
-			wantedData:         nil,
-			wantedNewDataFound: true,
+			originalLines: []string{
+				"dummy line 1",
+				"dummy line 2 127.0.1.1",
+			},
+			addLines: []string{
+				"     127.0.1.1		raspberrypi",
+			},
+			wantedData: nil,
+			wantedLines: []string{
+				"dummy line 1",
+				"dummy line 2 127.0.1.1",
+				"127.0.1.1		new_hostname",
+			},
 		},
 		{
 			name:      "success with replace type entire_line",
@@ -1458,11 +1469,55 @@ func TestReplaceLineInFile(t *testing.T) {
 						NewData: "new_hostname",
 					},
 				},
+				HasUniqueLines: true,
+				ToAddIfNoMatch: []string{"new_hostname"},
 			},
-			originalLine: "127.0.1.1		raspberrypi",
-			modifiedLine:       "new_hostname",
-			wantedData:         nil,
-			wantedNewDataFound: true,
+			originalLines: []string{
+				"dummy line 1",
+				"dummy line 2 127.0.1.1",
+			},
+			addLines: []string{
+				"        127.0.1.1		raspberrypi #random comment",
+			},
+			wantedData: nil,
+			wantedLines: []string{
+				"dummy line 1",
+				"dummy line 2 127.0.1.1",
+				"new_hostname",
+			},
+		},
+		{
+			name:      "success: more matches than wanted",
+			isSuccess: true,
+			args: actions.ReplaceLineInFileArg{
+				File:        "./test_write_to_file",
+				Permissions: 0755,
+				Regex:       actions.HostnameChangeInHostsRegex,
+				ReplaceType: actions.ReplaceType{
+					nil,
+					&actions.EntireLine{
+						NewData: "new_hostname",
+					},
+				},
+				HasUniqueLines: false,
+				ToAddIfNoMatch: []string{"new_hostname"},
+			},
+			originalLines: []string{
+				"dummy line 1",
+				"dummy line 2 127.0.1.1",
+			},
+			addLines: []string{
+				"127.0.1.1		raspberrypi #random comment",
+				"127.0.1.1		raspberrypi #random comment",
+			},
+			wantedData: nil,
+			wantedLines: []string{
+				"dummy line 1",
+				"dummy line 2 127.0.1.1",
+				"new_hostname", // the first match
+				"new_hostname", // the second match
+				"new_hostname", // the default value to add
+			},
 		},
 		{
 			name:      "success but no replacement because no match",
@@ -1478,10 +1533,82 @@ func TestReplaceLineInFile(t *testing.T) {
 					},
 				},
 			},
-			originalLine: "0.0.0.0		raspberrypi",
-			modifiedLine:       "",
-			wantedData:         nil,
-			wantedNewDataFound: true,
+			originalLines: []string{
+				"dummy line 1",
+				"dummy line 2 127.0.1.1",
+			},
+			addLines: []string{
+				"0.0.0.0		raspberrypi",
+			},
+			wantedData: nil,
+			wantedLines: []string{
+				"dummy line 1",
+				"dummy line 2 127.0.1.1",
+				"0.0.0.0		raspberrypi",
+			},
+		},
+		{
+			name:      "success: no match but add default data & duplicates okay",
+			isSuccess: true,
+			args: actions.ReplaceLineInFileArg{
+				File:        "./test_write_to_file",
+				Permissions: 0755,
+				Regex:       actions.HostnameChangeInHostsRegex,
+				ReplaceType: actions.ReplaceType{
+					nil,
+					&actions.EntireLine{
+						NewData: "new_hostname",
+					},
+				},
+				ToAddIfNoMatch: []string{"127.0.1.1_xxx_new_hostname"},
+			},
+			originalLines: []string{
+				"dummy line 1",
+				"dummy line 2 127.0.1.1",
+			},
+			addLines: []string{
+				"0.0.0.0		raspberrypi",
+			},
+			wantedData: nil,
+			wantedLines: []string{
+				"dummy line 1",
+				"dummy line 2 127.0.1.1",
+				"0.0.0.0		raspberrypi",
+				"127.0.1.1_xxx_new_hostname",
+			},
+		},
+		{
+			name:      "success: no match but add default data & uniques lines",
+			isSuccess: true,
+			args: actions.ReplaceLineInFileArg{
+				File:        "./test_write_to_file",
+				Permissions: 0755,
+				Regex:       actions.HostnameChangeInHostsRegex,
+				ReplaceType: actions.ReplaceType{
+					nil,
+					&actions.EntireLine{
+						NewData: "new_hostname",
+					},
+				},
+				ToAddIfNoMatch: []string{"127.0.1.1_xxx_new_hostname", "127.0.1.1_xxx_new_hostname"},
+				HasUniqueLines: true,
+			},
+
+			originalLines: []string{
+				"dummy line 1",
+				"dummy line 2 127.0.1.1",
+			},
+			addLines: []string{
+				"0.0.0.0		raspberrypi",
+				"0.0.0.0		raspberrypi",
+			},
+			wantedData: nil,
+			wantedLines: []string{
+				"dummy line 1",
+				"dummy line 2 127.0.1.1",
+				"0.0.0.0		raspberrypi",
+				"127.0.1.1_xxx_new_hostname",
+			},
 		},
 	}
 
@@ -1490,13 +1617,8 @@ func TestReplaceLineInFile(t *testing.T) {
 			if tc.isSuccess {
 				// create and populate file
 				if err := actions.OverwriteToFile(actions.WriteToFileArg{
-					File: tc.args.File,
-					Data: []string{
-						"dummy line 1",
-						"dummy line 2 127.0.1.1",
-						tc.originalLine,
-						"127.0.1.1		raspberrypi",
-					},
+					File:        tc.args.File,
+					Data:        append(tc.originalLines, tc.addLines...),
 					Multiline:   true,
 					Permissions: 0755,
 				}); err != nil {
@@ -1512,7 +1634,7 @@ func TestReplaceLineInFile(t *testing.T) {
 					log.Fatal(err)
 				}
 
-				fmt.Println(readLines)
+				// fmt.Println(readLines)
 				// --> replace all occurrences:
 				// [dummy line 1  dummy line 2 127.0.1.1  127.0.1.1		new_hostname  127.0.1.1		new_hostname  ]
 				// --> replace entire line:
@@ -1522,15 +1644,7 @@ func TestReplaceLineInFile(t *testing.T) {
 					fmt.Println(e)
 				}
 
-				// assert statements
-				isFound := false
-				for _, s := range readLines {
-					if tc.modifiedLine == s {
-						isFound = true
-					}
-				}
-
-				assert.Equal(t, tc.wantedNewDataFound, isFound)
+				assert.Equal(t, tc.wantedLines, readLines)
 				assert.Equal(t, tc.wantedData, replaceLineInFile)
 			}
 		})
@@ -1539,14 +1653,15 @@ func TestReplaceLineInFile(t *testing.T) {
 
 func TestChangeHostnameInHostnameFile(t *testing.T) {
 	cases := []struct {
-		name               string
-		argument           interface{}
-		isSuccess          bool
-		originalLine       string
-		wantedModifiedLine string
-		wantedExitStatus   uint8
-		wantedStderr       string
-		wantedErr          error
+		name             string
+		argument         interface{}
+		isSuccess        bool
+		originalLines    []string
+		addLines         []string
+		wantedLines      []string
+		wantedExitStatus uint8
+		wantedStderr     string
+		wantedErr        error
 	}{
 		{
 			name: "error : no such file or directory",
@@ -1579,11 +1694,17 @@ func TestChangeHostnameInHostnameFile(t *testing.T) {
 				},
 			},
 			isSuccess: true,
-			originalLine: "127.0.1.1		raspberrypi",
-			wantedModifiedLine: "new_hostname",
-			wantedExitStatus:   0,
-			wantedStderr:       "",
-			wantedErr:          nil,
+			originalLines: []string{
+				"dummy line 1",
+				"dummy line 2 127.0.1.1",
+			},
+			addLines: []string{
+				"    127.0.1.1		raspberrypi",
+			},
+			wantedLines:      []string{"new_hostname"},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
 		},
 		{
 			name: "success with regular params",
@@ -1592,11 +1713,17 @@ func TestChangeHostnameInHostnameFile(t *testing.T) {
 				Data:       "new_hostname",
 			},
 			isSuccess: true,
-			originalLine: "127.0.1.1		raspberrypi",
-			wantedModifiedLine: "new_hostname",
-			wantedExitStatus:   0,
-			wantedStderr:       "",
-			wantedErr:          nil,
+			originalLines: []string{
+				"dummy line 1",
+				"dummy line 2 127.0.1.1",
+			},
+			addLines: []string{
+				"    127.0.1.1		raspberrypi",
+			},
+			wantedLines:      []string{"new_hostname"},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
 		},
 	}
 
@@ -1609,8 +1736,8 @@ func TestChangeHostnameInHostnameFile(t *testing.T) {
 			if tc.isSuccess {
 				// create and populate file
 				if err := actions.OverwriteToFile(actions.WriteToFileArg{
-					File: dummyfilepath,
-					Data: []string{"dummy line 1", "dummy line 2 127.0.1.1", "127.0.1.1		raspberrypi"},
+					File:        dummyfilepath,
+					Data:        append(tc.originalLines, tc.addLines...),
 					Multiline:   true,
 					Permissions: 0755,
 				}); err != nil {
@@ -1629,7 +1756,7 @@ func TestChangeHostnameInHostnameFile(t *testing.T) {
 					fmt.Println(e)
 				}
 
-				assert.Equal(t, tc.wantedModifiedLine, readLines[0])
+				assert.Equal(t, tc.wantedLines, readLines)
 			} else {
 				chHostnameInHostnameFile, err = a.ChangeHostnameInHostnameFile(tc.argument)
 			}
@@ -1642,16 +1769,22 @@ func TestChangeHostnameInHostnameFile(t *testing.T) {
 }
 
 func TestChangeHostnameInHostsFile(t *testing.T) {
+	info, err := host.Info()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	cases := []struct {
-		name                  string
-		argument              interface{}
-		isSuccess             bool
-		originalLineStartWith string
-		modifiedLine          string
-		wantedNewDataFound    bool
-		wantedExitStatus      uint8
-		wantedStderr          string
-		wantedErr             error
+		name             string
+		argument         interface{}
+		isSuccess        bool
+		createFromAsset  bool
+		originalLines    []string
+		addLine          string
+		wantedLines      []string
+		wantedExitStatus uint8
+		wantedStderr     string
+		wantedErr        error
 	}{
 		{
 			name: "error : no such file or directory",
@@ -1661,7 +1794,7 @@ func TestChangeHostnameInHostsFile(t *testing.T) {
 			},
 			isSuccess:        false,
 			wantedExitStatus: 1,
-			wantedStderr:     "opening file failed",
+			wantedStderr:     "creating and opening file failed",
 			wantedErr:        nil,
 		},
 		{
@@ -1684,12 +1817,21 @@ func TestChangeHostnameInHostsFile(t *testing.T) {
 				},
 			},
 			isSuccess: true,
-			originalLineStartWith: "127.0.1.1		",
-			modifiedLine: "127.0.1.1		new_hostname",
-			wantedNewDataFound: true,
-			wantedExitStatus:   0,
-			wantedStderr:       "",
-			wantedErr:          nil,
+			addLine: "     127.0.1.1		",
+			originalLines: []string{
+				"dummy line 1",
+				"dummy line 2 127.0.1.1",
+				"yessss man",
+			},
+			wantedLines: []string{
+				"dummy line 1",
+				"dummy line 2 127.0.1.1",
+				"yessss man",
+				"127.0.1.1		new_hostname",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
 		},
 		{
 			name: "success with regular params",
@@ -1698,12 +1840,90 @@ func TestChangeHostnameInHostsFile(t *testing.T) {
 				Data:       "new_hostname",
 			},
 			isSuccess: true,
-			originalLineStartWith: "127.0.1.1		",
-			modifiedLine: "127.0.1.1		new_hostname",
-			wantedNewDataFound: true,
-			wantedExitStatus:   0,
-			wantedStderr:       "",
-			wantedErr:          nil,
+			addLine: "127.0.1.1		",
+			originalLines: []string{
+				"dummy line 1",
+				"dummy line 2 127.0.1.1",
+				"yessss man",
+			},
+			wantedLines: []string{
+				"dummy line 1",
+				"dummy line 2 127.0.1.1",
+				"yessss man",
+				"127.0.1.1		new_hostname",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+		{
+			name: "success: change hostname from asset",
+			argument: actions.DataToFile{
+				TargetFile: dummyfilepath,
+				Data:       "new_hostname",
+			},
+			isSuccess:       true,
+			createFromAsset: true,
+			wantedLines: []string{
+				"127.0.0.1	localhost",
+				"",
+				"::1		localhost ip6-localhost ip6-loopback",
+				"",
+				"ff02::1		ip6-allnodes",
+				"",
+				"ff02::2		ip6-allrouters",
+				"127.0.1.1		new_hostname",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+		{
+			name: "success: file does not exist",
+			argument: actions.DataToFile{
+				TargetFile: dummyfilepath,
+				Data:       "new_hostname",
+			},
+			isSuccess: true,
+			addLine: "127.0.1.1		",
+			originalLines: []string{
+				"dummy line 1",
+				"dummy line 2 127.0.1.1",
+				"yessss man",
+			},
+			wantedLines: []string{
+				"dummy line 1",
+				"dummy line 2 127.0.1.1",
+				"yessss man",
+				"127.0.1.1		new_hostname",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+		{
+			name: "success with no match",
+			argument: actions.DataToFile{
+				TargetFile: dummyfilepath,
+				Data:       "new_hostname",
+			},
+			isSuccess: true,
+			addLine: "XXX.0.1.1		",
+			originalLines: []string{
+				"dummy line 1",
+				"dummy line 2 127.0.1.1",
+				"yessss man",
+			},
+			wantedLines: []string{
+				"dummy line 1",
+				"dummy line 2 127.0.1.1",
+				"yessss man",
+				"XXX.0.1.1		" + info.Hostname,
+				"127.0.1.1		new_hostname",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
 		},
 	}
 
@@ -1714,24 +1934,16 @@ func TestChangeHostnameInHostsFile(t *testing.T) {
 			a := actions.New()
 
 			if tc.isSuccess {
-				info, err := host.Info()
-				if err != nil {
-					log.Fatal(err)
-				}
-
 				// create and populate file
-				if err := actions.OverwriteToFile(actions.WriteToFileArg{
-					File: dummyfilepath,
-					Data: []string{
-						"dummy line 1",
-						"dummy line 2 127.0.1.1",
-						tc.originalLineStartWith + info.Hostname,
-						"yessss man",
-					},
-					Multiline:   true,
-					Permissions: 0755,
-				}); err != nil {
-					log.Fatal(err)
+				if tc.createFromAsset == false {
+					if err := actions.OverwriteToFile(actions.WriteToFileArg{
+						File:        dummyfilepath,
+						Data:        append(tc.originalLines, []string{tc.addLine + info.Hostname}...),
+						Multiline:   true,
+						Permissions: 0755,
+					}); err != nil {
+						log.Fatal(err)
+					}
 				}
 
 				chHostnameInHostnameFile, err = a.ChangeHostnameInHostsFile(tc.argument)
@@ -1751,14 +1963,7 @@ func TestChangeHostnameInHostsFile(t *testing.T) {
 					fmt.Println(e)
 				}
 
-				// assert statements
-				isFound := false
-				for _, s := range readLines {
-					if tc.modifiedLine == s {
-						isFound = true
-					}
-				}
-				assert.Equal(t, tc.wantedNewDataFound, isFound)
+				assert.Equal(t, tc.wantedLines, readLines)
 			} else {
 				chHostnameInHostnameFile, err = a.ChangeHostnameInHostsFile(tc.argument)
 			}
@@ -1864,9 +2069,9 @@ func TestWaitForNetworkAtBoot(t *testing.T) {
 	}{
 		{
 			name: "error : no such file or directory (enable)",
-			argument: actions.WNB{
-				Directory: "",
-				Action:    actions.Enable,
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: "",
+				Action:        actions.Enable,
 			},
 			isSuccess:        false,
 			wantedExitStatus: 1,
@@ -1875,9 +2080,9 @@ func TestWaitForNetworkAtBoot(t *testing.T) {
 		},
 		{
 			name: "error : no such file or directory (disable)",
-			argument: actions.WNB{
-				Directory: "",
-				Action:    actions.Disable,
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: "",
+				Action:        actions.Disable,
 			},
 			isSuccess:        false,
 			wantedExitStatus: 1,
@@ -1886,9 +2091,9 @@ func TestWaitForNetworkAtBoot(t *testing.T) {
 		},
 		{
 			name: "error : bad action type",
-			argument: actions.WNB{
-				Directory: dummydirectorypath,
-				Action:    "dummyactiontype",
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: dummydirectorypath,
+				Action:        "dummyactiontype",
 			},
 			isSuccess:        false,
 			wantedExitStatus: 1,
@@ -1928,9 +2133,9 @@ func TestWaitForNetworkAtBoot(t *testing.T) {
 		},
 		{
 			name: "success enabling with regular params",
-			argument: actions.WNB{
-				Directory: dummydirectorypath,
-				Action:    actions.Enable,
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: dummydirectorypath,
+				Action:        actions.Enable,
 			},
 			isSuccess: true,
 			enable:    true,
@@ -1959,9 +2164,9 @@ func TestWaitForNetworkAtBoot(t *testing.T) {
 		},
 		{
 			name: "success disable with regular params",
-			argument: actions.WNB{
-				Directory: dummydirectorypath,
-				Action:    actions.Disable,
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: dummydirectorypath,
+				Action:        actions.Disable,
 			},
 			isSuccess:        true,
 			enable:           false,
@@ -2001,7 +2206,7 @@ func TestWaitForNetworkAtBoot(t *testing.T) {
 						fmt.Println(err)
 					}
 
-					fmt.Println(readLines)
+					// fmt.Println(readLines)
 
 					// assert statements
 					assert.Equal(t, tc.wantedData, readLines)
@@ -2021,6 +2226,983 @@ func TestWaitForNetworkAtBoot(t *testing.T) {
 			assert.Equal(t, tc.wantedExitStatus, waitForNetworkAtBoot.ExitStatus)
 			assert.Equal(t, tc.wantedStderr, waitForNetworkAtBoot.Stderr)
 			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
+func TestRemoveDuplicateStrings(t *testing.T) {
+	cases := []struct {
+		name       string
+		strSlice   []string
+		wantedData []string
+	}{
+		{
+			name:       "success: one duplicate",
+			strSlice:   []string{"A", "B", "B", "C", "D", "E"},
+			wantedData: []string{"A", "B", "C", "D", "E"},
+		},
+		{
+			name:       "success: five duplicates",
+			strSlice:   []string{"A", "B", "B", "B", "B", "B", "B", "C", "D", "E"},
+			wantedData: []string{"A", "B", "C", "D", "E"},
+		},
+		{
+			name:       "success: different duplicates in the middle",
+			strSlice:   []string{"A", "B", "B", "B", "B", "B", "B", "C", "D", "D", "D", "E"},
+			wantedData: []string{"A", "B", "C", "D", "E"},
+		},
+		{
+			name:       "success: different duplicates at the beginning, in the middle and at the end",
+			strSlice:   []string{"A", "A", "B", "B", "B", "B", "B", "B", "C", "D", "D", "D", "E", "E"},
+			wantedData: []string{"A", "B", "C", "D", "E"},
+		},
+		{
+			name:       "success: np duplicates",
+			strSlice:   []string{"A", "B", "C", "D", "E"},
+			wantedData: []string{"A", "B", "C", "D", "E"},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			dup := actions.RemoveDuplicateStrings(tc.strSlice)
+			assert.Equal(t, tc.wantedData, dup)
+		})
+	}
+}
+
+func TestDisableOrEnableOverscan(t *testing.T) {
+	cases := []struct {
+		name             string
+		argument         interface{}
+		isSuccess        bool
+		createFromAsset  bool
+		originalLines    []string
+		addLines         []string
+		wantedLines      []string
+		wantedExitStatus uint8
+		wantedStderr     string
+		wantedErr        error
+	}{
+		{
+			name: "error : no such file or directory (enable)",
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: "",
+				Action:        "enable",
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "creating and opening file failed",
+			wantedErr:        nil,
+		},
+		{
+			name: "error : no such file or directory (disable)",
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: "",
+				Action:        "disable",
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "creating and opening file failed",
+			wantedErr:        nil,
+		},
+		{
+			name: "error : too many arguments",
+			argument: []actions.OtherParams{
+				{Value: map[string]string{"path": dummyfilepath}},
+				{Value: map[string]string{"action": "enable"}},
+				{Value: map[string]string{"dummyarg": "dummyargvalue"}},
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "",
+			wantedErr:        &actions.Error{Arguments: []string{"path", "action"}},
+		},
+		{
+			name: "error : action not right",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"path":   dummyfilepath,
+					"action": "enable-xxx",
+				},
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "bad action type",
+			wantedErr:        nil,
+		},
+		{
+			name: "success with otherParams (enable)",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"path":   dummyfilepath,
+					"action": "enable",
+				},
+			},
+			isSuccess: true,
+			originalLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"#overscan_left=16",
+			},
+			addLines: []string{
+				"     # disable_overscan = 1",
+			},
+			wantedLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"#overscan_left=16",
+				"disable_overscan=0",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+		{
+			name: "success with regular params (enable)",
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: dummyfilepath,
+				Action:        "enable",
+			},
+			isSuccess: true,
+			originalLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"#overscan_left=16",
+			},
+			addLines: []string{
+				"  #           disable_overscan      = 1 #random comment",
+			},
+			wantedLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"#overscan_left=16",
+				"disable_overscan=0",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+		{
+			name: "success but no match (enable)",
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: dummyfilepath,
+				Action:        "enable",
+			},
+			isSuccess: true,
+			originalLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"#overscan_left=16",
+			},
+			addLines: []string{
+				"  #   #        disable_overscan      = 1 #random comment",
+			},
+			wantedLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"#overscan_left=16",
+				"  #   #        disable_overscan      = 1 #random comment",
+				"disable_overscan=0",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+		{
+			name: "success with otherParams (disable)",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"path":   dummyfilepath,
+					"action": "disable",
+				},
+			},
+			isSuccess: true,
+			originalLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"#overscan_left=16",
+			},
+			addLines: []string{
+				"    disable_overscan  =   0",
+			},
+			wantedLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"#overscan_left=16",
+				"#disable_overscan=1",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+		{
+			name: "success with regular params (disable)",
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: dummyfilepath,
+				Action:        "disable",
+			},
+			isSuccess: true,
+			originalLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"#overscan_left=16",
+			},
+			addLines: []string{
+				"    disable_overscan  =   0 # random comment",
+			},
+			wantedLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"#overscan_left=16",
+				"#disable_overscan=1",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+		{
+			name: "success with regular params but no match(disable)",
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: dummyfilepath,
+				Action:        "disable",
+			},
+			isSuccess: true,
+			originalLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"#overscan_left=16",
+			},
+			addLines: []string{
+				"  ABC  disable_overscan  =   0 # random comment",
+			},
+			wantedLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"#overscan_left=16",
+				"  ABC  disable_overscan  =   0 # random comment",
+				"#disable_overscan=1",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+		{
+			name: "success with regular params (disable)",
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: dummyfilepath,
+				Action:        "disable",
+			},
+			isSuccess: true,
+			originalLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"#overscan_left=16",
+			},
+			addLines: []string{
+				"    disable_overscan  =   0 # random comment",
+			},
+			wantedLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"#overscan_left=16",
+				"#disable_overscan=1",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+		{
+			name: "success: created from asset (disable)",
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: dummyfilepath,
+				Action:        "disable",
+			},
+			isSuccess:       true,
+			createFromAsset: true,
+			wantedLines: []string{
+				"# For more options and information see",
+				"# http://rpf.io/configtxt",
+				"# Some settings may impact device functionality. See link above for details",
+				"",
+				"# uncomment if you get no picture on HDMI for a default \"safe\" mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"#disable_overscan=1",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"#overscan_left=16",
+				"#overscan_right=16",
+				"#overscan_top=16",
+				"#overscan_bottom=16",
+				"# uncomment to force a console size. By default it will be display's size minus",
+				"# overscan.",
+				"#framebuffer_width=1280",
+				"#framebuffer_height=720",
+				"# uncomment if hdmi display is not detected and composite is being output",
+				"#hdmi_force_hotplug=1",
+				"# uncomment to force a specific HDMI mode (this will force VGA)",
+				"#hdmi_group=1",
+				"#hdmi_mode=1",
+				"# uncomment to force a HDMI mode rather than DVI. This can make audio work in",
+				"# DMT (computer monitor) modes",
+				"#hdmi_drive=2",
+				"# uncomment to increase signal to HDMI, if you have interference, blanking, or",
+				"# no display",
+				"#config_hdmi_boost=4",
+				"# uncomment for composite PAL",
+				"#sdtv_mode=2",
+				"#uncomment to overclock the arm. 700 MHz is the default.",
+				"#arm_freq=800",
+				"# Uncomment some or all of these to enable the optional hardware interfaces",
+				"#dtparam=i2c_arm=on",
+				"#dtparam=i2s=on",
+				"#dtparam=spi=on",
+				"# Uncomment this to enable infrared communication.",
+				"#dtoverlay=gpio-ir,gpio_pin=17",
+				"#dtoverlay=gpio-ir-tx,gpio_pin=18",
+				"# Additional overlays and parameters are documented /boot/overlays/README",
+				"# Enable audio (loads snd_bcm2835)",
+				"dtparam=audio=on",
+				"[pi4]",
+				"# Enable DRM VC4 V3D driver on top of the dispmanx display stack",
+				"dtoverlay=vc4-fkms-v3d",
+				"max_framebuffers=2",
+				"[all]",
+				"#dtoverlay=vc4-fkms-v3d",
+				"#disable_overscan=1",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var overscan rpi.Exec
+			var err error
+			a := actions.New()
+
+			if tc.isSuccess {
+				if tc.createFromAsset == false {
+					// create and populate file
+					if err := actions.OverwriteToFile(actions.WriteToFileArg{
+						File:        dummyfilepath,
+						Data:        append(tc.originalLines, tc.addLines...),
+						Multiline:   true,
+						Permissions: 0755,
+					}); err != nil {
+						log.Fatal(err)
+					}
+				}
+
+				overscan, err = a.DisableOrEnableOverscan(tc.argument)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				// if err := actions.ApplyPermissionsToFile(dummyfilepath, 0755); err != nil {
+				// 	log.Fatal(err)
+				// }
+
+				// read the new line and delete
+				readLines, err := infos.New().ReadFile(dummyfilepath)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				if e := os.Remove(dummyfilepath); e != nil {
+					fmt.Println(e)
+				}
+
+				assert.Equal(t, tc.wantedLines, readLines)
+			} else {
+				overscan, err = a.DisableOrEnableOverscan(tc.argument)
+			}
+
+			assert.Equal(t, tc.wantedExitStatus, overscan.ExitStatus)
+			assert.Equal(t, tc.wantedStderr, overscan.Stderr)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
+func TestCommentOrUncommentLineInFile(t *testing.T) {
+	cases := []struct {
+		name          string
+		args          actions.CommentLineInFileArg
+		isSuccess     bool
+		originalLines []string
+		addLines      []string
+		wantedData    error
+		wantedLines   []string
+	}{
+		{
+			name:      "error: no file",
+			isSuccess: false,
+			args: actions.CommentLineInFileArg{
+				File:        "",
+				Permissions: 0755,
+				Regex:       actions.CommentOverscanRegex,
+				Action:      "dummyaction",
+			},
+			wantedData: fmt.Errorf("opening file failed"),
+		},
+		{
+			name:      "error: action not right",
+			isSuccess: false,
+			args: actions.CommentLineInFileArg{
+				File:        dummyfilepath,
+				Permissions: 0755,
+				Regex:       actions.CommentOverscanRegex,
+				Action:      "dummyaction",
+			},
+			wantedData: fmt.Errorf("bad action: comment or uncomment"),
+		},
+		{
+			name:      "success commenting",
+			isSuccess: true,
+			args: actions.CommentLineInFileArg{
+				File:           dummyfilepath,
+				Permissions:    0755,
+				Regex:          actions.CommentOverscanRegex,
+				Action:         actions.Comment,
+				HasUniqueLines: false,
+				ToAddIfNoMatch: []string{
+					"#overscan_left=16",
+					"#overscan_right=16",
+					"#overscan_top=16",
+					"#overscan_bottom=16",
+				},
+			},
+			originalLines: []string{
+				"this is line 1",
+				"# this is line 2",
+				"# and line 3",
+			},
+			addLines: []string{
+				"         overscan_left=16",
+				"overscan_right=16",
+				"overscan_left=16",
+			},
+			wantedData: nil,
+			wantedLines: []string{
+				"this is line 1",
+				"# this is line 2",
+				"# and line 3",
+				"#overscan_left=16",
+				"#overscan_right=16",
+				"#overscan_left=16",
+				"#overscan_left=16",
+				"#overscan_right=16",
+				"#overscan_top=16",
+				"#overscan_bottom=16",
+			},
+		},
+		{
+			name:      "success uncommenting",
+			isSuccess: true,
+			args: actions.CommentLineInFileArg{
+				File:        dummyfilepath,
+				Permissions: 0755,
+				Regex:       actions.UncommentOverscanRegex,
+				Action:      actions.Uncomment,
+			},
+			originalLines: []string{
+				"this is line 1",
+				"# this is line 2",
+				"# and line 3",
+			},
+			addLines: []string{
+				"   #  overscan_left=16 # another comment",
+			},
+			wantedData: nil,
+			wantedLines: []string{
+				"this is line 1",
+				"# this is line 2",
+				"# and line 3",
+				"overscan_left=16 # another comment",
+			},
+		},
+		{
+			name:      "success but no replacement because no match",
+			isSuccess: true,
+			args: actions.CommentLineInFileArg{
+				File:        dummyfilepath,
+				Permissions: 0755,
+				Regex:       actions.CommentOverscan,
+			},
+			originalLines: []string{
+				"this is line 1",
+				"# this is line 2",
+				"# and line 3",
+			},
+			addLines: []string{
+				" ## first comment   overscan_left=16 # another comment",
+			},
+			wantedData: nil,
+			wantedLines: []string{
+				"this is line 1",
+				"# this is line 2",
+				"# and line 3",
+				" ## first comment   overscan_left=16 # another comment",
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.isSuccess {
+				// create and populate file
+				if err := actions.OverwriteToFile(actions.WriteToFileArg{
+					File:        tc.args.File,
+					Data:        append(tc.originalLines, tc.addLines...),
+					Multiline:   true,
+					Permissions: 0755,
+				}); err != nil {
+					log.Fatal(err)
+				}
+
+				// comment line in file
+				commentLineInFile := actions.CommentOrUncommentLineInFile(tc.args)
+
+				// read the new line
+				readLines, err := infos.New().ReadFile(tc.args.File)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				if e := os.Remove(tc.args.File); e != nil {
+					fmt.Println(e)
+				}
+
+				assert.Equal(t, tc.wantedLines, readLines)
+				assert.Equal(t, tc.wantedData, commentLineInFile)
+			}
+		})
+	}
+}
+
+func TestCommentOverscan(t *testing.T) {
+	cases := []struct {
+		name             string
+		argument         interface{}
+		isSuccess        bool
+		createFromAsset  bool
+		originalLines    []string
+		addLines         []string
+		wantedLines      []string
+		wantedExitStatus uint8
+		wantedStderr     string
+		wantedErr        error
+	}{
+		{
+			name: "error : no such file or directory",
+			argument: actions.CommentOrUncommentConfig{
+				DirOrFilePath: "",
+				Action:        "comment",
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "creating and opening file failed",
+			wantedErr:        nil,
+		},
+		{
+			name: "error : too many arguments",
+			argument: []actions.OtherParams{
+				{Value: map[string]string{"path": dummyfilepath}},
+				{Value: map[string]string{"action": "enable"}},
+				{Value: map[string]string{"dummyarg": "dummyargvalue"}},
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "",
+			wantedErr:        &actions.Error{Arguments: []string{"path", "action"}},
+		},
+		{
+			name: "error : action not right",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"path":   dummyfilepath,
+					"action": "comment-xxx",
+				},
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "bad action type",
+			wantedErr:        nil,
+		},
+		{
+			name: "error: bad action type with uncomment",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"path":   dummyfilepath,
+					"action": "uncomment",
+				},
+			},
+			isSuccess: false,
+			originalLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+			},
+			addLines: []string{
+				"#overscan_left=1",
+			},
+			wantedExitStatus: 1,
+			wantedStderr:     "bad action type",
+			wantedErr:        nil,
+		},
+		{
+			name: "success with regular params but not enough matches (comment)",
+			argument: actions.CommentOrUncommentConfig{
+				DirOrFilePath: dummyfilepath,
+				Action:        "comment",
+			},
+			isSuccess: true,
+			originalLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#disable_overscan=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+			},
+			addLines: []string{
+				"overscan_left=1",
+			},
+			wantedLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#disable_overscan=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"#overscan_left=1",
+				"#overscan_left=16",
+				"#overscan_right=16",
+				"#overscan_top=16",
+				"#overscan_bottom=16",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+		{
+			name: "success with regular params (comment)",
+			argument: actions.CommentOrUncommentConfig{
+				DirOrFilePath: dummyfilepath,
+				Action:        "comment",
+			},
+			isSuccess: true,
+			originalLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+			},
+			addLines: []string{
+				"overscan_left=1",
+				"overscan_right=16",
+				"overscan_top=16",
+				"overscan_bottom=16",
+			},
+			wantedLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"#overscan_left=1",
+				"#overscan_right=16",
+				"#overscan_top=16",
+				"#overscan_bottom=16",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+		{
+			name: "success: file created from asset",
+			argument: actions.CommentOrUncommentConfig{
+				DirOrFilePath: dummyfilepath,
+				Action:        "comment",
+			},
+			isSuccess:       true,
+			createFromAsset: true,
+			wantedLines: []string{
+				"# For more options and information see",
+				"# http://rpf.io/configtxt",
+				"# Some settings may impact device functionality. See link above for details",
+				"",
+				"# uncomment if you get no picture on HDMI for a default \"safe\" mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"#disable_overscan=1",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"#overscan_left=16",
+				"#overscan_right=16",
+				"#overscan_top=16",
+				"#overscan_bottom=16",
+				"# uncomment to force a console size. By default it will be display's size minus",
+				"# overscan.",
+				"#framebuffer_width=1280",
+				"#framebuffer_height=720",
+				"# uncomment if hdmi display is not detected and composite is being output",
+				"#hdmi_force_hotplug=1",
+				"# uncomment to force a specific HDMI mode (this will force VGA)",
+				"#hdmi_group=1",
+				"#hdmi_mode=1",
+				"# uncomment to force a HDMI mode rather than DVI. This can make audio work in",
+				"# DMT (computer monitor) modes",
+				"#hdmi_drive=2",
+				"# uncomment to increase signal to HDMI, if you have interference, blanking, or",
+				"# no display",
+				"#config_hdmi_boost=4",
+				"# uncomment for composite PAL",
+				"#sdtv_mode=2",
+				"#uncomment to overclock the arm. 700 MHz is the default.",
+				"#arm_freq=800",
+				"# Uncomment some or all of these to enable the optional hardware interfaces",
+				"#dtparam=i2c_arm=on",
+				"#dtparam=i2s=on",
+				"#dtparam=spi=on",
+				"# Uncomment this to enable infrared communication.",
+				"#dtoverlay=gpio-ir,gpio_pin=17",
+				"#dtoverlay=gpio-ir-tx,gpio_pin=18",
+				"# Additional overlays and parameters are documented /boot/overlays/README",
+				"# Enable audio (loads snd_bcm2835)",
+				"dtparam=audio=on",
+				"[pi4]",
+				"# Enable DRM VC4 V3D driver on top of the dispmanx display stack",
+				"dtoverlay=vc4-fkms-v3d",
+				"max_framebuffers=2",
+				"[all]",
+				"#dtoverlay=vc4-fkms-v3d",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var commentOverscan rpi.Exec
+			var err error
+			a := actions.New()
+
+			if tc.isSuccess {
+				if tc.createFromAsset == false {
+					// create and populate file
+					if err := actions.OverwriteToFile(actions.WriteToFileArg{
+						File:        dummyfilepath,
+						Data:        append(tc.originalLines, tc.addLines...),
+						Multiline:   true,
+						Permissions: 0755,
+					}); err != nil {
+						log.Fatal(err)
+					}
+				}
+
+				commentOverscan, err = a.CommentOverscan(tc.argument)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				// read the new line and delete
+				readLines, err := infos.New().ReadFile(dummyfilepath)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				if e := os.Remove(dummyfilepath); e != nil {
+					fmt.Println(e)
+				}
+
+				assert.Equal(t, tc.wantedLines, readLines)
+			} else {
+				commentOverscan, err = a.CommentOverscan(tc.argument)
+			}
+
+			assert.Equal(t, tc.wantedExitStatus, commentOverscan.ExitStatus)
+			assert.Equal(t, tc.wantedStderr, commentOverscan.Stderr)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
+func TestCreateAssetFile(t *testing.T) {
+	cases := []struct {
+		name             string
+		argument         actions.CreateAssetFileArg
+		isSuccess        bool
+		wantedLines      []string
+		wantedExitStatus int
+		wantedStderr     string
+	}{
+		{
+			name: "error: wrong key",
+			argument: actions.CreateAssetFileArg{
+				AssetFile:     "../assets/config.xxx",
+				TargetFile:    dummyfilepath,
+				HasUniqueLine: true,
+			},
+			wantedExitStatus: 1,
+			wantedStderr:     "couldn't find asset file",
+			wantedLines:      nil,
+		},
+		{
+			name: "success: config.txt",
+			argument: actions.CreateAssetFileArg{
+				AssetFile:     "../assets/config.txt",
+				TargetFile:    dummyfilepath,
+				HasUniqueLine: true,
+			},
+			isSuccess:        true,
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedLines: []string{
+				"# For more options and information see",
+				"# http://rpf.io/configtxt",
+				"# Some settings may impact device functionality. See link above for details",
+				"",
+				"# uncomment if you get no picture on HDMI for a default \"safe\" mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"#disable_overscan=1",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"#overscan_left=16",
+				"#overscan_right=16",
+				"#overscan_top=16",
+				"#overscan_bottom=16",
+				"# uncomment to force a console size. By default it will be display's size minus",
+				"# overscan.",
+				"#framebuffer_width=1280",
+				"#framebuffer_height=720",
+				"# uncomment if hdmi display is not detected and composite is being output",
+				"#hdmi_force_hotplug=1",
+				"# uncomment to force a specific HDMI mode (this will force VGA)",
+				"#hdmi_group=1",
+				"#hdmi_mode=1",
+				"# uncomment to force a HDMI mode rather than DVI. This can make audio work in",
+				"# DMT (computer monitor) modes",
+				"#hdmi_drive=2",
+				"# uncomment to increase signal to HDMI, if you have interference, blanking, or",
+				"# no display",
+				"#config_hdmi_boost=4",
+				"# uncomment for composite PAL",
+				"#sdtv_mode=2",
+				"#uncomment to overclock the arm. 700 MHz is the default.",
+				"#arm_freq=800",
+				"# Uncomment some or all of these to enable the optional hardware interfaces",
+				"#dtparam=i2c_arm=on",
+				"#dtparam=i2s=on",
+				"#dtparam=spi=on",
+				"# Uncomment this to enable infrared communication.",
+				"#dtoverlay=gpio-ir,gpio_pin=17",
+				"#dtoverlay=gpio-ir-tx,gpio_pin=18",
+				"# Additional overlays and parameters are documented /boot/overlays/README",
+				"# Enable audio (loads snd_bcm2835)",
+				"dtparam=audio=on",
+				"[pi4]",
+				"# Enable DRM VC4 V3D driver on top of the dispmanx display stack",
+				"dtoverlay=vc4-fkms-v3d",
+				"max_framebuffers=2",
+				"[all]",
+				"#dtoverlay=vc4-fkms-v3d",
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			exitStatus, stdErr := actions.CreateAssetFile(tc.argument)
+
+			if tc.isSuccess {
+				// read the new line and delete
+				readLines, err := infos.New().ReadFile(dummyfilepath)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				if e := os.Remove(dummyfilepath); e != nil {
+					fmt.Println(e)
+				}
+
+				assert.Equal(t, tc.wantedLines, readLines)
+			}
+
+			assert.Equal(t, tc.wantedExitStatus, exitStatus)
+			assert.Equal(t, tc.wantedStderr, stdErr)
 		})
 	}
 }

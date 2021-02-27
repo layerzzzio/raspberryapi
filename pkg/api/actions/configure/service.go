@@ -10,6 +10,7 @@ type Service interface {
 	ExecuteCH(string) (rpi.Action, error)
 	ExecuteCP(string, string) (rpi.Action, error)
 	ExecuteWNB(string) (rpi.Action, error)
+	ExecuteOV(string) (rpi.Action, error)
 }
 
 // Configure represents a Configure application service.
@@ -23,6 +24,7 @@ type CONSYS interface {
 	ExecuteCH(map[int](map[int]actions.Func)) (rpi.Action, error)
 	ExecuteCP(map[int](map[int]actions.Func)) (rpi.Action, error)
 	ExecuteWNB(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteOV(map[int](map[int]actions.Func)) (rpi.Action, error)
 }
 
 // Actions represents the actions interface
@@ -31,6 +33,8 @@ type Actions interface {
 	ChangeHostnameInHostsFile(interface{}) (rpi.Exec, error)
 	ChangePassword(interface{}) (rpi.Exec, error)
 	WaitForNetworkAtBoot(interface{}) (rpi.Exec, error)
+	DisableOrEnableOverscan(interface{}) (rpi.Exec, error)
+	CommentOverscan(interface{}) (rpi.Exec, error)
 }
 
 // New creates a CONSYS application service instance.

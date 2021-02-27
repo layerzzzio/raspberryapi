@@ -1,7 +1,6 @@
 package actions
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"io"
@@ -15,6 +14,7 @@ import (
 	"time"
 
 	"github.com/raspibuddy/rpi"
+	"github.com/raspibuddy/rpi/pkg/utl/assets"
 	"github.com/raspibuddy/rpi/pkg/utl/infos"
 	"github.com/shirou/gopsutil/host"
 )
@@ -37,9 +37,24 @@ var (
 	// Disable is a flag to enable a configuration
 	Disable = "disable"
 
+	// Comment is a flag to comment lines
+	Comment = "comment"
+
+	// Uncomment is a flag to uncomment lines
+	Uncomment = "uncomment"
+
 	// IpRegex is the regex used to detect ip addresses in strings
-	HostnameChangeInHostsRegex = `^127.0.1.1.*`
+	HostnameChangeInHostsRegex = `^\s*127.0.1.1.*`
 	// IpRegex = "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
+
+	// OverscanRegex is the regex used to detect disable_overscan variable in /boot/config.txt
+	DisableOrEnableOverscanRegex = `^\s*#?\s*disable_overscan\s*=.*`
+
+	// CommentOverscanRegex is the regex used to detect overscan variable in /boot/config.txt
+	CommentOverscanRegex = `^\s*overscan_(left|right|top|bottom)\s*=.*`
+
+	// UncommentOverscanRegex is the regex used to detect overscan variable in /boot/config.txt
+	UncommentOverscanRegex = `^\s*#?\s*overscan_(left|right|bottom|top)\s*=.*`
 
 	// Separator separates parent and child execution
 	Separator = "<|>"
@@ -70,6 +85,15 @@ var (
 
 	// WaitForNetworkAtBoot is the name of the wait for network at boot
 	WaitForNetworkAtBoot = "wait_for_network_at_boot"
+
+	// Overscan is the name of the overscan actions
+	Overscan = "overscan"
+
+	// DisableOrEnableOverscan is the name of the disable or enable overscan method
+	DisableOrEnableOverscan = "disable_or_enable_overscan"
+
+	// CommentOverscan is the name of the comment overscan method
+	CommentOverscan = "comment_overscan"
 )
 
 // Service represents several system scripts.
@@ -210,8 +234,8 @@ func (s Service) KillProcessByName(arg interface{}) (rpi.Exec, error) {
 	}, nil
 }
 
-// DF is the argument used when deleting a file
-type DF struct {
+// FileOrDirectory is the argument used when wanting to modified a file only (ex: comment)
+type FileOrDirectory struct {
 	Path string
 }
 
@@ -220,7 +244,7 @@ func (s Service) DeleteFile(arg interface{}) (rpi.Exec, error) {
 	var path string
 
 	switch v := arg.(type) {
-	case DF:
+	case FileOrDirectory:
 		path = v.Path
 	case OtherParams:
 		path = arg.(OtherParams).Value["path"]
@@ -324,28 +348,43 @@ func (s Service) ChangeHostnameInHostsFile(arg interface{}) (rpi.Exec, error) {
 	var stdErr string
 
 	info, err := host.Info()
+
 	if err != nil {
 		exitStatus = 1
 		stdErr = fmt.Sprint(err)
 	} else {
-		err = ReplaceLineInFile(ReplaceLineInFileArg{
-			File:  targetFile,
-			Regex: HostnameChangeInHostsRegex,
-			ReplaceType: ReplaceType{
-				// old hostname is not passed as an argument from the application
-				// indeed it can changed between the moment the user ask for a change
-				// and the moment it actually changes
-				&AllOccurrences{
-					Occurrence: info.Hostname,
-					NewData:    hostname,
+		// copy the file if the file exists
+		if _, err := os.Stat(targetFile); err == nil {
+			err = ReplaceLineInFile(ReplaceLineInFileArg{
+				File:  targetFile,
+				Regex: HostnameChangeInHostsRegex,
+				ReplaceType: ReplaceType{
+					// old hostname is not passed as an argument from the application
+					// indeed it can changed between the moment the user ask for a change
+					// and the moment it actually changes
+					&AllOccurrences{
+						Occurrence: info.Hostname,
+						NewData:    hostname,
+					},
+					nil,
 				},
-				nil,
-			},
-		})
+				ToAddIfNoMatch: []string{"127.0.1.1		" + hostname},
+				HasUniqueLines: true,
+			})
 
-		if err != nil {
-			exitStatus = 1
-			stdErr = fmt.Sprint(err)
+			if err != nil {
+				exitStatus = 1
+				stdErr = fmt.Sprint(err)
+			}
+		} else {
+			exitStatus, stdErr = CreateAssetFile(
+				CreateAssetFileArg{
+					AssetFile:  "../assets/hosts",
+					TargetFile: targetFile,
+					NewData: []string{"127.0.1.1		" + hostname},
+					HasUniqueLine: true,
+				},
+			)
 		}
 	}
 
@@ -414,10 +453,10 @@ func (s Service) ChangePassword(arg interface{}) (rpi.Exec, error) {
 	}, nil
 }
 
-// WNB is the do boot wait argument
-type WNB struct {
-	Directory string
-	Action    string
+// EnableOrDisableConfig is the argument for enable or disable methods
+type EnableOrDisableConfig struct {
+	Action        string
+	DirOrFilePath string
 }
 
 // WaitForNetworkAtBoot enable or disable wait for network at boot
@@ -426,8 +465,8 @@ func (s Service) WaitForNetworkAtBoot(arg interface{}) (rpi.Exec, error) {
 	var action string
 
 	switch v := arg.(type) {
-	case WNB:
-		directory = v.Directory
+	case EnableOrDisableConfig:
+		directory = v.DirOrFilePath
 		action = v.Action
 	case OtherParams:
 		directory = arg.(OtherParams).Value["directory"]
@@ -480,6 +519,160 @@ func (s Service) WaitForNetworkAtBoot(arg interface{}) (rpi.Exec, error) {
 
 	return rpi.Exec{
 		Name:       WaitForNetworkAtBoot,
+		StartTime:  startTime,
+		EndTime:    endTime,
+		ExitStatus: uint8(exitStatus),
+		Stderr:     stdErr,
+	}, nil
+}
+
+// DisableOrEnableOverscan enables or disables overscan
+func (s Service) DisableOrEnableOverscan(arg interface{}) (rpi.Exec, error) {
+	var path string
+	var action string
+
+	switch v := arg.(type) {
+	case EnableOrDisableConfig:
+		path = v.DirOrFilePath
+		action = v.Action
+	case OtherParams:
+		path = arg.(OtherParams).Value["path"]
+		action = arg.(OtherParams).Value["action"]
+	default:
+		return rpi.Exec{ExitStatus: 1}, &Error{[]string{"path", "action"}}
+	}
+
+	// execution start time
+	startTime := uint64(time.Now().Unix())
+	exitStatus := 0
+	var stdErr string
+	var newData string
+
+	if action == Enable {
+		newData = "disable_overscan=0"
+	} else if action == Disable {
+		newData = "#disable_overscan=1"
+	} else {
+		exitStatus = 1
+		stdErr = "bad action type"
+	}
+
+	if exitStatus == 0 {
+		if _, err := os.Stat(path); err == nil {
+			err := ReplaceLineInFile(ReplaceLineInFileArg{
+				File:  path,
+				Regex: DisableOrEnableOverscanRegex,
+				ReplaceType: ReplaceType{
+					nil,
+					&EntireLine{NewData: newData},
+				},
+				HasUniqueLines: true,
+				ToAddIfNoMatch: []string{newData},
+			})
+
+			if err != nil {
+				exitStatus = 1
+				stdErr = fmt.Sprint(err)
+			}
+		} else {
+			exitStatus, stdErr = CreateAssetFile(
+				// it will add the new data at the end of the file
+				// indeed all lines commented from asset
+				CreateAssetFileArg{
+					AssetFile:     "../assets/config.txt",
+					TargetFile:    path,
+					NewData:       []string{newData},
+					HasUniqueLine: true,
+				},
+			)
+		}
+	}
+
+	// execution end time
+	endTime := uint64(time.Now().Unix())
+
+	return rpi.Exec{
+		Name:       DisableOrEnableOverscan,
+		StartTime:  startTime,
+		EndTime:    endTime,
+		ExitStatus: uint8(exitStatus),
+		Stderr:     stdErr,
+	}, nil
+}
+
+// CommentOrUncommentConfig is the argument for comment or uncomment methods
+type CommentOrUncommentConfig struct {
+	DirOrFilePath string
+	Action        string
+}
+
+// CommentOverscan comments overscan lines
+func (s Service) CommentOverscan(arg interface{}) (rpi.Exec, error) {
+	var path string
+	var action string
+
+	switch v := arg.(type) {
+	case CommentOrUncommentConfig:
+		path = v.DirOrFilePath
+		action = v.Action
+	case OtherParams:
+		path = arg.(OtherParams).Value["path"]
+		action = arg.(OtherParams).Value["action"]
+	default:
+		return rpi.Exec{ExitStatus: 1}, &Error{[]string{"path", "action"}}
+	}
+
+	// execution start time
+	startTime := uint64(time.Now().Unix())
+	exitStatus := 0
+	var stdErr string
+	var regex string
+
+	var defaultData []string
+
+	if action == "comment" {
+		regex = CommentOverscanRegex
+		defaultData = []string{
+			"#overscan_left=16",
+			"#overscan_right=16",
+			"#overscan_top=16",
+			"#overscan_bottom=16",
+		}
+	} else {
+		exitStatus = 1
+		stdErr = "bad action type"
+	}
+
+	if exitStatus == 0 {
+		if _, err := os.Stat(path); err == nil {
+			err := CommentOrUncommentLineInFile(CommentLineInFileArg{
+				File:           path,
+				Regex:          regex,
+				Action:         action,
+				ToAddIfNoMatch: defaultData,
+				HasUniqueLines: true,
+			})
+
+			if err != nil {
+				exitStatus = 1
+				stdErr = fmt.Sprint(err)
+			}
+		} else {
+			exitStatus, stdErr = CreateAssetFile(
+				// no new data because already commented in assets
+				CreateAssetFileArg{
+					AssetFile:  "../assets/config.txt",
+					TargetFile: path,
+				},
+			)
+		}
+	}
+
+	// execution end time
+	endTime := uint64(time.Now().Unix())
+
+	return rpi.Exec{
+		Name:       CommentOverscan,
 		StartTime:  startTime,
 		EndTime:    endTime,
 		ExitStatus: uint8(exitStatus),
@@ -753,10 +946,12 @@ func OverwriteToFile(args WriteToFileArg) error {
 
 // ReplaceLineFile is the argument to function ReplaceLineFile
 type ReplaceLineInFileArg struct {
-	File        string
-	Permissions uint32 // 0644, 0666, etc.
-	Regex       string
-	ReplaceType ReplaceType
+	File           string
+	Permissions    uint32 // 0644, 0666, etc.
+	Regex          string
+	ReplaceType    ReplaceType
+	ToAddIfNoMatch []string
+	HasUniqueLines bool
 }
 
 // ReplaceType lists all the possible replace types
@@ -792,6 +987,19 @@ func GetReplaceType(repType ReplaceType) (*string, error) {
 	return &result, nil
 }
 
+func RemoveDuplicateStrings(strSlice []string) []string {
+	keys := make(map[string]bool)
+	list := []string{}
+
+	for _, v := range strSlice {
+		if _, value := keys[v]; !value {
+			keys[v] = true
+			list = append(list, v)
+		}
+	}
+	return list
+}
+
 // ReplaceLineInFile replace one or multiple line in file
 func ReplaceLineInFile(args ReplaceLineInFileArg) error {
 	repType, err := GetReplaceType(args.ReplaceType)
@@ -799,58 +1007,75 @@ func ReplaceLineInFile(args ReplaceLineInFileArg) error {
 		return fmt.Errorf("getting replace type failed")
 	}
 
-	f, err := os.Open(args.File)
+	rawLines, err := infos.New().ReadFile(args.File)
 	if err != nil {
 		return fmt.Errorf("opening file failed")
 	}
 
-	// replacing line logic
-	// source: https://stackoverflow.com/questions/8757389/reading-a-file-line-by-line-in-go
-	reader := bufio.NewReader(f)
-	var line string
-	allLines := []string{}
+	if args.HasUniqueLines {
+		rawLines = RemoveDuplicateStrings(rawLines)
+	}
 
-	for {
-		line, err = reader.ReadString('\n')
-		if err != nil && err != io.EOF {
-			break
-		}
+	newLines := []string{}
+	matchCounter := 0
 
-		// apply the replace type here
-		re := regexp.MustCompile(args.Regex)
-		if re.MatchString(line) {
-			switch *repType {
-			case RepTypeAllOccurrences:
-				line = strings.ReplaceAll(
-					line,
-					args.ReplaceType.AllOccurrences.Occurrence,
-					args.ReplaceType.AllOccurrences.NewData)
-			case RepTypeEntireLine:
-				line = args.ReplaceType.EntireLine.NewData
-			default:
-				line = args.ReplaceType.EntireLine.NewData
+	for _, line := range rawLines {
+		if line != "" {
+			// apply the replace type here
+			re := regexp.MustCompile(args.Regex)
+			if re.MatchString(line) {
+				switch *repType {
+				case RepTypeAllOccurrences:
+					line = strings.ReplaceAll(
+						line,
+						args.ReplaceType.AllOccurrences.Occurrence,
+						args.ReplaceType.AllOccurrences.NewData,
+					)
+					line = strings.TrimSpace(line)
+				case RepTypeEntireLine:
+					line = args.ReplaceType.EntireLine.NewData
+				default:
+					line = args.ReplaceType.EntireLine.NewData
+				}
+				matchCounter++
 			}
-		}
-
-		// save each line (replaced or non-replaced) in an array
-		allLines = append(allLines, line)
-
-		if err != nil {
-			break
+			newLines = append(newLines, strings.TrimSuffix(line, "\n"))
 		}
 	}
 
-	if err != io.EOF {
-		return fmt.Errorf("reading file failed")
+	if args.ToAddIfNoMatch != nil {
+		// we want to make sure there is as much match
+		// as the number of matched lines to modify
+		// ----------------------
+		// example: only 1 match instead of 2 theoretically
+		// ----------------------
+		// overscan_top=1
+		// overscan_bottomX=2
+		// in this case there is only 1 match (with overscan_top) instead of 2
+		// indeed we also want to work with line overscan_bottomX=2
+		// so the only choice here, to make sure 2 lines are added, is to add default data.
+		// ----------------------
+		// A case that is not taken into account is when
+		// we have two identical matches and one non-match
+		// while we would like to have 2 matches for 2 different values
+		// This case can happens only is HasUniqueLine = False <- not safe
+		// ----------------------
+		// overscan_top=1
+		// overscan_top=1
+		// overscan_bottomX=2
+		if matchCounter != len(args.ToAddIfNoMatch) {
+			newLines = append(newLines, args.ToAddIfNoMatch...)
+		}
 	}
 
-	if err = f.Close(); err != nil {
-		return fmt.Errorf("closing file failed")
+	if args.HasUniqueLines {
+		newLines = RemoveDuplicateStrings(newLines)
 	}
 
+	// allLines is deduplicated
 	if err = OverwriteToFile(WriteToFileArg{
 		File:        args.File,
-		Data:        allLines,
+		Data:        newLines,
 		Multiline:   true,
 		Permissions: args.Permissions,
 	}); err != nil {
@@ -882,4 +1107,136 @@ func AddLinesEndOfFile(args WriteToFileArg) error {
 	}
 
 	return nil
+}
+
+// CommentLineInFileArg is the argument to function CommentLineInFile
+type CommentLineInFileArg struct {
+	File           string
+	Permissions    uint32 // 0644, 0666, etc.
+	Regex          string
+	Action         string
+	ToAddIfNoMatch []string
+	HasUniqueLines bool
+}
+
+// CommentLineInFile comments one or multiple line in file
+func CommentOrUncommentLineInFile(args CommentLineInFileArg) error {
+	rawLines, err := infos.New().ReadFile(args.File)
+	if err != nil {
+		return fmt.Errorf("opening file failed")
+	}
+
+	if args.HasUniqueLines {
+		rawLines = RemoveDuplicateStrings(rawLines)
+	}
+
+	newLines := []string{}
+	matchCounter := 0
+
+	for _, line := range rawLines {
+		if line != "" {
+			// apply the replace type here
+			re := regexp.MustCompile(args.Regex)
+			if re.MatchString(line) {
+				line = strings.TrimSpace(line)
+				if args.Action == Comment {
+					line = "#" + line
+				} else if args.Action == Uncomment {
+					line = strings.TrimSpace(strings.Replace(line, "#", "", 1))
+				} else {
+					return fmt.Errorf("bad action: comment or uncomment")
+				}
+				matchCounter++
+			}
+			newLines = append(newLines, strings.TrimSuffix(line, "\n"))
+		}
+	}
+
+	if args.ToAddIfNoMatch != nil {
+		if len(args.ToAddIfNoMatch) != matchCounter {
+			newLines = append(newLines, args.ToAddIfNoMatch...)
+		}
+	}
+
+	if args.HasUniqueLines {
+		newLines = RemoveDuplicateStrings(newLines)
+	}
+
+	if err = OverwriteToFile(WriteToFileArg{
+		File:        args.File,
+		Data:        newLines,
+		Multiline:   true,
+		Permissions: args.Permissions,
+	}); err != nil {
+		return fmt.Errorf("overwriting to file failed")
+	}
+
+	return nil
+}
+
+// CreateAssetFileArg is the argument for CreateAssetFile
+type CreateAssetFileArg struct {
+	AssetFile     string
+	TargetFile    string
+	HasUniqueLine bool
+	NewData       []string
+}
+
+// CreateAssetFile creates a file from an asset file
+func CreateAssetFile(args CreateAssetFileArg) (int, string) {
+	exitStatus := 0
+	var stdErr string
+
+	// for go version 1.16
+	// couldn't do that because of labstack color package issue
+	// assetData, err := infos.New().ReadFile(args.AssetFile)
+
+	// if err != nil {
+	// 	exitStatus = 1
+	// 	stdErr = fmt.Sprint(err)
+	// } else {
+	// 	if args.HasUniqueLine {
+	// 		assetData = RemoveDuplicateStrings(append(
+	// 			assetData,
+	// 			args.NewData...,
+	// 		))
+	// 	}
+
+	// 	if err = OverwriteToFile(
+	// 		WriteToFileArg{
+	// 			File:      args.TargetFile,
+	// 			Data:      assetData,
+	// 			Multiline: true,
+	// 		},
+	// 	); err != nil {
+	// 		exitStatus = 1
+	// 		stdErr = fmt.Sprint(err)
+	// 	}
+	// }
+
+	// 	if args.HasUniqueLine {
+	// 		assetData = RemoveDuplicateStrings(append(
+	// 			assetData,
+	// 			args.NewData...,
+	// 		))
+	// 	}
+
+	if assetData := assets.FILEMAP[args.AssetFile]; assetData != nil {
+		fmt.Println(assetData)
+		if err := OverwriteToFile(
+			WriteToFileArg{
+				File:      args.TargetFile,
+				Data:      append(assetData, args.NewData...),
+				Multiline: true,
+			},
+		); err != nil {
+			exitStatus = 1
+			stdErr = fmt.Sprint(err)
+		}
+	} else {
+		exitStatus = 1
+		stdErr = "couldn't find asset file"
+	}
+
+	return exitStatus, stdErr
 }
