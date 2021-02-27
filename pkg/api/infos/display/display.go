@@ -10,10 +10,11 @@ import (
 
 // List populates and returns an array of Display model.
 func (d *Display) List() (rpi.Display, error) {
-	readLines, err := d.i.ReadFile(infos.BootConfig)
+	bootConfig, err := d.i.ReadFile(infos.BootConfig)
+
 	if err != nil {
 		return rpi.Display{}, echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the display details")
 	}
 
-	return d.dissys.List(readLines)
+	return d.dissys.List(bootConfig)
 }

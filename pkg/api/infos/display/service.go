@@ -26,6 +26,6 @@ type Infos interface {
 }
 
 // New creates a Display application service instance.
-func New(boosys DISSYS, i Infos) *Display {
-	return &Display{dissys: boosys, i: i}
+func New(dissys DISSYS, i Infos) *Display {
+	return &Display{dissys: dissys, i: i}
 }
