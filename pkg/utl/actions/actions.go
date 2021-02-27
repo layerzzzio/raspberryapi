@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/raspibuddy/rpi"
+	"github.com/raspibuddy/rpi/pkg/utl/assets"
 	"github.com/raspibuddy/rpi/pkg/utl/infos"
 	"github.com/shirou/gopsutil/host"
 )
@@ -1186,29 +1187,56 @@ func CreateAssetFile(args CreateAssetFileArg) (int, string) {
 	exitStatus := 0
 	var stdErr string
 
-	assetData, err := infos.New().ReadFile(args.AssetFile)
+	// for go version 1.16
+	// couldn't do that because of labstack color package issue
+	// assetData, err := infos.New().ReadFile(args.AssetFile)
 
-	if err != nil {
-		exitStatus = 1
-		stdErr = fmt.Sprint(err)
-	} else {
-		if args.HasUniqueLine {
-			assetData = RemoveDuplicateStrings(append(
-				assetData,
-				args.NewData...,
-			))
-		}
+	// if err != nil {
+	// 	exitStatus = 1
+	// 	stdErr = fmt.Sprint(err)
+	// } else {
+	// 	if args.HasUniqueLine {
+	// 		assetData = RemoveDuplicateStrings(append(
+	// 			assetData,
+	// 			args.NewData...,
+	// 		))
+	// 	}
 
-		if err = OverwriteToFile(
+	// 	if err = OverwriteToFile(
+	// 		WriteToFileArg{
+	// 			File:      args.TargetFile,
+	// 			Data:      assetData,
+	// 			Multiline: true,
+	// 		},
+	// 	); err != nil {
+	// 		exitStatus = 1
+	// 		stdErr = fmt.Sprint(err)
+	// 	}
+	// }
+
+	// 	if args.HasUniqueLine {
+	// 		assetData = RemoveDuplicateStrings(append(
+	// 			assetData,
+	// 			args.NewData...,
+	// 		))
+	// 	}
+
+	if assetData := assets.FILEMAP[args.AssetFile]; assetData != nil {
+		fmt.Println(assetData)
+		if err := OverwriteToFile(
 			WriteToFileArg{
 				File:      args.TargetFile,
-				Data:      assetData,
+				Data:      append(assetData, args.NewData...),
 				Multiline: true,
 			},
 		); err != nil {
 			exitStatus = 1
 			stdErr = fmt.Sprint(err)
 		}
+	} else {
+		exitStatus = 1
+		stdErr = "couldn't find asset file"
 	}
+
 	return exitStatus, stdErr
 }

@@ -1,5 +1,5 @@
 ## Change hostname
-1. regex on the front-end to have a well formatted hostname //TODO
+1. regex on the front-end to have a well formatted hostname
 
     > RFCs mandate that a hostname's labels may contain only the ASCII letters 'a' through 'z' (case-insensitive), the digits '0' through '9', and the hyphen. Hostname labels cannot begin or end with a hyphen.No other symbols, punctuation characters, or blank spaces are permitted.
 
