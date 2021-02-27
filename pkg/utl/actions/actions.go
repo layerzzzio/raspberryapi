@@ -347,30 +347,43 @@ func (s Service) ChangeHostnameInHostsFile(arg interface{}) (rpi.Exec, error) {
 	var stdErr string
 
 	info, err := host.Info()
+
 	if err != nil {
 		exitStatus = 1
 		stdErr = fmt.Sprint(err)
 	} else {
-		err = ReplaceLineInFile(ReplaceLineInFileArg{
-			File:  targetFile,
-			Regex: HostnameChangeInHostsRegex,
-			ReplaceType: ReplaceType{
-				// old hostname is not passed as an argument from the application
-				// indeed it can changed between the moment the user ask for a change
-				// and the moment it actually changes
-				&AllOccurrences{
-					Occurrence: info.Hostname,
-					NewData:    hostname,
+		// copy the file if the file exists
+		if _, err := os.Stat(targetFile); err == nil {
+			err = ReplaceLineInFile(ReplaceLineInFileArg{
+				File:  targetFile,
+				Regex: HostnameChangeInHostsRegex,
+				ReplaceType: ReplaceType{
+					// old hostname is not passed as an argument from the application
+					// indeed it can changed between the moment the user ask for a change
+					// and the moment it actually changes
+					&AllOccurrences{
+						Occurrence: info.Hostname,
+						NewData:    hostname,
+					},
+					nil,
 				},
-				nil,
-			},
-			ToAddIfNoMatch: []string{"127.0.1.1		" + hostname},
-			HasUniqueLines: true,
-		})
+				ToAddIfNoMatch: []string{"127.0.1.1		" + hostname},
+				HasUniqueLines: true,
+			})
 
-		if err != nil {
-			exitStatus = 1
-			stdErr = fmt.Sprint(err)
+			if err != nil {
+				exitStatus = 1
+				stdErr = fmt.Sprint(err)
+			}
+		} else {
+			exitStatus, stdErr = CreateAssetFile(
+				CreateAssetFileArg{
+					AssetFile:  "../assets/hosts",
+					TargetFile: targetFile,
+					NewData: []string{"127.0.1.1		" + hostname},
+					HasUniqueLine: true,
+				},
+			)
 		}
 	}
 
@@ -544,20 +557,33 @@ func (s Service) DisableOrEnableOverscan(arg interface{}) (rpi.Exec, error) {
 	}
 
 	if exitStatus == 0 {
-		err := ReplaceLineInFile(ReplaceLineInFileArg{
-			File:  path,
-			Regex: DisableOrEnableOverscanRegex,
-			ReplaceType: ReplaceType{
-				nil,
-				&EntireLine{NewData: newData},
-			},
-			HasUniqueLines: true,
-			ToAddIfNoMatch: []string{newData},
-		})
+		if _, err := os.Stat(path); err == nil {
+			err := ReplaceLineInFile(ReplaceLineInFileArg{
+				File:  path,
+				Regex: DisableOrEnableOverscanRegex,
+				ReplaceType: ReplaceType{
+					nil,
+					&EntireLine{NewData: newData},
+				},
+				HasUniqueLines: true,
+				ToAddIfNoMatch: []string{newData},
+			})
 
-		if err != nil {
-			exitStatus = 1
-			stdErr = fmt.Sprint(err)
+			if err != nil {
+				exitStatus = 1
+				stdErr = fmt.Sprint(err)
+			}
+		} else {
+			exitStatus, stdErr = CreateAssetFile(
+				// it will add the new data at the end of the file
+				// indeed all lines commented from asset
+				CreateAssetFileArg{
+					AssetFile:     "../assets/config.txt",
+					TargetFile:    path,
+					NewData:       []string{newData},
+					HasUniqueLine: true,
+				},
+			)
 		}
 	}
 
@@ -617,17 +643,27 @@ func (s Service) CommentOverscan(arg interface{}) (rpi.Exec, error) {
 	}
 
 	if exitStatus == 0 {
-		err := CommentOrUncommentLineInFile(CommentLineInFileArg{
-			File:           path,
-			Regex:          regex,
-			Action:         action,
-			ToAddIfNoMatch: defaultData,
-			HasUniqueLines: true,
-		})
+		if _, err := os.Stat(path); err == nil {
+			err := CommentOrUncommentLineInFile(CommentLineInFileArg{
+				File:           path,
+				Regex:          regex,
+				Action:         action,
+				ToAddIfNoMatch: defaultData,
+				HasUniqueLines: true,
+			})
 
-		if err != nil {
-			exitStatus = 1
-			stdErr = fmt.Sprint(err)
+			if err != nil {
+				exitStatus = 1
+				stdErr = fmt.Sprint(err)
+			}
+		} else {
+			exitStatus, stdErr = CreateAssetFile(
+				// no new data because already commented in assets
+				CreateAssetFileArg{
+					AssetFile:  "../assets/config.txt",
+					TargetFile: path,
+				},
+			)
 		}
 	}
 
@@ -1135,4 +1171,44 @@ func CommentOrUncommentLineInFile(args CommentLineInFileArg) error {
 	}
 
 	return nil
+}
+
+// CreateAssetFileArg is the argument for CreateAssetFile
+type CreateAssetFileArg struct {
+	AssetFile     string
+	TargetFile    string
+	HasUniqueLine bool
+	NewData       []string
+}
+
+// CreateAssetFile creates a file from an asset file
+func CreateAssetFile(args CreateAssetFileArg) (int, string) {
+	exitStatus := 0
+	var stdErr string
+
+	assetData, err := infos.New().ReadFile(args.AssetFile)
+
+	if err != nil {
+		exitStatus = 1
+		stdErr = fmt.Sprint(err)
+	} else {
+		if args.HasUniqueLine {
+			assetData = RemoveDuplicateStrings(append(
+				assetData,
+				args.NewData...,
+			))
+		}
+
+		if err = OverwriteToFile(
+			WriteToFileArg{
+				File:      args.TargetFile,
+				Data:      assetData,
+				Multiline: true,
+			},
+		); err != nil {
+			exitStatus = 1
+			stdErr = fmt.Sprint(err)
+		}
+	}
+	return exitStatus, stdErr
 }
