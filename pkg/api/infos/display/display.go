@@ -5,12 +5,12 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/raspibuddy/rpi"
-	"github.com/raspibuddy/rpi/pkg/utl/infos"
 )
 
 // List populates and returns an array of Display model.
 func (d *Display) List() (rpi.Display, error) {
-	bootConfig, err := d.i.ReadFile(infos.BootConfig)
+	bootConfigPath := d.i.GetConfigFiles()["bootconfig"].Path
+	bootConfig, err := d.i.ReadFile(bootConfigPath)
 
 	if err != nil {
 		return rpi.Display{}, echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the display details")

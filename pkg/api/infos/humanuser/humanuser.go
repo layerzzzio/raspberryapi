@@ -9,7 +9,8 @@ import (
 
 // List populates and returns an array of HumanUser model.
 func (hu *HumanUser) List() ([]rpi.HumanUser, error) {
-	humanUsers, err := hu.i.ReadFile("/etc/passwd")
+	etcPasswdPath := hu.i.GetConfigFiles()["etcpasswd"].Path
+	humanUsers, err := hu.i.ReadFile(etcPasswdPath)
 
 	if err != nil {
 		return nil, echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the human users")

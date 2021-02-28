@@ -14,22 +14,16 @@ import (
 	"time"
 
 	"github.com/raspibuddy/rpi"
-	"github.com/raspibuddy/rpi/pkg/utl/assets"
+	"github.com/raspibuddy/rpi/pkg/utl/constants"
 	"github.com/raspibuddy/rpi/pkg/utl/infos"
 	"github.com/shirou/gopsutil/host"
 )
 
 // TODO: to test this method by simulating different OS scenarios in a Docker container (raspbian/strech)
 
-var (
+const (
 	// DefaultFilePerm is the default file permission
 	DefaultFilePerm = uint32(0644)
-
-	// RepTypeAllOccurrences is a flag meaning all occurrences of a word should be replaced
-	RepTypeAllOccurrences = "all_occurrences"
-
-	// RepTypeEntireLine is a flag meaning all occurrences of an entire file line should be replaced
-	RepTypeEntireLine = "entire_line"
 
 	// Enable is a flag to enable a configuration
 	Enable = "enable"
@@ -94,6 +88,14 @@ var (
 
 	// CommentOverscan is the name of the comment overscan method
 	CommentOverscan = "comment_overscan"
+)
+
+var (
+	// RepTypeAllOccurrences is a flag meaning all occurrences of a word should be replaced
+	RepTypeAllOccurrences = "all_occurrences"
+
+	// RepTypeEntireLine is a flag meaning all occurrences of an entire file line should be replaced
+	RepTypeEntireLine = "entire_line"
 )
 
 // Service represents several system scripts.
@@ -1221,7 +1223,7 @@ func CreateAssetFile(args CreateAssetFileArg) (int, string) {
 	// 		))
 	// 	}
 
-	if assetData := assets.FILEMAP[args.AssetFile]; assetData != nil {
+	if assetData := constants.FILEMAP[args.AssetFile]; assetData != nil {
 		fmt.Println(assetData)
 		if err := OverwriteToFile(
 			WriteToFileArg{

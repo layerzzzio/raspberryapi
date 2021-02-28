@@ -17,6 +17,7 @@ type Service interface {
 type Configure struct {
 	consys CONSYS
 	a      Actions
+	i      Infos
 }
 
 // CONSYS represents a Configure repository service.
@@ -37,7 +38,12 @@ type Actions interface {
 	CommentOverscan(interface{}) (rpi.Exec, error)
 }
 
+// Infos represents the infos interface
+type Infos interface {
+	GetConfigFiles() map[string]rpi.ConfigFileDetails
+}
+
 // New creates a CONSYS application service instance.
-func New(consys CONSYS, a Actions) *Configure {
-	return &Configure{consys: consys, a: a}
+func New(consys CONSYS, a Actions, i Infos) *Configure {
+	return &Configure{consys: consys, a: a, i: i}
 }

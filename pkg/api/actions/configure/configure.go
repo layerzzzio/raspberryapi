@@ -6,7 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/raspibuddy/rpi"
 	"github.com/raspibuddy/rpi/pkg/utl/actions"
-	"github.com/raspibuddy/rpi/pkg/utl/infos"
+	"github.com/raspibuddy/rpi/pkg/utl/constants"
 )
 
 // ExecuteCH changes hostname and returns an action.
@@ -18,7 +18,7 @@ func (con *Configure) ExecuteCH(hostname string) (rpi.Action, error) {
 				Reference: con.a.ChangeHostnameInHostsFile,
 				Argument: []interface{}{
 					actions.DataToFile{
-						TargetFile: "/etc/hosts",
+						TargetFile: con.i.GetConfigFiles()["hosts"].Path,
 						Data:       hostname,
 					},
 				},
@@ -28,7 +28,7 @@ func (con *Configure) ExecuteCH(hostname string) (rpi.Action, error) {
 				Reference: con.a.ChangeHostnameInHostnameFile,
 				Argument: []interface{}{
 					actions.DataToFile{
-						TargetFile: "/etc/hostname",
+						TargetFile: con.i.GetConfigFiles()["hostname"].Path,
 						Data:       hostname,
 					},
 				},
@@ -68,7 +68,7 @@ func (con *Configure) ExecuteWNB(action string) (rpi.Action, error) {
 				Reference: con.a.WaitForNetworkAtBoot,
 				Argument: []interface{}{
 					actions.EnableOrDisableConfig{
-						DirOrFilePath: "/etc/systemd/system/dhcpcd.service.d",
+						DirOrFilePath: constants.DHCPSERVICE,
 						Action:        action,
 					},
 				},
@@ -91,7 +91,7 @@ func (con *Configure) ExecuteOV(action string) (rpi.Action, error) {
 					Reference: con.a.DisableOrEnableOverscan,
 					Argument: []interface{}{
 						actions.EnableOrDisableConfig{
-							DirOrFilePath: infos.BootConfig,
+							DirOrFilePath: con.i.GetConfigFiles()["bootconfig"].Path,
 							Action:        action,
 						},
 					},
@@ -106,7 +106,7 @@ func (con *Configure) ExecuteOV(action string) (rpi.Action, error) {
 					Reference: con.a.DisableOrEnableOverscan,
 					Argument: []interface{}{
 						actions.EnableOrDisableConfig{
-							DirOrFilePath: infos.BootConfig,
+							DirOrFilePath: con.i.GetConfigFiles()["bootconfig"].Path,
 							Action:        action,
 						},
 					},
@@ -118,7 +118,7 @@ func (con *Configure) ExecuteOV(action string) (rpi.Action, error) {
 					Reference: con.a.CommentOverscan,
 					Argument: []interface{}{
 						actions.CommentOrUncommentConfig{
-							DirOrFilePath: infos.BootConfig,
+							DirOrFilePath: con.i.GetConfigFiles()["bootconfig"].Path,
 							Action:        "comment",
 						},
 					},

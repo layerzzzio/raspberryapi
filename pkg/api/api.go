@@ -92,7 +92,7 @@ func Start(cfg *config.Configuration) error {
 
 	// actions
 	adt.NewHTTP(adl.New(destroy.New(ads.Destroy{}, a), log).Service, v1)
-	act.NewHTTP(acl.New(configure.New(acs.Configure{}, a), log).Service, v1)
+	act.NewHTTP(acl.New(configure.New(acs.Configure{}, a, i), log).Service, v1)
 
 	// infos
 	ihut.NewHTTP(ihul.New(humanuser.New(ihus.HumanUser{}, i), log).Service, v1)

@@ -24,6 +24,13 @@ func TestList(t *testing.T) {
 		{
 			name: "error: lines are nil",
 			infos: mock.Infos{
+				GetConfigFilesFn: func() map[string]rpi.ConfigFileDetails {
+					return map[string]rpi.ConfigFileDetails{
+						"bootconfig": {
+							Path: "/dummy/path",
+						},
+					}
+				},
 				ReadFileFn: func(string) ([]string, error) {
 					return nil, errors.New("test error info")
 				},
@@ -34,6 +41,13 @@ func TestList(t *testing.T) {
 		{
 			name: "success",
 			infos: mock.Infos{
+				GetConfigFilesFn: func() map[string]rpi.ConfigFileDetails {
+					return map[string]rpi.ConfigFileDetails{
+						"bootconfig": {
+							Path: "/dummy/path",
+						},
+					}
+				},
 				ReadFileFn: func(string) ([]string, error) {
 					return []string{
 						"systemd-network:x:101:103:systemd Network Management,,,:/run/systemd:/usr/sbin/nologin",

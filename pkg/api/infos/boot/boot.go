@@ -6,6 +6,7 @@ import (
 
 // List populates and returns an array of Boot model.
 func (b *Boot) List() (rpi.Boot, error) {
-	isWaitForNetwork := b.i.IsFileExists("/etc/systemd/system/dhcpcd.service.d/wait.conf")
+	isWaitForNetworkPath := b.i.GetConfigFiles()["waitfornetwork"].Path
+	isWaitForNetwork := b.i.IsFileExists(isWaitForNetworkPath)
 	return b.boosys.List(isWaitForNetwork)
 }

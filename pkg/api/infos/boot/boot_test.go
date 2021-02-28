@@ -21,6 +21,13 @@ func TestList(t *testing.T) {
 		{
 			name: "file exists",
 			infos: mock.Infos{
+				GetConfigFilesFn: func() map[string]rpi.ConfigFileDetails {
+					return map[string]rpi.ConfigFileDetails{
+						"bootconfig": {
+							Path: "/dummy/path",
+						},
+					}
+				},
 				IsFileExistsFn: func(string) bool {
 					return false
 				},

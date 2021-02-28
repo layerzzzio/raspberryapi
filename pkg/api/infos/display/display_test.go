@@ -25,6 +25,13 @@ func TestList(t *testing.T) {
 		{
 			name: "error: readLines nil",
 			infos: mock.Infos{
+				GetConfigFilesFn: func() map[string]rpi.ConfigFileDetails {
+					return map[string]rpi.ConfigFileDetails{
+						"bootconfig": {
+							Path: "/dummy/path",
+						},
+					}
+				},
 				ReadFileFn: func(string) ([]string, error) {
 					return nil, errors.New("test error readLines")
 				},
@@ -40,6 +47,13 @@ func TestList(t *testing.T) {
 		{
 			name: "success",
 			infos: mock.Infos{
+				GetConfigFilesFn: func() map[string]rpi.ConfigFileDetails {
+					return map[string]rpi.ConfigFileDetails{
+						"bootconfig": {
+							Path: "/dummy/path",
+						},
+					}
+				},
 				ReadFileFn: func(string) ([]string, error) {
 					return []string{
 						"line1",

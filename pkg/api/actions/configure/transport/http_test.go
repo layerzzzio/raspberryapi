@@ -16,6 +16,7 @@ import (
 	"github.com/raspibuddy/rpi/pkg/api/actions/configure"
 	"github.com/raspibuddy/rpi/pkg/api/actions/configure/transport"
 	"github.com/raspibuddy/rpi/pkg/utl/actions"
+	"github.com/raspibuddy/rpi/pkg/utl/infos"
 	"github.com/raspibuddy/rpi/pkg/utl/mock/mocksys"
 	"github.com/raspibuddy/rpi/pkg/utl/server"
 	"github.com/stretchr/testify/assert"
@@ -79,7 +80,8 @@ func TestExecuteCH(t *testing.T) {
 			r := server.New()
 			rg := r.Group("")
 			a := actions.New()
-			s := configure.New(tc.consys, a)
+			i := infos.New()
+			s := configure.New(tc.consys, a, i)
 			transport.NewHTTP(s, rg)
 			ts := httptest.NewServer(r)
 
@@ -164,7 +166,8 @@ func TestExecuteCP(t *testing.T) {
 			r := server.New()
 			rg := r.Group("")
 			a := actions.New()
-			s := configure.New(tc.consys, a)
+			i := infos.New()
+			s := configure.New(tc.consys, a, i)
 			transport.NewHTTP(s, rg)
 			ts := httptest.NewServer(r)
 
@@ -290,7 +293,8 @@ func TestExecuteWNB(t *testing.T) {
 			r := server.New()
 			rg := r.Group("")
 			a := actions.New()
-			s := configure.New(tc.consys, a)
+			i := infos.New()
+			s := configure.New(tc.consys, a, i)
 			transport.NewHTTP(s, rg)
 			ts := httptest.NewServer(r)
 
@@ -380,7 +384,8 @@ func TestExecuteOV(t *testing.T) {
 			r := server.New()
 			rg := r.Group("")
 			a := actions.New()
-			s := configure.New(tc.consys, a)
+			i := infos.New()
+			s := configure.New(tc.consys, a, i)
 			transport.NewHTTP(s, rg)
 			ts := httptest.NewServer(r)
 

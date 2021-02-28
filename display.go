@@ -2,5 +2,6 @@ package rpi
 
 // Display represents a current device display configuration
 type Display struct {
-	IsOverscan bool `json:"isOverscan"`
+	IsOverscan              bool `json:"isOverscan"`
+	IsXscreenSaverInstalled bool `json:"isXscreenSaverInstalled"`
 }

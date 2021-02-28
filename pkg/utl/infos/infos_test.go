@@ -98,3 +98,27 @@ func TestIsFileExists(t *testing.T) {
 		})
 	}
 }
+
+func TestGetConfigFiles(t *testing.T) {
+	cases := []struct {
+		name     string
+		wantData map[string]string
+	}{
+		{
+			name: "success",
+			wantData: map[string]string{
+				"bootconfig":     "/boot/config.txt",
+				"etcpasswd":      "/etc/passwd",
+				"waitfornetwork": "/etc/systemd/system/dhcpcd.service.d/wait.conf",
+				"hosts":          "/etc/hosts",
+				"hostname":       "/etc/hostname",
+			},
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			configFiles := infos.New().GetConfigFiles()
+			assert.Equal(t, tt.wantData, configFiles)
+		})
+	}
+}

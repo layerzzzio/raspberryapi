@@ -22,7 +22,9 @@ type DISSYS interface {
 
 // Infos represents the infos interface
 type Infos interface {
+	IsFileExists(string) bool
 	ReadFile(string) ([]string, error)
+	GetConfigFiles() map[string]rpi.ConfigFileDetails
 }
 
 // New creates a Display application service instance.

@@ -48,6 +48,12 @@ func TestList(t *testing.T) {
 			wantedData: rpi.Display{IsOverscan: false},
 			wantedErr:  nil,
 		},
+		{
+			name:       "success: arg is nil",
+			readLines:  nil,
+			wantedData: rpi.Display{IsOverscan: false},
+			wantedErr:  nil,
+		},
 	}
 
 	for _, tc := range cases {

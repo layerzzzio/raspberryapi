@@ -23,6 +23,7 @@ type HUMSYS interface {
 // Infos represents the infos interface
 type Infos interface {
 	ReadFile(string) ([]string, error)
+	GetConfigFiles() map[string]rpi.ConfigFileDetails
 }
 
 // New creates a HumanUser application service instance.

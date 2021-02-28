@@ -20,6 +20,7 @@ func TestExecuteCH(t *testing.T) {
 		path       string
 		plan       map[int](map[int]actions.Func)
 		actions    *mock.Actions
+		infos      *mock.Infos
 		consys     *mocksys.Action
 		wantedData rpi.Action
 		wantedErr  error
@@ -49,6 +50,15 @@ func TestExecuteCH(t *testing.T) {
 							},
 						},
 					},
+				},
+			},
+			infos: &mock.Infos{
+				GetConfigFilesFn: func() map[string]rpi.ConfigFileDetails {
+					return map[string]rpi.ConfigFileDetails{
+						"bootconfig": {
+							Path: "/dummy/path",
+						},
+					}
 				},
 			},
 			actions: &mock.Actions{
@@ -127,7 +137,7 @@ func TestExecuteCH(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			s := configure.New(tc.consys, tc.actions)
+			s := configure.New(tc.consys, tc.actions, tc.infos)
 			changeHostname, err := s.ExecuteCH(tc.path)
 			assert.Equal(t, tc.wantedData, changeHostname)
 			assert.Equal(t, tc.wantedErr, err)
@@ -142,6 +152,7 @@ func TestExecuteCP(t *testing.T) {
 		username   string
 		plan       map[int](map[int]actions.Func)
 		actions    *mock.Actions
+		infos      *mock.Infos
 		consys     *mocksys.Action
 		wantedData rpi.Action
 		wantedErr  error
@@ -162,6 +173,15 @@ func TestExecuteCP(t *testing.T) {
 							},
 						},
 					},
+				},
+			},
+			infos: &mock.Infos{
+				GetConfigFilesFn: func() map[string]rpi.ConfigFileDetails {
+					return map[string]rpi.ConfigFileDetails{
+						"bootconfig": {
+							Path: "/dummy/path",
+						},
+					}
 				},
 			},
 			actions: &mock.Actions{
@@ -217,7 +237,7 @@ func TestExecuteCP(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			s := configure.New(tc.consys, tc.actions)
+			s := configure.New(tc.consys, tc.actions, tc.infos)
 			changePassword, err := s.ExecuteCP(tc.password, tc.username)
 			assert.Equal(t, tc.wantedData, changePassword)
 			assert.Equal(t, tc.wantedErr, err)
@@ -231,6 +251,7 @@ func TestExecuteWNB(t *testing.T) {
 		action     string
 		plan       map[int](map[int]actions.Func)
 		actions    *mock.Actions
+		infos      *mock.Infos
 		consys     *mocksys.Action
 		wantedData rpi.Action
 		wantedErr  error
@@ -250,6 +271,15 @@ func TestExecuteWNB(t *testing.T) {
 							},
 						},
 					},
+				},
+			},
+			infos: &mock.Infos{
+				GetConfigFilesFn: func() map[string]rpi.ConfigFileDetails {
+					return map[string]rpi.ConfigFileDetails{
+						"bootconfig": {
+							Path: "/dummy/path",
+						},
+					}
 				},
 			},
 			actions: &mock.Actions{
@@ -305,7 +335,7 @@ func TestExecuteWNB(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			s := configure.New(tc.consys, tc.actions)
+			s := configure.New(tc.consys, tc.actions, tc.infos)
 			changePassword, err := s.ExecuteWNB(tc.action)
 			assert.Equal(t, tc.wantedData, changePassword)
 			assert.Equal(t, tc.wantedErr, err)
@@ -319,6 +349,7 @@ func TestExecuteOV(t *testing.T) {
 		action     string
 		plan       map[int](map[int]actions.Func)
 		actions    *mock.Actions
+		infos      *mock.Infos
 		consys     *mocksys.Action
 		wantedData rpi.Action
 		wantedErr  error
@@ -358,6 +389,15 @@ func TestExecuteOV(t *testing.T) {
 							},
 						},
 					},
+				},
+			},
+			infos: &mock.Infos{
+				GetConfigFilesFn: func() map[string]rpi.ConfigFileDetails {
+					return map[string]rpi.ConfigFileDetails{
+						"bootconfig": {
+							Path: "/dummy/path",
+						},
+					}
 				},
 			},
 			actions: &mock.Actions{
@@ -438,6 +478,15 @@ func TestExecuteOV(t *testing.T) {
 					},
 				},
 			},
+			infos: &mock.Infos{
+				GetConfigFilesFn: func() map[string]rpi.ConfigFileDetails {
+					return map[string]rpi.ConfigFileDetails{
+						"bootconfig": {
+							Path: "/dummy/path",
+						},
+					}
+				},
+			},
 			actions: &mock.Actions{
 				DisableOrEnableOverscanFn: func(interface{}) (rpi.Exec, error) {
 					return rpi.Exec{
@@ -514,7 +563,7 @@ func TestExecuteOV(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			s := configure.New(tc.consys, tc.actions)
+			s := configure.New(tc.consys, tc.actions, tc.infos)
 			overscan, err := s.ExecuteOV(tc.action)
 			assert.Equal(t, tc.wantedData, overscan)
 			assert.Equal(t, tc.wantedErr, err)

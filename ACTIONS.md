@@ -16,6 +16,6 @@
 3. no reboot needed
 
 ## Overscan
-1. check isOverscan: GET /displays
+1. check isOverscan: GET /displays (if not the file might not exist)
 2. depending on that enable or disable: POST /configure/overscan?action=**[enable/disable]**
 3. reboot

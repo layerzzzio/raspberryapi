@@ -1,4 +1,4 @@
-package assets
+package constants
 
 var (
 	FILEMAP = map[string][]string{

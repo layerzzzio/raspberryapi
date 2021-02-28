@@ -6,11 +6,8 @@ import (
 	"io"
 	"os"
 	"strings"
-)
 
-var (
-	// BootConfig contains the boot configs
-	BootConfig = "/boot/config.txt"
+	"github.com/raspibuddy/rpi"
 )
 
 // Service represents several system scripts.
@@ -70,5 +67,32 @@ func (s Service) IsFileExists(filePath string) bool {
 		return true
 	} else {
 		return false
+	}
+}
+
+// GetConfigFiles returns a map of the unix config file used in the Raspberry Pi
+// source: https://qvault.io/2019/10/21/golang-constant-maps-slices/
+func (s Service) GetConfigFiles() map[string]rpi.ConfigFileDetails {
+	return map[string]rpi.ConfigFileDetails{
+		"bootconfig": {
+			Path:        "/boot/config.txt",
+			Description: fmt.Sprint("/boot/config.txt contains some system configuration parameters. It is read at boot time by the device."),
+		},
+		"etcpasswd": {
+			Path:        "/etc/passwd",
+			Description: fmt.Sprint("/etc/passwd is a text-based database of information about users that may log into the system or other operating system user identities that own running processes."),
+		},
+		"waitfornetwork": {
+			Path:        "/etc/systemd/system/dhcpcd.service.d/wait.conf",
+			Description: "",
+		},
+		"hosts": {
+			Path:        "/etc/hosts",
+			Description: "",
+		},
+		"hostname": {
+			Path:        "/etc/hostname",
+			Description: "",
+		},
 	}
 }
