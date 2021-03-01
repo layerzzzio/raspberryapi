@@ -2,8 +2,10 @@ package infos_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
+	"github.com/raspibuddy/rpi"
 	"github.com/raspibuddy/rpi/pkg/utl/infos"
 	"github.com/stretchr/testify/assert"
 )
@@ -102,16 +104,31 @@ func TestIsFileExists(t *testing.T) {
 func TestGetConfigFiles(t *testing.T) {
 	cases := []struct {
 		name     string
-		wantData map[string]string
+		wantData map[string]rpi.ConfigFileDetails
 	}{
 		{
 			name: "success",
-			wantData: map[string]string{
-				"bootconfig":     "/boot/config.txt",
-				"etcpasswd":      "/etc/passwd",
-				"waitfornetwork": "/etc/systemd/system/dhcpcd.service.d/wait.conf",
-				"hosts":          "/etc/hosts",
-				"hostname":       "/etc/hostname",
+			wantData: map[string]rpi.ConfigFileDetails{
+				"bootconfig": {
+					Path:        "/boot/config.txt",
+					Description: "contains some system configuration parameters. It is read at boot time by the device.",
+				},
+				"etcpasswd": {
+					Path:        "/etc/passwd",
+					Description: "is a text-based database of information about users that may log into the system or other operating system user identities that own running processes.",
+				},
+				"waitfornetwork": {
+					Path:        "/etc/systemd/system/dhcpcd.service.d/wait.conf",
+					Description: "is a configuration file that forces the dhcp service to wait for the network to be configured before running.",
+				},
+				"hosts": {
+					Path:        "/etc/hosts",
+					Description: "is a text file that associates IP addresses with hostnames, one line per IP address.",
+				},
+				"hostname": {
+					Path:        "/etc/hostname",
+					Description: "configures the name of the local system. It contains a single newline-terminated hostname string.",
+				},
 			},
 		},
 	}
@@ -119,6 +136,57 @@ func TestGetConfigFiles(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			configFiles := infos.New().GetConfigFiles()
 			assert.Equal(t, tt.wantData, configFiles)
+		})
+	}
+}
+
+func TestGetEnrichedConfigFiles(t *testing.T) {
+	fileTestExisting := "/etc/passwd"
+	statExisting, _ := os.Stat(fileTestExisting)
+
+	fileTestNotExisting := "/boot/config.txt"
+
+	cases := []struct {
+		name     string
+		args     map[string]rpi.ConfigFileDetails
+		wantData map[string]rpi.ConfigFileDetails
+	}{
+		{
+			name: "success",
+			args: map[string]rpi.ConfigFileDetails{
+				"etcpasswd": {
+					Path:        fileTestExisting,
+					Description: "dummy existing file",
+				},
+				"bootconfig": {
+					Path:        fileTestNotExisting,
+					Description: "dummy not existing file",
+				},
+			},
+			wantData: map[string]rpi.ConfigFileDetails{
+				"etcpasswd": {
+					Path:         fileTestExisting,
+					Name:         "passwd",
+					Description:  "dummy existing file",
+					IsExist:      true,
+					Size:         statExisting.Size(),
+					LastModified: uint64(statExisting.ModTime().Unix()),
+				},
+				"bootconfig": {
+					Path:         fileTestNotExisting,
+					Name:         "config.txt",
+					Description:  "dummy not existing file",
+					IsExist:      false,
+					LastModified: 0,
+					Size:         0,
+				},
+			},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			configFiles := infos.New().GetEnrichedConfigFiles(tc.args)
+			assert.Equal(t, tc.wantData, configFiles)
 		})
 	}
 }

@@ -6,7 +6,7 @@ import (
 
 // Service represents all configfile application services.
 type Service interface {
-	List() ([]rpi.ConfigFile, error)
+	List() (rpi.ConfigFile, error)
 }
 
 // ConfigFile represents a ConfigFile application service.
@@ -17,13 +17,13 @@ type ConfigFile struct {
 
 // COFSYS represents a ConfigFile repository service.
 type COFSYS interface {
-	List(map[string]rpi.ConfigFileDetails) ([]rpi.ConfigFile, error)
+	List(map[string]rpi.ConfigFileDetails) (rpi.ConfigFile, error)
 }
 
 // Infos represents the infos interface
 type Infos interface {
-	IsFileExists(string) bool
 	GetConfigFiles() map[string]rpi.ConfigFileDetails
+	GetEnrichedConfigFiles(map[string]rpi.ConfigFileDetails) map[string]rpi.ConfigFileDetails
 }
 
 // New creates a ConfigFile application service instance.

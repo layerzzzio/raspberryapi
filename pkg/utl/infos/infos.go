@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/raspibuddy/rpi"
@@ -76,23 +77,49 @@ func (s Service) GetConfigFiles() map[string]rpi.ConfigFileDetails {
 	return map[string]rpi.ConfigFileDetails{
 		"bootconfig": {
 			Path:        "/boot/config.txt",
-			Description: fmt.Sprint("/boot/config.txt contains some system configuration parameters. It is read at boot time by the device."),
+			Description: "contains some system configuration parameters. It is read at boot time by the device.",
 		},
 		"etcpasswd": {
 			Path:        "/etc/passwd",
-			Description: fmt.Sprint("/etc/passwd is a text-based database of information about users that may log into the system or other operating system user identities that own running processes."),
+			Description: "is a text-based database of information about users that may log into the system or other operating system user identities that own running processes.",
 		},
 		"waitfornetwork": {
 			Path:        "/etc/systemd/system/dhcpcd.service.d/wait.conf",
-			Description: "",
+			Description: "is a configuration file that forces the dhcp service to wait for the network to be configured before running.",
 		},
 		"hosts": {
 			Path:        "/etc/hosts",
-			Description: "",
+			Description: "is a text file that associates IP addresses with hostnames, one line per IP address.",
 		},
 		"hostname": {
 			Path:        "/etc/hostname",
-			Description: "",
+			Description: "configures the name of the local system. It contains a single newline-terminated hostname string.",
 		},
 	}
+}
+
+// GetEnrichedConfigFiles returns the list of config file with some extra fields
+func (s Service) GetEnrichedConfigFiles(configFiles map[string]rpi.ConfigFileDetails) map[string]rpi.ConfigFileDetails {
+	for k, v := range configFiles {
+		stat, err := os.Stat(v.Path)
+		if err != nil {
+			configFiles[k] = rpi.ConfigFileDetails{
+				Path:        v.Path,
+				Description: v.Description,
+				Name:        filepath.Base(v.Path),
+				IsExist:     false,
+			}
+		} else {
+			configFiles[k] = rpi.ConfigFileDetails{
+				Path:         v.Path,
+				Description:  v.Description,
+				Name:         filepath.Base(v.Path),
+				IsExist:      true,
+				LastModified: uint64(stat.ModTime().Unix()),
+				Size:         stat.Size(),
+			}
+		}
+	}
+
+	return configFiles
 }

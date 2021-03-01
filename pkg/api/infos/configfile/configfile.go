@@ -5,7 +5,8 @@ import (
 )
 
 // List populates and returns an array of Display model.
-func (co *ConfigFile) List() ([]rpi.ConfigFile, error) {
+func (co *ConfigFile) List() (rpi.ConfigFile, error) {
 	configFiles := co.i.GetConfigFiles()
-	return co.cofsys.List(configFiles)
+	enrichedConfigFiles := co.i.GetEnrichedConfigFiles(configFiles)
+	return co.cofsys.List(enrichedConfigFiles)
 }

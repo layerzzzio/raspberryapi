@@ -4,9 +4,10 @@ import "github.com/raspibuddy/rpi"
 
 // Infos mock
 type Infos struct {
-	ReadFileFn       func(path string) ([]string, error)
-	IsFileExistsFn   func(path string) bool
-	GetConfigFilesFn func() map[string]rpi.ConfigFileDetails
+	ReadFileFn               func(path string) ([]string, error)
+	IsFileExistsFn           func(path string) bool
+	GetConfigFilesFn         func() map[string]rpi.ConfigFileDetails
+	GetEnrichedConfigFilesFn func(configFiles map[string]rpi.ConfigFileDetails) map[string]rpi.ConfigFileDetails
 }
 
 // ReadFile mock
@@ -22,4 +23,9 @@ func (i Infos) IsFileExists(path string) bool {
 // GetConfigFiles mock
 func (i Infos) GetConfigFiles() map[string]rpi.ConfigFileDetails {
 	return i.GetConfigFilesFn()
+}
+
+// GetEnrichedConfigFiles mock
+func (i Infos) GetEnrichedConfigFiles(configFiles map[string]rpi.ConfigFileDetails) map[string]rpi.ConfigFileDetails {
+	return i.GetEnrichedConfigFilesFn(configFiles)
 }

@@ -10,6 +10,6 @@ type ConfigFileDetails struct {
 	Path         string `json:"path"`
 	Description  string `json:"description"`
 	IsExist      bool   `json:"isExist"`
-	LastModified uint64 `json:"lastModified"`
-	Size         int64  `json:"size"`
+	LastModified uint64 `json:"lastModified,omitempty"`
+	Size         int64  `json:"size,omitempty"`
 }
