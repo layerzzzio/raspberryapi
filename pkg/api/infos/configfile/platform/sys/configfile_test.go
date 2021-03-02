@@ -22,14 +22,25 @@ func TestList(t *testing.T) {
 			configFiles: map[string]rpi.ConfigFileDetails{
 				"/etc/passwd": {
 					Path:         "/etc/passwd",
+					IsCritical:   true,
 					Name:         "passwd",
 					IsExist:      true,
 					Description:  "dummy desc",
 					Size:         1,
 					LastModified: 2,
 				},
+				"/etc/hostname": {
+					Path:         "/etc/hostname",
+					IsCritical:   false,
+					Name:         "hostname",
+					IsExist:      false,
+					Description:  "dummy desc",
+					LastModified: 0,
+					Size:         0,
+				},
 				"/etc/hosts": {
 					Path:         "/etc/hosts",
+					IsCritical:   true,
 					Name:         "hosts",
 					IsExist:      false,
 					Description:  "dummy desc",
@@ -38,12 +49,30 @@ func TestList(t *testing.T) {
 				},
 			},
 			wantedData: rpi.ConfigFile{
-				IsFileMissing: true,
+				IsFilesMissing:         true,
+				IsCriticalFilesMissing: true,
+				CriticalFilesMissing: []string{
+					"/etc/hosts",
+				},
+				FilesMissing: []string{
+					"/etc/hostname",
+					"/etc/hosts",
+				},
 				ConfigFiles: []rpi.ConfigFileDetails{
+					{
+						Path:         "/etc/hostname",
+						Name:         "hostname",
+						IsExist:      false,
+						IsCritical:   false,
+						Description:  "dummy desc",
+						LastModified: 0,
+						Size:         0,
+					},
 					{
 						Path:         "/etc/hosts",
 						Name:         "hosts",
 						IsExist:      false,
+						IsCritical:   true,
 						Description:  "dummy desc",
 						LastModified: 0,
 						Size:         0,
@@ -52,6 +81,7 @@ func TestList(t *testing.T) {
 						Path:         "/etc/passwd",
 						Name:         "passwd",
 						IsExist:      true,
+						IsCritical:   true,
 						Size:         1,
 						LastModified: 2,
 						Description:  "dummy desc",
@@ -71,9 +101,16 @@ func TestList(t *testing.T) {
 				return enrichedConfigFiles.ConfigFiles[i].Name < enrichedConfigFiles.ConfigFiles[j].Name
 			})
 
+			sort.SliceStable(enrichedConfigFiles.FilesMissing, func(i, j int) bool {
+				return enrichedConfigFiles.FilesMissing[i] < enrichedConfigFiles.FilesMissing[j]
+			})
+
 			res := rpi.ConfigFile{
-				IsFileMissing: enrichedConfigFiles.IsFileMissing,
-				ConfigFiles:   enrichedConfigFiles.ConfigFiles,
+				IsFilesMissing:         enrichedConfigFiles.IsFilesMissing,
+				IsCriticalFilesMissing: enrichedConfigFiles.IsCriticalFilesMissing,
+				CriticalFilesMissing:   enrichedConfigFiles.CriticalFilesMissing,
+				FilesMissing:           enrichedConfigFiles.FilesMissing,
+				ConfigFiles:            enrichedConfigFiles.ConfigFiles,
 			}
 
 			assert.Equal(t, tc.wantedData, res)

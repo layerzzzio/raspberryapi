@@ -60,4 +60,4 @@ jobs:
         uses: actions/checkout@v1
 
       - name: Build for Raspberry OS architecture
-        run: env GOOS=linux GOARCH=arm GOARM=5 go build -o rpi cmd/api/main.go
+        run: env GOOS=linux GOARCH=arm GOARM=5 go build -o raspibuddy cmd/api/main.go

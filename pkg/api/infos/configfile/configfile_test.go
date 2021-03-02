@@ -45,7 +45,7 @@ func TestList(t *testing.T) {
 			cofsys: mocksys.ConfigFile{
 				ListFn: func(map[string]rpi.ConfigFileDetails) (rpi.ConfigFile, error) {
 					return rpi.ConfigFile{
-						IsFileMissing: true,
+						IsFilesMissing: true,
 						ConfigFiles: []rpi.ConfigFileDetails{
 							{
 								Path:         "/etc/passwd",
@@ -60,7 +60,7 @@ func TestList(t *testing.T) {
 				},
 			},
 			wantedData: rpi.ConfigFile{
-				IsFileMissing: true,
+				IsFilesMissing: true,
 				ConfigFiles: []rpi.ConfigFileDetails{
 					{
 						Path:         "/etc/passwd",

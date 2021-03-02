@@ -5,11 +5,11 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/raspibuddy/rpi"
-	"github.com/raspibuddy/rpi/pkg/api/infos/display"
+	"github.com/raspibuddy/rpi/pkg/api/infos/configfile"
 )
 
 // New creates a new configfile logging service instance.
-func New(svc display.Service, logger rpi.Logger) *LogService {
+func New(svc configfile.Service, logger rpi.Logger) *LogService {
 	return &LogService{
 		Service: svc,
 		logger:  logger,
@@ -18,14 +18,14 @@ func New(svc display.Service, logger rpi.Logger) *LogService {
 
 // LogService represents a configfile logging service.
 type LogService struct {
-	display.Service
+	configfile.Service
 	logger rpi.Logger
 }
 
 const name = "configfile"
 
 // List is the logging function attached to the List configfile services and responsible for logging it out.
-func (ls *LogService) List(ctx echo.Context) (resp rpi.Display, err error) {
+func (ls *LogService) List(ctx echo.Context) (resp rpi.ConfigFile, err error) {
 	defer func(begin time.Time) {
 		ls.logger.Log(
 			ctx,

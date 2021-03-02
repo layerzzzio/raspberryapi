@@ -13,6 +13,10 @@ import (
 	ibol "github.com/raspibuddy/rpi/pkg/api/infos/boot/logging"
 	ibos "github.com/raspibuddy/rpi/pkg/api/infos/boot/platform/sys"
 	ibot "github.com/raspibuddy/rpi/pkg/api/infos/boot/transport"
+	"github.com/raspibuddy/rpi/pkg/api/infos/configfile"
+	icol "github.com/raspibuddy/rpi/pkg/api/infos/configfile/logging"
+	icos "github.com/raspibuddy/rpi/pkg/api/infos/configfile/platform/sys"
+	icot "github.com/raspibuddy/rpi/pkg/api/infos/configfile/transport"
 	"github.com/raspibuddy/rpi/pkg/api/infos/display"
 	idil "github.com/raspibuddy/rpi/pkg/api/infos/display/logging"
 	idis "github.com/raspibuddy/rpi/pkg/api/infos/display/platform/sys"
@@ -98,6 +102,7 @@ func Start(cfg *config.Configuration) error {
 	ihut.NewHTTP(ihul.New(humanuser.New(ihus.HumanUser{}, i), log).Service, v1)
 	ibot.NewHTTP(ibol.New(boot.New(ibos.Boot{}, i), log).Service, v1)
 	idit.NewHTTP(idil.New(display.New(idis.Display{}, i), log).Service, v1)
+	icot.NewHTTP(icol.New(configfile.New(icos.ConfigFile{}, i), log).Service, v1)
 
 	server.Start(e, &server.Config{
 		Port:                cfg.Server.Port,

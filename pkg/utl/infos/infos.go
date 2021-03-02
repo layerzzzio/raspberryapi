@@ -77,22 +77,27 @@ func (s Service) GetConfigFiles() map[string]rpi.ConfigFileDetails {
 	return map[string]rpi.ConfigFileDetails{
 		"bootconfig": {
 			Path:        "/boot/config.txt",
+			IsCritical:  true,
 			Description: "contains some system configuration parameters. It is read at boot time by the device.",
 		},
 		"etcpasswd": {
 			Path:        "/etc/passwd",
+			IsCritical:  true,
 			Description: "is a text-based database of information about users that may log into the system or other operating system user identities that own running processes.",
 		},
 		"waitfornetwork": {
 			Path:        "/etc/systemd/system/dhcpcd.service.d/wait.conf",
+			IsCritical:  false,
 			Description: "is a configuration file that forces the dhcp service to wait for the network to be configured before running.",
 		},
 		"hosts": {
 			Path:        "/etc/hosts",
+			IsCritical:  true,
 			Description: "is a text file that associates IP addresses with hostnames, one line per IP address.",
 		},
 		"hostname": {
 			Path:        "/etc/hostname",
+			IsCritical:  true,
 			Description: "configures the name of the local system. It contains a single newline-terminated hostname string.",
 		},
 	}
