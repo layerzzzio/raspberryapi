@@ -88,6 +88,12 @@ const (
 
 	// CommentOverscan is the name of the comment overscan method
 	CommentOverscan = "comment_overscan"
+
+	// DisableOrEnableBlanking is the name of the disable or enable blanking function
+	DisableOrEnableBlanking = "disable_or_enable_blanking"
+
+	// Blanking is the name of the disable or enable blanking method
+	Blanking = "blanking"
 )
 
 var (
@@ -461,6 +467,13 @@ type EnableOrDisableConfig struct {
 	DirOrFilePath string
 }
 
+// EnableOrDisableConfigExtraFile is the argument for enable or disable methods
+type TargetDestEnableOrDisableConfig struct {
+	Action                   string
+	TargetDirOrFilePath      string
+	DestinationDirOrFilePath string
+}
+
 // WaitForNetworkAtBoot enable or disable wait for network at boot
 func (s Service) WaitForNetworkAtBoot(arg interface{}) (rpi.Exec, error) {
 	var directory string
@@ -682,6 +695,81 @@ func (s Service) CommentOverscan(arg interface{}) (rpi.Exec, error) {
 	}, nil
 }
 
+// DisableOrEnableBlanking disables or enables blanking
+func (s Service) DisableOrEnableBlanking(arg interface{}) (rpi.Exec, error) {
+	var target string
+	var destination string
+	var action string
+
+	switch v := arg.(type) {
+	case TargetDestEnableOrDisableConfig:
+		target = v.TargetDirOrFilePath
+		destination = v.DestinationDirOrFilePath
+		action = v.Action
+	case OtherParams:
+		target = arg.(OtherParams).Value["target"]
+		destination = arg.(OtherParams).Value["destination"]
+		action = arg.(OtherParams).Value["action"]
+	default:
+		return rpi.Exec{ExitStatus: 1}, &Error{[]string{"target", "destination", "action"}}
+	}
+
+	// execution start time
+	startTime := uint64(time.Now().Unix())
+	exitStatus := 0
+	var stdErr string
+
+	if action == Enable {
+		// remove the file
+		err := os.Remove(destination + "/10-blanking.conf")
+
+		// if error, it is logged here
+		if err != nil {
+			exitStatus = 1
+			stdErr = fmt.Sprint(err)
+		}
+	} else if action == Disable {
+		// create the directory and the parent directories
+		if err := os.MkdirAll(destination, 0755); err != nil {
+			exitStatus = 1
+			stdErr = fmt.Sprint(err)
+		} else {
+			if _, err := os.Stat(target + "/10-blanking.conf"); err != nil {
+				exitStatus, stdErr = CreateAssetFile(
+					// no new data because already commented in assets
+					CreateAssetFileArg{
+						AssetFile:  "../assets/10-blanking.conf",
+						TargetFile: target + "/10-blanking.conf",
+					},
+				)
+			}
+
+			if err := CopyFile(
+				target+"/10-blanking.conf",
+				destination+"/10-blanking.conf",
+				DefaultFilePerm,
+			); err != nil {
+				exitStatus = 1
+				stdErr = fmt.Sprint(err)
+			}
+		}
+	} else {
+		exitStatus = 1
+		stdErr = "bad action type"
+	}
+
+	// execution end time
+	endTime := uint64(time.Now().Unix())
+
+	return rpi.Exec{
+		Name:       DisableOrEnableBlanking,
+		StartTime:  startTime,
+		EndTime:    endTime,
+		ExitStatus: uint8(exitStatus),
+		Stderr:     stdErr,
+	}, nil
+}
+
 // Call calls a function by its name and params
 func Call(funcName interface{}, params []interface{}) (result interface{}, err error) {
 	// defer wg.Done()
@@ -821,37 +909,36 @@ type WriteToFileArg struct {
 // BackupFile copies a file and adds suffix .bak to the copied file
 // !!! "defer close" should absolutely not be used here !!!
 // source: https://www.joeshaw.org/dont-defer-close-on-writable-files/
-func BackupFile(path string, perm uint32) error {
-	newPath := path + ".bak"
-
+func CopyFile(target string, destination string, perm uint32) error {
 	// copy the file if the file exists
-	if _, err := os.Stat(path); err == nil {
-		in, err := os.Open(path)
+	if _, err := os.Stat(target); err == nil {
+		in, err := os.Open(target)
 		if err != nil {
 			return fmt.Errorf("opening source file failed")
 		}
 
-		out, err := os.Create(newPath)
+		fmt.Println("creating file here" + destination)
+		out, err := os.Create(destination)
 		if err != nil {
 			out.Close()
-			return fmt.Errorf("creating bak file failed")
+			return fmt.Errorf("creating copied file failed")
 		}
 
 		if _, err = io.Copy(out, in); err != nil {
-			return fmt.Errorf("copying to bak file failed")
+			return fmt.Errorf("copying to copied file failed")
 		}
 
 		err = in.Close()
 		if err != nil {
-			return fmt.Errorf("closing file failed")
+			return fmt.Errorf("closing target failed")
 		}
 
 		err = out.Close()
 		if err != nil {
-			return fmt.Errorf("closing new file failed")
+			return fmt.Errorf("closing destination failed")
 		}
 
-		if err := ApplyPermissionsToFile(newPath, perm); err != nil {
+		if err := ApplyPermissionsToFile(destination, perm); err != nil {
 			return fmt.Errorf("applying permission failed")
 		}
 	}
@@ -915,8 +1002,7 @@ func CloseAndRemoveBakFile(file *os.File, path string) error {
 
 // OverwriteToFile overwrite data in a given file
 func OverwriteToFile(args WriteToFileArg) error {
-	err := BackupFile(args.File, DefaultFilePerm)
-	if err != nil {
+	if err := CopyFile(args.File, args.File+".bak", DefaultFilePerm); err != nil {
 		return fmt.Errorf("backuping file failed")
 	}
 
@@ -934,6 +1020,9 @@ func OverwriteToFile(args WriteToFileArg) error {
 		}
 
 		if err != nil {
+			if err = os.Rename(args.File+".bak", args.File); err != nil {
+				return fmt.Errorf("renaming bak file to regular file failed")
+			}
 			return fmt.Errorf("writing to file failed")
 		}
 	}
@@ -1224,7 +1313,6 @@ func CreateAssetFile(args CreateAssetFileArg) (int, string) {
 	// 	}
 
 	if assetData := constants.FILEMAP[args.AssetFile]; assetData != nil {
-		fmt.Println(assetData)
 		if err := OverwriteToFile(
 			WriteToFileArg{
 				File:      args.TargetFile,

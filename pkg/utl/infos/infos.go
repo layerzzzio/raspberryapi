@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -100,6 +101,11 @@ func (s Service) GetConfigFiles() map[string]rpi.ConfigFileDetails {
 			IsCritical:  true,
 			Description: "configures the name of the local system. It contains a single newline-terminated hostname string.",
 		},
+		"blanking": {
+			Path:        "/etc/X11/xorg.conf.d/10-blanking.conf",
+			IsCritical:  false,
+			Description: "configures the blanking behavior of the monitor.",
+		},
 	}
 }
 
@@ -127,4 +133,25 @@ func (s Service) GetEnrichedConfigFiles(configFiles map[string]rpi.ConfigFileDet
 	}
 
 	return configFiles
+}
+
+// IsXscreenSaverInstalled checks if XscreenSaver is installed
+func (s Service) IsXscreenSaverInstalled() (bool, error) {
+	isInstalled := false
+
+	res, err := exec.Command(
+		"sh",
+		"-c",
+		"dpkg -l xscreensaver | tail -n 1 | cut -d ' ' -f 1",
+	).Output()
+
+	if err != nil {
+		err = fmt.Errorf("checking xscreensaver installation failed")
+	} else {
+		if string(res) == "ii" {
+			isInstalled = true
+		}
+	}
+
+	return isInstalled, err
 }

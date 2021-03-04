@@ -17,7 +17,7 @@ type Display struct {
 
 // DISSYS represents a Display repository service.
 type DISSYS interface {
-	List([]string) (rpi.Display, error)
+	List([]string, bool, bool) (rpi.Display, error)
 }
 
 // Infos represents the infos interface
@@ -25,6 +25,7 @@ type Infos interface {
 	IsFileExists(string) bool
 	ReadFile(string) ([]string, error)
 	GetConfigFiles() map[string]rpi.ConfigFileDetails
+	IsXscreenSaverInstalled() (bool, error)
 }
 
 // New creates a Display application service instance.

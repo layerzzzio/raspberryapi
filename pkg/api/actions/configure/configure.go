@@ -131,3 +131,30 @@ func (con *Configure) ExecuteOV(action string) (rpi.Action, error) {
 
 	return con.consys.ExecuteOV(plan)
 }
+
+// ExecuteBL enable or disable blanking
+func (con *Configure) ExecuteBL(action string) (rpi.Action, error) {
+	var plan map[int]map[int]actions.Func
+
+	if action == "enable" || action == "disable" {
+		plan = map[int](map[int]actions.Func){
+			1: {
+				1: {
+					Name:      actions.DisableOrEnableBlanking,
+					Reference: con.a.DisableOrEnableBlanking,
+					Argument: []interface{}{
+						actions.TargetDestEnableOrDisableConfig{
+							TargetDirOrFilePath:      constants.RASPICONFIGX11SERVICE,
+							DestinationDirOrFilePath: constants.X11SERVICE,
+							Action:                   action,
+						},
+					},
+				},
+			},
+		}
+	} else {
+		return rpi.Action{}, echo.NewHTTPError(http.StatusInternalServerError, "bad action type: enable or disable blanking failed")
+	}
+
+	return con.consys.ExecuteBL(plan)
+}

@@ -134,6 +134,11 @@ func TestGetConfigFiles(t *testing.T) {
 					IsCritical:  true,
 					Description: "configures the name of the local system. It contains a single newline-terminated hostname string.",
 				},
+				"blanking": {
+					Path:        "/etc/X11/xorg.conf.d/10-blanking.conf",
+					IsCritical:  false,
+					Description: "configures the blanking behavior of the monitor.",
+				},
 			},
 		},
 	}
@@ -192,6 +197,27 @@ func TestGetEnrichedConfigFiles(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			configFiles := infos.New().GetEnrichedConfigFiles(tc.args)
 			assert.Equal(t, tc.wantData, configFiles)
+		})
+	}
+}
+
+func TestIsXscreenSaverInstalled(t *testing.T) {
+	cases := []struct {
+		name     string
+		wantData bool
+		wantErr  error
+	}{
+		{
+			name:     "success",
+			wantData: false,
+			wantErr:  nil,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			command, err := infos.New().IsXscreenSaverInstalled()
+			assert.Equal(t, tc.wantData, command)
+			assert.Equal(t, tc.wantErr, err)
 		})
 	}
 }

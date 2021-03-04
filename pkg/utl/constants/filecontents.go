@@ -63,5 +63,18 @@ var (
 			"",
 			"ff02::2		ip6-allrouters",
 		},
+		"../assets/10-blanking.conf": {
+			"Section \"Extensions\"",
+			"    Option      \"DPMS\" \"Disable\"",
+			"EndSection",
+			"",
+			"Section \"ServerLayout\"",
+			"    Identifier \"ServerLayout0\"",
+			"    Option \"StandbyTime\" \"0\"",
+			"    Option \"SuspendTime\" \"0\"",
+			"    Option \"OffTime\"     \"0\"",
+			"    Option \"BlankTime\"   \"0\"",
+			"EndSection",
+		},
 	}
 )

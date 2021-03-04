@@ -1,24 +1,13 @@
 package constants
 
-// // file consts
-// const (
-// 	// BOOTCONFIG contains the boot configs
-// 	BOOTCONFIG = "/boot/config.txt"
-
-// 	// ETCPASSWD contains the list of users & password
-// 	ETCPASSWD = "/etc/passwd"
-
-// 	// WAITFORNETWORK contains the waif for network conf
-// 	WAITFORNETWORK = "/etc/systemd/system/dhcpcd.service.d/wait.conf"
-
-// 	// HOSTS contains the hostname configuration
-// 	HOSTS = "/etc/hosts"
-
-// 	// HOSTNAME contains the hostname
-// 	HOSTNAME = "/etc/hostname"
-// )
-
 // directory consts
 const (
+	// DHCPSERVICE directory
 	DHCPSERVICE = "/etc/systemd/system/dhcpcd.service.d"
+
+	// X11SERVICE directory
+	X11SERVICE = "/etc/X11/xorg.conf.d"
+
+	// RASPI-CONFIG X11SERVICE directory
+	RASPICONFIGX11SERVICE = "/usr/share/raspi-config/10-blanking.conf"
 )

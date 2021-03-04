@@ -21,7 +21,6 @@ func TestList(t *testing.T) {
 		wantedData rpi.Display
 		wantedErr  error
 	}{
-
 		{
 			name: "error: readLines nil",
 			infos: mock.Infos{
@@ -35,9 +34,12 @@ func TestList(t *testing.T) {
 				ReadFileFn: func(string) ([]string, error) {
 					return nil, errors.New("test error readLines")
 				},
+				IsXscreenSaverInstalledFn: func() (bool, error) {
+					return false, nil
+				},
 			},
 			dissys: mocksys.Display{
-				ListFn: func([]string) (rpi.Display, error) {
+				ListFn: func([]string, bool, bool) (rpi.Display, error) {
 					return rpi.Display{}, nil
 				},
 			},
@@ -61,10 +63,17 @@ func TestList(t *testing.T) {
 						"line3",
 					}, nil
 				},
+				IsXscreenSaverInstalledFn: func() (bool, error) {
+					return false, nil
+				},
 			},
 			dissys: mocksys.Display{
-				ListFn: func([]string) (rpi.Display, error) {
-					return rpi.Display{IsOverscan: true}, nil
+				ListFn: func([]string, bool, bool) (rpi.Display, error) {
+					return rpi.Display{
+						IsOverscan:              true,
+						IsXscreenSaverInstalled: false,
+						IsBlanking:              false,
+					}, nil
 				},
 			},
 			wantedData: rpi.Display{IsOverscan: true},
