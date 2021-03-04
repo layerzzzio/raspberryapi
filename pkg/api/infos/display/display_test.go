@@ -37,6 +37,9 @@ func TestList(t *testing.T) {
 				IsXscreenSaverInstalledFn: func() (bool, error) {
 					return false, nil
 				},
+				IsFileExistsFn: func(string) bool {
+					return false
+				},
 			},
 			dissys: mocksys.Display{
 				ListFn: func([]string, bool, bool) (rpi.Display, error) {
@@ -65,6 +68,9 @@ func TestList(t *testing.T) {
 				},
 				IsXscreenSaverInstalledFn: func() (bool, error) {
 					return false, nil
+				},
+				IsFileExistsFn: func(string) bool {
+					return false
 				},
 			},
 			dissys: mocksys.Display{
