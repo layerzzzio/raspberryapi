@@ -21,6 +21,8 @@ func NewHTTP(svc configure.Service, r *echo.Group) {
 	cr.POST("/changepassword", h.changepassword)
 	cr.POST("/waitfornetworkatboot", h.waitfornetworkatboot)
 	cr.POST("/overscan", h.overscan)
+	cr.POST("/blanking", h.blanking)
+
 }
 
 func (h *HTTP) changehostname(ctx echo.Context) error {
@@ -79,6 +81,20 @@ func (h *HTTP) overscan(ctx echo.Context) error {
 	}
 
 	result, err := h.svc.ExecuteOV(action)
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(http.StatusOK, result)
+}
+
+func (h *HTTP) blanking(ctx echo.Context) error {
+	action := ctx.QueryParam("action")
+	if err := ActionCheck(action); err != nil {
+		return err
+	}
+
+	result, err := h.svc.ExecuteBL(action)
 	if err != nil {
 		return err
 	}

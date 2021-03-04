@@ -2,8 +2,10 @@ package infos_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
+	"github.com/raspibuddy/rpi"
 	"github.com/raspibuddy/rpi/pkg/utl/infos"
 	"github.com/stretchr/testify/assert"
 )
@@ -95,6 +97,127 @@ func TestIsFileExists(t *testing.T) {
 			i := infos.New()
 			isFileExists := i.IsFileExists(tc.filepath)
 			assert.Equal(t, tc.wantedData, isFileExists)
+		})
+	}
+}
+
+func TestGetConfigFiles(t *testing.T) {
+	cases := []struct {
+		name     string
+		wantData map[string]rpi.ConfigFileDetails
+	}{
+		{
+			name: "success",
+			wantData: map[string]rpi.ConfigFileDetails{
+				"bootconfig": {
+					Path:        "/boot/config.txt",
+					IsCritical:  true,
+					Description: "contains some system configuration parameters. It is read at boot time by the device.",
+				},
+				"etcpasswd": {
+					Path:        "/etc/passwd",
+					IsCritical:  true,
+					Description: "is a text-based database of information about users that may log into the system or other operating system user identities that own running processes.",
+				},
+				"waitfornetwork": {
+					Path:        "/etc/systemd/system/dhcpcd.service.d/wait.conf",
+					IsCritical:  false,
+					Description: "is a configuration file that forces the dhcp service to wait for the network to be configured before running.",
+				},
+				"hosts": {
+					Path:        "/etc/hosts",
+					IsCritical:  true,
+					Description: "is a text file that associates IP addresses with hostnames, one line per IP address.",
+				},
+				"hostname": {
+					Path:        "/etc/hostname",
+					IsCritical:  true,
+					Description: "configures the name of the local system. It contains a single newline-terminated hostname string.",
+				},
+				"blanking": {
+					Path:        "/etc/X11/xorg.conf.d/10-blanking.conf",
+					IsCritical:  false,
+					Description: "configures the blanking behavior of the monitor.",
+				},
+			},
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			configFiles := infos.New().GetConfigFiles()
+			assert.Equal(t, tt.wantData, configFiles)
+		})
+	}
+}
+
+func TestGetEnrichedConfigFiles(t *testing.T) {
+	fileTestExisting := "/etc/passwd"
+	statExisting, _ := os.Stat(fileTestExisting)
+
+	fileTestNotExisting := "/boot/config.txt"
+
+	cases := []struct {
+		name     string
+		args     map[string]rpi.ConfigFileDetails
+		wantData map[string]rpi.ConfigFileDetails
+	}{
+		{
+			name: "success",
+			args: map[string]rpi.ConfigFileDetails{
+				"etcpasswd": {
+					Path:        fileTestExisting,
+					Description: "dummy existing file",
+				},
+				"bootconfig": {
+					Path:        fileTestNotExisting,
+					Description: "dummy not existing file",
+				},
+			},
+			wantData: map[string]rpi.ConfigFileDetails{
+				"etcpasswd": {
+					Path:         fileTestExisting,
+					Name:         "passwd",
+					Description:  "dummy existing file",
+					IsExist:      true,
+					Size:         statExisting.Size(),
+					LastModified: uint64(statExisting.ModTime().Unix()),
+				},
+				"bootconfig": {
+					Path:         fileTestNotExisting,
+					Name:         "config.txt",
+					Description:  "dummy not existing file",
+					IsExist:      false,
+					LastModified: 0,
+					Size:         0,
+				},
+			},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			configFiles := infos.New().GetEnrichedConfigFiles(tc.args)
+			assert.Equal(t, tc.wantData, configFiles)
+		})
+	}
+}
+
+func TestIsXscreenSaverInstalled(t *testing.T) {
+	cases := []struct {
+		name     string
+		wantData bool
+		wantErr  error
+	}{
+		{
+			name:     "success",
+			wantData: false,
+			wantErr:  nil,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			command, err := infos.New().IsXscreenSaverInstalled()
+			assert.Equal(t, tc.wantData, command)
+			assert.Equal(t, tc.wantErr, err)
 		})
 	}
 }

@@ -11,11 +11,22 @@
 2. no reboot needed
 
 ## Wait for network at boot
-1. check isWaitForNetworkAtBoot: GET /boots
+1. check if isWaitForNetworkAtBoot: GET /boots 
+    > no need to check GET /configfiles because GET /boots does that
 2. depending on that enable or disable: POST /configure/waitfornetworkatboot?action=**[enable/disable]**
 3. no reboot needed
 
 ## Overscan
-1. check isOverscan: GET /displays
-2. depending on that enable or disable: POST /configure/overscan?action=**[enable/disable]**
-3. reboot
+1. check if file exists: GET /configfiles
+2. if file exists, check isOverscan: GET /displays
+3. depending on that enable or disable: POST /configure/overscan?action=**[enable/disable]**
+4. reboot
+
+## Blanking
+1. check if file exists: GET /configfiles
+2. if file exists, check isXscreenSaverInstalled and isBlanking: GET /displays
+3. if isXscreenSaverInstalled = true, it will override the raspi-config blanking config: ABORT here
+4. if isXscreenSaverInstalled = false, then continue
+5. enable or disable depending on isBlanking: POST /configure/overscan?action=**[enable/disable]**
+PS: it will fail it try to enable while it is already enabled - same with disable status & disable
+6. reboot

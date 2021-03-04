@@ -23,6 +23,7 @@ type BOOSYS interface {
 // Infos represents the infos interface
 type Infos interface {
 	IsFileExists(string) bool
+	GetConfigFiles() map[string]rpi.ConfigFileDetails
 }
 
 // New creates a Boot application service instance.

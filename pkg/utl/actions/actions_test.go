@@ -20,8 +20,9 @@ import (
 )
 
 var (
-	dummyfilepath      = "./dummyfile"
-	dummydirectorypath = "./dummydirectory"
+	dummyfilepath            = "./dummyfile"
+	dummydirectorypath       = "./dummydirectory"
+	destinationdirectorypath = "./destinationdirectory"
 )
 
 func TestDeleteFile(t *testing.T) {
@@ -1095,7 +1096,7 @@ func TestExecutePlanWithDependency(t *testing.T) {
 	}
 }
 
-func TestBackupFile(t *testing.T) {
+func TestCopyFile(t *testing.T) {
 	cases := []struct {
 		name       string
 		path       string
@@ -1130,7 +1131,7 @@ func TestBackupFile(t *testing.T) {
 				file.Close()
 
 				// backup file
-				backupFile := actions.BackupFile(tc.path, tc.perm)
+				backupFile := actions.CopyFile(tc.path, tc.path+".bak", tc.perm)
 
 				// open backup file and read the content
 				fileBak, err := os.Open(tc.path + ".bak")
@@ -1166,7 +1167,7 @@ func TestBackupFile(t *testing.T) {
 				// backup file content should be equal to original file
 				assert.Equal(t, "hey_man", strings.Join(readLines, ""))
 			}
-			backupFile := actions.BackupFile(tc.path, tc.perm)
+			backupFile := actions.CopyFile(tc.path, tc.path+".bak", tc.perm)
 			assert.Equal(t, tc.wantedData, backupFile)
 		})
 	}
@@ -2309,14 +2310,18 @@ func TestDisableOrEnableOverscan(t *testing.T) {
 		{
 			name: "error : too many arguments",
 			argument: []actions.OtherParams{
-				{Value: map[string]string{"path": dummyfilepath}},
-				{Value: map[string]string{"action": "enable"}},
-				{Value: map[string]string{"dummyarg": "dummyargvalue"}},
+				{
+					Value: map[string]string{
+						"path":     "target",
+						"action":   "enable",
+						"dummyarg": "dummyargvalue",
+					},
+				},
 			},
 			isSuccess:        false,
 			wantedExitStatus: 1,
 			wantedStderr:     "",
-			wantedErr:        &actions.Error{Arguments: []string{"path", "action"}},
+			wantedErr:        &actions.Error{[]string{"path", "action"}},
 		},
 		{
 			name: "error : action not right",
@@ -2868,14 +2873,14 @@ func TestCommentOverscan(t *testing.T) {
 		{
 			name: "error : too many arguments",
 			argument: []actions.OtherParams{
-				{Value: map[string]string{"path": dummyfilepath}},
-				{Value: map[string]string{"action": "enable"}},
-				{Value: map[string]string{"dummyarg": "dummyargvalue"}},
+				{Value: map[string]string{"path": dummydirectorypath}},
+				{Value: map[string]string{"action": "dummyaction"}},
+				{Value: map[string]string{"dummyextraarg": "dummyextraarg"}},
 			},
 			isSuccess:        false,
 			wantedExitStatus: 1,
 			wantedStderr:     "",
-			wantedErr:        &actions.Error{Arguments: []string{"path", "action"}},
+			wantedErr:        &actions.Error{[]string{"path", "action"}},
 		},
 		{
 			name: "error : action not right",
@@ -3203,6 +3208,275 @@ func TestCreateAssetFile(t *testing.T) {
 
 			assert.Equal(t, tc.wantedExitStatus, exitStatus)
 			assert.Equal(t, tc.wantedStderr, stdErr)
+		})
+	}
+}
+
+func TestDisableOrEnableBlanking(t *testing.T) {
+	cases := []struct {
+		name                string
+		argument            interface{}
+		action              string
+		isTargetFileAbsent  bool
+		wantedIsFileDeleted bool
+		wantedLines         []string
+		wantedExitStatus    uint8
+		wantedStderr        string
+		wantedErr           error
+	}{
+		{
+			name:   "error : no such file or directory (enable)",
+			action: "error",
+			argument: actions.TargetDestEnableOrDisableConfig{
+				TargetDirOrFilePath:      "",
+				DestinationDirOrFilePath: "",
+				Action:                   "enable",
+			},
+			wantedExitStatus: 1,
+			wantedStderr:     "remove /10-blanking.conf: no such file or directory",
+			wantedErr:        nil,
+		},
+		{
+			name:   "error : no such file or directory (disable)",
+			action: "error",
+			argument: actions.TargetDestEnableOrDisableConfig{
+				TargetDirOrFilePath:      "",
+				DestinationDirOrFilePath: "",
+				Action:                   "disable",
+			},
+			wantedExitStatus: 1,
+			wantedStderr:     "mkdir : no such file or directory",
+			wantedErr:        nil,
+		},
+		{
+			name:   "error : too many arguments",
+			action: "other",
+			argument: []actions.OtherParams{
+				{Value: map[string]string{"target": dummydirectorypath}},
+				{Value: map[string]string{"destination": "destination"}},
+				{Value: map[string]string{"action": "action"}},
+				{Value: map[string]string{"dummyarg": "dummyarg"}},
+			},
+			wantedExitStatus: 1,
+			wantedStderr:     "",
+			wantedErr:        &actions.Error{Arguments: []string{"target", "destination", "action"}},
+		},
+		{
+			name:   "error : action not right",
+			action: "other",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"target":      "target",
+					"destination": "destination",
+					"action":      "enable-xxx",
+				},
+			},
+			wantedExitStatus: 1,
+			wantedStderr:     "bad action type",
+			wantedErr:        nil,
+		},
+		{
+			name:   "success: enable with otherParams",
+			action: "enable",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"target":      dummydirectorypath,
+					"destination": destinationdirectorypath,
+					"action":      actions.Enable,
+				},
+			},
+			wantedIsFileDeleted: true,
+			wantedExitStatus:    0,
+			wantedStderr:        "",
+			wantedErr:           nil,
+		},
+		{
+			name:   "success: enable with regular args",
+			action: "enable",
+			argument: actions.TargetDestEnableOrDisableConfig{
+				TargetDirOrFilePath:      dummydirectorypath,
+				DestinationDirOrFilePath: destinationdirectorypath,
+				Action:                   actions.Enable,
+			},
+			wantedIsFileDeleted: true,
+			wantedExitStatus:    0,
+			wantedStderr:        "",
+			wantedErr:           nil,
+		},
+		{
+			name:   "success: disable with otherParams",
+			action: "disable",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"target":      dummydirectorypath,
+					"destination": destinationdirectorypath,
+					"action":      actions.Disable,
+				},
+			},
+			wantedLines: []string{
+				"Section \"Extensions\"",
+				"    Option      \"DPMS\" \"Disable\"",
+				"EndSection",
+				"",
+				"Section \"ServerLayout\"",
+				"    Identifier \"ServerLayout0\"",
+				"    Option \"StandbyTime\" \"0\"",
+				"    Option \"SuspendTime\" \"0\"",
+				"    Option \"OffTime\"     \"0\"",
+				"    Option \"BlankTime\"   \"0\"",
+				"EndSection",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+		{
+			name:   "success: disable with regular args",
+			action: "disable",
+			argument: actions.TargetDestEnableOrDisableConfig{
+				TargetDirOrFilePath:      dummydirectorypath,
+				DestinationDirOrFilePath: destinationdirectorypath,
+				Action:                   actions.Disable,
+			},
+			wantedLines: []string{
+				"Section \"Extensions\"",
+				"    Option      \"DPMS\" \"Disable\"",
+				"EndSection",
+				"",
+				"Section \"ServerLayout\"",
+				"    Identifier \"ServerLayout0\"",
+				"    Option \"StandbyTime\" \"0\"",
+				"    Option \"SuspendTime\" \"0\"",
+				"    Option \"OffTime\"     \"0\"",
+				"    Option \"BlankTime\"   \"0\"",
+				"EndSection",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+		{
+			name:               "success: target file does not exist",
+			action:             "disable",
+			isTargetFileAbsent: true,
+			argument: actions.TargetDestEnableOrDisableConfig{
+				TargetDirOrFilePath:      dummydirectorypath,
+				DestinationDirOrFilePath: destinationdirectorypath,
+				Action:                   actions.Disable,
+			},
+			wantedLines: []string{
+				"Section \"Extensions\"",
+				"    Option      \"DPMS\" \"Disable\"",
+				"EndSection",
+				"",
+				"Section \"ServerLayout\"",
+				"    Identifier \"ServerLayout0\"",
+				"    Option \"StandbyTime\" \"0\"",
+				"    Option \"SuspendTime\" \"0\"",
+				"    Option \"OffTime\"     \"0\"",
+				"    Option \"BlankTime\"   \"0\"",
+				"EndSection",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var overscan rpi.Exec
+			var err error
+			a := actions.New()
+
+			if tc.action == "enable" {
+				if err := os.MkdirAll(destinationdirectorypath, 0755); err != nil {
+					log.Fatal(err)
+				}
+
+				if tc.isTargetFileAbsent == false {
+					// create and populate file
+					if err := actions.OverwriteToFile(actions.WriteToFileArg{
+						File: destinationdirectorypath + "/10-blanking.conf",
+						Data: []string{
+							"Section \"Extensions\"",
+							"    Option      \"DPMS\" \"Disable\"",
+							"EndSection",
+							"",
+							"Section \"ServerLayout\"",
+							"    Identifier \"ServerLayout0\"",
+							"    Option \"StandbyTime\" \"0\"",
+							"    Option \"SuspendTime\" \"0\"",
+							"    Option \"OffTime\"     \"0\"",
+							"    Option \"BlankTime\"   \"0\"",
+							"EndSection",
+						},
+						Multiline:   true,
+						Permissions: 0755,
+					}); err != nil {
+						log.Fatal(err)
+					}
+				}
+
+				overscan, err = a.DisableOrEnableBlanking(tc.argument)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				isFileDeleted := false
+				if _, err := os.Stat(destinationdirectorypath + "/10-blanking.conf"); err != nil {
+					isFileDeleted = true
+				}
+
+				os.RemoveAll(dummydirectorypath)
+				os.RemoveAll(destinationdirectorypath)
+
+				assert.Equal(t, tc.wantedIsFileDeleted, isFileDeleted)
+			} else if tc.action == "disable" {
+				if err := os.MkdirAll(dummydirectorypath, 0755); err != nil {
+					log.Fatal(err)
+				}
+
+				// create and populate file
+				if err := actions.OverwriteToFile(actions.WriteToFileArg{
+					File: dummydirectorypath + "/10-blanking.conf",
+					Data: []string{
+						"Section \"Extensions\"",
+						"    Option      \"DPMS\" \"Disable\"",
+						"EndSection",
+						"",
+						"Section \"ServerLayout\"",
+						"    Identifier \"ServerLayout0\"",
+						"    Option \"StandbyTime\" \"0\"",
+						"    Option \"SuspendTime\" \"0\"",
+						"    Option \"OffTime\"     \"0\"",
+						"    Option \"BlankTime\"   \"0\"",
+						"EndSection",
+					},
+					Multiline:   true,
+					Permissions: 0755,
+				}); err != nil {
+					log.Fatal(err)
+				}
+
+				overscan, err = a.DisableOrEnableBlanking(tc.argument)
+
+				// read the new line and delete
+				readLines, err := infos.New().ReadFile(destinationdirectorypath + "/10-blanking.conf")
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				os.RemoveAll(dummydirectorypath)
+				os.RemoveAll(destinationdirectorypath)
+				assert.Equal(t, tc.wantedLines, readLines)
+			} else {
+				overscan, err = a.DisableOrEnableBlanking(tc.argument)
+			}
+
+			assert.Equal(t, tc.wantedExitStatus, overscan.ExitStatus)
+			assert.Equal(t, tc.wantedStderr, overscan.Stderr)
+			assert.Equal(t, tc.wantedErr, err)
 		})
 	}
 }

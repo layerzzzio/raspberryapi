@@ -10,7 +10,11 @@ import (
 type Display struct{}
 
 // List returns a list of Display info
-func (d Display) List(readLines []string) (rpi.Display, error) {
+func (d Display) List(
+	readLines []string,
+	isXscreenSaverInstalled bool,
+	isBlanking bool,
+) (rpi.Display, error) {
 	isOverscan := false
 	// I use a regex here to cover the below cases:
 	// disable_overscan=0 (regular)
@@ -25,6 +29,8 @@ func (d Display) List(readLines []string) (rpi.Display, error) {
 	}
 
 	return rpi.Display{
-		IsOverscan: isOverscan,
+		IsOverscan:              isOverscan,
+		IsXscreenSaverInstalled: isXscreenSaverInstalled,
+		IsBlanking:              isBlanking,
 	}, nil
 }

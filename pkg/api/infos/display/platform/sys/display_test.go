@@ -12,10 +12,12 @@ import (
 
 func TestList(t *testing.T) {
 	cases := []struct {
-		name       string
-		readLines  []string
-		wantedData rpi.Display
-		wantedErr  error
+		name                    string
+		readLines               []string
+		isXscreenSaverInstalled bool
+		isBlanking              bool
+		wantedData              rpi.Display
+		wantedErr               error
 	}{
 		{
 			name: "success: overscan true",
@@ -25,8 +27,14 @@ func TestList(t *testing.T) {
 				"     disable_overscan     =    0  #random bash comment",
 				"line3",
 			},
-			wantedData: rpi.Display{IsOverscan: true},
-			wantedErr:  nil,
+			isXscreenSaverInstalled: false,
+			isBlanking:              false,
+			wantedData: rpi.Display{
+				IsOverscan:              true,
+				IsXscreenSaverInstalled: false,
+				IsBlanking:              false,
+			},
+			wantedErr: nil,
 		},
 		{
 			name: "success: overscan false",
@@ -35,8 +43,14 @@ func TestList(t *testing.T) {
 				"#disable_overscan=1",
 				"line3",
 			},
-			wantedData: rpi.Display{IsOverscan: false},
-			wantedErr:  nil,
+			isXscreenSaverInstalled: true,
+			isBlanking:              true,
+			wantedData: rpi.Display{
+				IsOverscan:              false,
+				IsXscreenSaverInstalled: true,
+				IsBlanking:              true,
+			},
+			wantedErr: nil,
 		},
 		{
 			name: "success: overscan false with whitespaces",
@@ -45,15 +59,33 @@ func TestList(t *testing.T) {
 				"  #disable_overscan =   1 ",
 				"line3",
 			},
-			wantedData: rpi.Display{IsOverscan: false},
-			wantedErr:  nil,
+			isXscreenSaverInstalled: false,
+			isBlanking:              false,
+			wantedData: rpi.Display{
+				IsOverscan:              false,
+				IsXscreenSaverInstalled: false,
+				IsBlanking:              false,
+			},
+			wantedErr: nil,
+		},
+		{
+			name:                    "success: arg is nil",
+			readLines:               nil,
+			isXscreenSaverInstalled: true,
+			isBlanking:              true,
+			wantedData: rpi.Display{
+				IsOverscan:              false,
+				IsXscreenSaverInstalled: true,
+				IsBlanking:              true,
+			},
+			wantedErr: nil,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			s := display.DISSYS(sys.Display{})
-			boot, err := s.List(tc.readLines)
+			boot, err := s.List(tc.readLines, tc.isXscreenSaverInstalled, tc.isBlanking)
 			assert.Equal(t, tc.wantedData, boot)
 			assert.Equal(t, tc.wantedErr, err)
 		})
