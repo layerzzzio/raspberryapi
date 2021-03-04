@@ -9,5 +9,5 @@ const (
 	X11SERVICE = "/etc/X11/xorg.conf.d"
 
 	// RASPI-CONFIG X11SERVICE directory
-	RASPICONFIGX11SERVICE = "/usr/share/raspi-config/10-blanking.conf"
+	RASPICONFIGX11SERVICE = "/usr/share/raspi-config"
 )

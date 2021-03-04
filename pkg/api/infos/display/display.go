@@ -20,5 +20,5 @@ func (d *Display) List() (rpi.Display, error) {
 		return rpi.Display{}, echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the display details")
 	}
 
-	return d.dissys.List(bootConfig, isXscreenSaverInstalled, isBlanking)
+	return d.dissys.List(bootConfig, isXscreenSaverInstalled, !isBlanking)
 }
