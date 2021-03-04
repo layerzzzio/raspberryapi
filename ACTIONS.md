@@ -24,6 +24,8 @@
 
 ## Blanking
 1. check if file exists: GET /configfiles
-2. if file exists, check isXscreenSaverInstalled: GET /displays
-3. depending on that enable or disable: POST /configure/overscan?action=**[enable/disable]**
-4. reboot
+2. if file exists, check isXscreenSaverInstalled and isBlanking: GET /displays
+3. if isXscreenSaverInstalled = true, it will override the raspi-config blanking config: ABORT here
+4. if isXscreenSaverInstalled = false, then continue
+5. enable or disable: POST /configure/overscan?action=**[enable/disable]**
+6. reboot
