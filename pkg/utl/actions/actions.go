@@ -31,6 +31,12 @@ const (
 	// Disable is a flag to enable a configuration
 	Disable = "disable"
 
+	// Add is a flag to add a configuration or a user
+	Add = "add"
+
+	// Delete is a flag to delete a configuration or a user
+	Delete = "delete"
+
 	// Comment is a flag to comment lines
 	Comment = "comment"
 
@@ -94,6 +100,12 @@ const (
 
 	// Blanking is the name of the disable or enable blanking method
 	Blanking = "blanking"
+
+	// AddUser is the name of the adding user method
+	AddUser = "add_user"
+
+	// DeleteUser is the name of the deleting user method
+	DeleteUser = "delete_user"
 )
 
 var (
@@ -454,6 +466,112 @@ func (s Service) ChangePassword(arg interface{}) (rpi.Exec, error) {
 
 	return rpi.Exec{
 		Name:       ChangePassword,
+		StartTime:  startTime,
+		EndTime:    endTime,
+		ExitStatus: uint8(exitStatus),
+		Stderr:     stdErr,
+	}, nil
+}
+
+// ADU argument for AddOrDeleteUser function
+type ADU struct {
+	Username string
+	Password string
+}
+
+// AddUser add a user on the system
+func (s Service) AddUser(arg interface{}) (rpi.Exec, error) {
+	var password string
+	var username string
+
+	switch v := arg.(type) {
+	case ADU:
+		password = v.Password
+		username = v.Username
+	case OtherParams:
+		password = arg.(OtherParams).Value["password"]
+		username = arg.(OtherParams).Value["username"]
+	default:
+		return rpi.Exec{ExitStatus: 1}, &Error{[]string{"username", "password"}}
+	}
+
+	// execution start time
+	startTime := uint64(time.Now().Unix())
+	exitStatus := 0
+	var stdErr string
+
+	if exitStatus != 1 {
+		var err error
+		_, err = exec.Command(
+			"sh",
+			"-c",
+			fmt.Sprintf("useradd -m %v", username),
+		).Output()
+
+		if err != nil {
+			exitStatus = 1
+			stdErr = fmt.Sprint(err)
+		} else {
+			_, err = exec.Command(
+				"sh",
+				"-c",
+				"usermod --password $(echo "+password+" | openssl passwd -1 -stdin) "+username,
+			).Output()
+
+			if err != nil {
+				exitStatus = 1
+				stdErr = fmt.Sprint(err)
+			}
+		}
+	}
+
+	// execution end time
+	endTime := uint64(time.Now().Unix())
+
+	return rpi.Exec{
+		Name:       AddUser,
+		StartTime:  startTime,
+		EndTime:    endTime,
+		ExitStatus: uint8(exitStatus),
+		Stderr:     stdErr,
+	}, nil
+}
+
+// DeleteUser delete a user on the system
+func (s Service) DeleteUser(arg interface{}) (rpi.Exec, error) {
+	var username string
+
+	switch v := arg.(type) {
+	case ADU:
+		username = v.Username
+	case OtherParams:
+		username = arg.(OtherParams).Value["username"]
+	default:
+		return rpi.Exec{ExitStatus: 1}, &Error{[]string{"username"}}
+	}
+
+	// execution start time
+	startTime := uint64(time.Now().Unix())
+	exitStatus := 0
+	var stdErr string
+
+	var err error
+	_, err = exec.Command(
+		"sh",
+		"-c",
+		fmt.Sprintf("userdel -r %v", username),
+	).Output()
+
+	if err != nil {
+		exitStatus = 1
+		stdErr = fmt.Sprint(err)
+	}
+
+	// execution end time
+	endTime := uint64(time.Now().Unix())
+
+	return rpi.Exec{
+		Name:       DeleteUser,
 		StartTime:  startTime,
 		EndTime:    endTime,
 		ExitStatus: uint8(exitStatus),

@@ -12,6 +12,8 @@ type Service interface {
 	ExecuteWNB(string) (rpi.Action, error)
 	ExecuteOV(string) (rpi.Action, error)
 	ExecuteBL(string) (rpi.Action, error)
+	ExecuteAUS(string, string) (rpi.Action, error)
+	ExecuteDUS(string) (rpi.Action, error)
 }
 
 // Configure represents a Configure application service.
@@ -28,6 +30,8 @@ type CONSYS interface {
 	ExecuteWNB(map[int](map[int]actions.Func)) (rpi.Action, error)
 	ExecuteOV(map[int](map[int]actions.Func)) (rpi.Action, error)
 	ExecuteBL(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteAUS(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteDUS(map[int](map[int]actions.Func)) (rpi.Action, error)
 }
 
 // Actions represents the actions interface
@@ -39,6 +43,8 @@ type Actions interface {
 	DisableOrEnableOverscan(interface{}) (rpi.Exec, error)
 	CommentOverscan(interface{}) (rpi.Exec, error)
 	DisableOrEnableBlanking(interface{}) (rpi.Exec, error)
+	AddUser(interface{}) (rpi.Exec, error)
+	DeleteUser(interface{}) (rpi.Exec, error)
 }
 
 // Infos represents the infos interface

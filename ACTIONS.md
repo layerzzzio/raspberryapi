@@ -27,6 +27,14 @@
 2. if file exists, check isXscreenSaverInstalled and isBlanking: GET /displays
 3. if isXscreenSaverInstalled = true, it will override the raspi-config blanking config: ABORT here
 4. if isXscreenSaverInstalled = false, then continue
-5. enable or disable depending on isBlanking: POST /configure/overscan?action=**[enable/disable]**
+5. enable or disable depending on isBlanking: POST /configure/blanking?action=**[enable/disable]**
 PS: it will fail it try to enable while it is already enabled - same with disable status & disable
 6. reboot
+
+## Add User
+1. check if user exists: GET /humanusers
+2. add or delete depending on the result: POST /configure/adduser?username=**username**&password=**password**
+
+## Delete User
+1. check if user exists: GET /humanusers
+2. add or delete depending on the result: POST /configure/deleteuser?username=**username**

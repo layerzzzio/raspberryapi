@@ -3480,3 +3480,78 @@ func TestDisableOrEnableBlanking(t *testing.T) {
 		})
 	}
 }
+
+func TestAddUser(t *testing.T) {
+	cases := []struct {
+		name             string
+		argument         interface{}
+		action           string
+		wantedExitStatus uint8
+		wantedStderr     string
+		wantedErr        error
+	}{
+		{
+			name:   "error : too many arguments",
+			action: "error",
+			argument: []actions.OtherParams{
+				{Value: map[string]string{"username": "username"}},
+				{Value: map[string]string{"password": "password"}},
+				{Value: map[string]string{"dummyarg": "dummyarg"}},
+			},
+			wantedExitStatus: 1,
+			wantedStderr:     "",
+			wantedErr:        &actions.Error{Arguments: []string{"username", "password"}},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var overscan rpi.Exec
+			var err error
+			a := actions.New()
+
+			overscan, err = a.AddUser(tc.argument)
+
+			assert.Equal(t, tc.wantedExitStatus, overscan.ExitStatus)
+			assert.Equal(t, tc.wantedStderr, overscan.Stderr)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
+func TestDeleteUser(t *testing.T) {
+	cases := []struct {
+		name             string
+		argument         interface{}
+		action           string
+		wantedExitStatus uint8
+		wantedStderr     string
+		wantedErr        error
+	}{
+		{
+			name:   "error : too many arguments",
+			action: "error",
+			argument: []actions.OtherParams{
+				{Value: map[string]string{"username": "username"}},
+				{Value: map[string]string{"dummyarg": "dummyarg"}},
+			},
+			wantedExitStatus: 1,
+			wantedStderr:     "",
+			wantedErr:        &actions.Error{Arguments: []string{"username"}},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var overscan rpi.Exec
+			var err error
+			a := actions.New()
+
+			overscan, err = a.DeleteUser(tc.argument)
+
+			assert.Equal(t, tc.wantedExitStatus, overscan.ExitStatus)
+			assert.Equal(t, tc.wantedStderr, overscan.Stderr)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}

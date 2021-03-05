@@ -675,8 +675,187 @@ func TestExecuteBL(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			s := configure.New(tc.consys, tc.actions, tc.infos)
-			overscan, err := s.ExecuteBL(tc.action)
-			assert.Equal(t, tc.wantedData, overscan)
+			blanking, err := s.ExecuteBL(tc.action)
+			assert.Equal(t, tc.wantedData, blanking)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
+func TestExecuteAUS(t *testing.T) {
+	cases := []struct {
+		name       string
+		username   string
+		password   string
+		plan       map[int](map[int]actions.Func)
+		actions    *mock.Actions
+		infos      *mock.Infos
+		consys     *mocksys.Action
+		wantedData rpi.Action
+		wantedErr  error
+	}{
+		{
+			name:     "success",
+			username: "username",
+			password: "password",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      actions.AddUser,
+						Reference: actions.AddUser,
+						Argument: []interface{}{
+							actions.ADU{
+								Username: "username",
+								Password: "password",
+							},
+						},
+					},
+				},
+			},
+			actions: &mock.Actions{
+				AddUserFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       actions.AddUser,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "username-password-add",
+					}, nil
+				},
+			},
+			consys: &mocksys.Action{
+				ExecuteAUSFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.AddUser,
+						NumberOfSteps: 1,
+						Progress: map[string]rpi.Exec{
+							"1": {
+								Name:       actions.AddUser,
+								StartTime:  1,
+								EndTime:    2,
+								ExitStatus: 0,
+								Stdout:     "username-password-add",
+							},
+						},
+						ExitStatus: 0,
+						StartTime:  2,
+						EndTime:    uint64(time.Now().Unix()),
+					}, nil
+				},
+			},
+			wantedData: rpi.Action{
+				Name:          actions.AddUser,
+				NumberOfSteps: 1,
+				Progress: map[string]rpi.Exec{
+					"1": {
+						Name:       actions.AddUser,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "username-password-add",
+					},
+				},
+				ExitStatus: 0,
+				StartTime:  2,
+				EndTime:    uint64(time.Now().Unix()),
+			},
+			wantedErr: nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := configure.New(tc.consys, tc.actions, tc.infos)
+			user, err := s.ExecuteAUS(tc.username, tc.password)
+			assert.Equal(t, tc.wantedData, user)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
+func TestExecuteDUS(t *testing.T) {
+	cases := []struct {
+		name       string
+		username   string
+		plan       map[int](map[int]actions.Func)
+		actions    *mock.Actions
+		infos      *mock.Infos
+		consys     *mocksys.Action
+		wantedData rpi.Action
+		wantedErr  error
+	}{
+		{
+			name:     "success",
+			username: "username",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      actions.DeleteUser,
+						Reference: actions.DeleteUser,
+						Argument: []interface{}{
+							actions.ADU{
+								Username: "username",
+							},
+						},
+					},
+				},
+			},
+			actions: &mock.Actions{
+				DeleteUserFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       actions.DeleteUser,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "username-password-add",
+					}, nil
+				},
+			},
+			consys: &mocksys.Action{
+				ExecuteDUSFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.DeleteUser,
+						NumberOfSteps: 1,
+						Progress: map[string]rpi.Exec{
+							"1": {
+								Name:       actions.DeleteUser,
+								StartTime:  1,
+								EndTime:    2,
+								ExitStatus: 0,
+								Stdout:     "username-password-add",
+							},
+						},
+						ExitStatus: 0,
+						StartTime:  2,
+						EndTime:    uint64(time.Now().Unix()),
+					}, nil
+				},
+			},
+			wantedData: rpi.Action{
+				Name:          actions.DeleteUser,
+				NumberOfSteps: 1,
+				Progress: map[string]rpi.Exec{
+					"1": {
+						Name:       actions.DeleteUser,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "username-password-add",
+					},
+				},
+				ExitStatus: 0,
+				StartTime:  2,
+				EndTime:    uint64(time.Now().Unix()),
+			},
+			wantedErr: nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := configure.New(tc.consys, tc.actions, tc.infos)
+			user, err := s.ExecuteDUS(tc.username)
+			assert.Equal(t, tc.wantedData, user)
 			assert.Equal(t, tc.wantedErr, err)
 		})
 	}

@@ -158,3 +158,44 @@ func (con *Configure) ExecuteBL(action string) (rpi.Action, error) {
 
 	return con.consys.ExecuteBL(plan)
 }
+
+// ExecuteAUS add user
+func (con *Configure) ExecuteAUS(username string, password string) (rpi.Action, error) {
+
+	plan := map[int](map[int]actions.Func){
+		1: {
+			1: {
+				Name:      actions.AddUser,
+				Reference: con.a.AddUser,
+				Argument: []interface{}{
+					actions.ADU{
+						Username: username,
+						Password: password,
+					},
+				},
+			},
+		},
+	}
+
+	return con.consys.ExecuteAUS(plan)
+}
+
+// ExecuteDUS delete user
+func (con *Configure) ExecuteDUS(username string) (rpi.Action, error) {
+
+	plan := map[int](map[int]actions.Func){
+		1: {
+			1: {
+				Name:      actions.DeleteUser,
+				Reference: con.a.DeleteUser,
+				Argument: []interface{}{
+					actions.ADU{
+						Username: username,
+					},
+				},
+			},
+		},
+	}
+
+	return con.consys.ExecuteDUS(plan)
+}
