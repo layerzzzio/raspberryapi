@@ -22,6 +22,8 @@ func NewHTTP(svc configure.Service, r *echo.Group) {
 	cr.POST("/waitfornetworkatboot", h.waitfornetworkatboot)
 	cr.POST("/overscan", h.overscan)
 	cr.POST("/blanking", h.blanking)
+	cr.POST("/adduser", h.adduser)
+	cr.POST("/deleteuser", h.deleteuser)
 
 }
 
@@ -62,8 +64,8 @@ func (h *HTTP) changepassword(ctx echo.Context) error {
 
 func (h *HTTP) waitfornetworkatboot(ctx echo.Context) error {
 	action := ctx.QueryParam("action")
-	if err := ActionCheck(action); err != nil {
-		return err
+	if err := ActionCheck(action, `enable|disable`); err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - bad action type")
 	}
 
 	result, err := h.svc.ExecuteWNB(action)
@@ -76,8 +78,8 @@ func (h *HTTP) waitfornetworkatboot(ctx echo.Context) error {
 
 func (h *HTTP) overscan(ctx echo.Context) error {
 	action := ctx.QueryParam("action")
-	if err := ActionCheck(action); err != nil {
-		return err
+	if err := ActionCheck(action, `enable|disable`); err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - bad action type")
 	}
 
 	result, err := h.svc.ExecuteOV(action)
@@ -90,8 +92,8 @@ func (h *HTTP) overscan(ctx echo.Context) error {
 
 func (h *HTTP) blanking(ctx echo.Context) error {
 	action := ctx.QueryParam("action")
-	if err := ActionCheck(action); err != nil {
-		return err
+	if err := ActionCheck(action, `enable|disable`); err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - bad action type")
 	}
 
 	result, err := h.svc.ExecuteBL(action)
@@ -102,8 +104,41 @@ func (h *HTTP) blanking(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, result)
 }
 
-func ActionCheck(action string) error {
-	re := regexp.MustCompile(`enable|disable`)
+func (h *HTTP) adduser(ctx echo.Context) error {
+	username := ctx.QueryParam("username")
+	if username == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - username is null")
+	}
+
+	password := ctx.QueryParam("password")
+	if password == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - password is null")
+	}
+
+	result, err := h.svc.ExecuteAUS(username, password)
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(http.StatusOK, result)
+}
+
+func (h *HTTP) deleteuser(ctx echo.Context) error {
+	username := ctx.QueryParam("username")
+	if username == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - username is null")
+	}
+
+	result, err := h.svc.ExecuteDUS(username)
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(http.StatusOK, result)
+}
+
+func ActionCheck(action string, regex string) error {
+	re := regexp.MustCompile(`^(` + regex + `)$`)
 	if !re.MatchString(action) || action == "" {
 		return echo.NewHTTPError(http.StatusNotFound, "Not found - bad action type or action type is null")
 	} else {

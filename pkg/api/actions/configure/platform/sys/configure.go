@@ -89,3 +89,35 @@ func (con Configure) ExecuteBL(plan map[int](map[int]actions.Func)) (rpi.Action,
 		EndTime:       uint64(time.Now().Unix()),
 	}, nil
 }
+
+// ExecuteAUS returns an action response after adding a user
+func (con Configure) ExecuteAUS(plan map[int](map[int]actions.Func)) (rpi.Action, error) {
+	actionStartTime := uint64(time.Now().Unix())
+	progressInit := actions.FlattenPlan(plan)
+	progress, exitStatus := actions.ExecutePlan(plan, progressInit)
+
+	return rpi.Action{
+		Name:          actions.AddUser,
+		NumberOfSteps: uint16(len(progressInit)),
+		Progress:      progress,
+		ExitStatus:    exitStatus,
+		StartTime:     actionStartTime,
+		EndTime:       uint64(time.Now().Unix()),
+	}, nil
+}
+
+// ExecuteDUS returns an action response after deleting a user
+func (con Configure) ExecuteDUS(plan map[int](map[int]actions.Func)) (rpi.Action, error) {
+	actionStartTime := uint64(time.Now().Unix())
+	progressInit := actions.FlattenPlan(plan)
+	progress, exitStatus := actions.ExecutePlan(plan, progressInit)
+
+	return rpi.Action{
+		Name:          actions.DeleteUser,
+		NumberOfSteps: uint16(len(progressInit)),
+		Progress:      progress,
+		ExitStatus:    exitStatus,
+		StartTime:     actionStartTime,
+		EndTime:       uint64(time.Now().Unix()),
+	}, nil
+}

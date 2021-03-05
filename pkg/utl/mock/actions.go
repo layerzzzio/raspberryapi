@@ -16,6 +16,8 @@ type Actions struct {
 	DisableOrEnableOverscanFn      func(arg interface{}) (rpi.Exec, error)
 	CommentOverscanFn              func(arg interface{}) (rpi.Exec, error)
 	DisableOrEnableBlankingFn      func(arg interface{}) (rpi.Exec, error)
+	AddUserFn                      func(arg interface{}) (rpi.Exec, error)
+	DeleteUserFn                   func(arg interface{}) (rpi.Exec, error)
 }
 
 // DeleteFile mock
@@ -65,4 +67,12 @@ func (a Actions) CommentOverscan(arg interface{}) (rpi.Exec, error) {
 
 func (a Actions) DisableOrEnableBlanking(arg interface{}) (rpi.Exec, error) {
 	return a.DisableOrEnableBlankingFn(arg)
+}
+
+func (a Actions) AddUser(arg interface{}) (rpi.Exec, error) {
+	return a.AddUserFn(arg)
+}
+
+func (a Actions) DeleteUser(arg interface{}) (rpi.Exec, error) {
+	return a.DeleteUserFn(arg)
 }
