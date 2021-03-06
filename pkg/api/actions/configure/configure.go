@@ -88,11 +88,15 @@ func (con *Configure) ExecuteOV(action string) (rpi.Action, error) {
 			1: {
 				1: {
 					Name:      actions.DisableOrEnableOverscan,
-					Reference: con.a.DisableOrEnableOverscan,
+					Reference: con.a.DisableOrEnableConfig,
 					Argument: []interface{}{
-						actions.EnableOrDisableConfig{
+						actions.EODC{
 							DirOrFilePath: con.i.GetConfigFiles()["bootconfig"].Path,
 							Action:        action,
+							Data:          "disable_overscan=0",
+							Regex:         actions.DisableOrEnableOverscanRegex,
+							FunctionName:  actions.DisableOrEnableOverscan,
+							AssetFile:     "../assets/config.txt",
 						},
 					},
 				},
@@ -103,11 +107,15 @@ func (con *Configure) ExecuteOV(action string) (rpi.Action, error) {
 			1: {
 				1: {
 					Name:      actions.DisableOrEnableOverscan,
-					Reference: con.a.DisableOrEnableOverscan,
+					Reference: con.a.DisableOrEnableConfig,
 					Argument: []interface{}{
-						actions.EnableOrDisableConfig{
+						actions.EODC{
 							DirOrFilePath: con.i.GetConfigFiles()["bootconfig"].Path,
 							Action:        action,
+							Data:          "#disable_overscan=1",
+							Regex:         actions.DisableOrEnableOverscanRegex,
+							FunctionName:  actions.DisableOrEnableOverscan,
+							AssetFile:     "../assets/config.txt",
 						},
 					},
 				},
@@ -198,4 +206,135 @@ func (con *Configure) ExecuteDUS(username string) (rpi.Action, error) {
 	}
 
 	return con.consys.ExecuteDUS(plan)
+}
+
+// ExecuteCA disables or enables camera interface
+func (con *Configure) ExecuteCA(action string) (rpi.Action, error) {
+	var plan map[int]map[int]actions.Func
+
+	if action == "enable" {
+		plan = map[int](map[int]actions.Func){
+			1: {
+				1: {
+					Name:      "comment_startx",
+					Reference: con.a.CommentOrUncommentInFile,
+					Argument: []interface{}{
+						actions.COUSLINF{
+							DirOrFilePath: con.i.GetConfigFiles()["bootconfig"].Path,
+							Action:        action,
+							DefaultData:   "#startx=",
+							Regex:         actions.StartxCameraRegex,
+							FunctionName:  actions.CameraInterface,
+							AssetFile:     "../assets/config.txt",
+						},
+					},
+				},
+				2: {
+					Name:      "comment_fixup_file",
+					Reference: con.a.CommentOrUncommentInFile,
+					Argument: []interface{}{
+						actions.COUSLINF{
+							DirOrFilePath: con.i.GetConfigFiles()["bootconfig"].Path,
+							Action:        action,
+							DefaultData:   "#fixup_file=",
+							Regex:         actions.FixupFileCameraRegex,
+							FunctionName:  actions.CameraInterface,
+							AssetFile:     "../assets/config.txt",
+						},
+					},
+				},
+				3: {
+					Name:      actions.DisableOrEnableCameraInterface,
+					Reference: con.a.DisableOrEnableConfig,
+					Argument: []interface{}{
+						actions.EODC{
+							DirOrFilePath: con.i.GetConfigFiles()["bootconfig"].Path,
+							Action:        action,
+							Data:          "start_x=1",
+							Regex:         actions.DisableOrEnableCameraRegex,
+							FunctionName:  actions.CameraInterface,
+							AssetFile:     "../assets/config.txt",
+						},
+					},
+				},
+				4: {
+					Name:      "set_gpu_mem_for_camera",
+					Reference: con.a.SetVariableInConfigFile,
+					Argument: []interface{}{
+						actions.SVICF{
+							File:      con.i.GetConfigFiles()["bootconfig"].Path,
+							Regex:     actions.GpuMemCameraRegex,
+							Data:      "gpu_mem=128",
+							AssetFile: "../assets/config.txt",
+						},
+					},
+				},
+			},
+		}
+	} else if action == "disable" {
+		plan = map[int](map[int]actions.Func){
+			1: {
+				1: {
+					Name:      "comment_startx",
+					Reference: con.a.CommentOrUncommentInFile,
+					Argument: []interface{}{
+						actions.COUSLINF{
+							DirOrFilePath: con.i.GetConfigFiles()["bootconfig"].Path,
+							Action:        action,
+							DefaultData:   "#startx=",
+							Regex:         actions.StartxCameraRegex,
+							FunctionName:  actions.CameraInterface,
+							AssetFile:     "../assets/config.txt",
+						},
+					},
+				},
+				2: {
+					Name:      "comment_fixup_file",
+					Reference: con.a.CommentOrUncommentInFile,
+					Argument: []interface{}{
+						actions.COUSLINF{
+							DirOrFilePath: con.i.GetConfigFiles()["bootconfig"].Path,
+							Action:        action,
+							DefaultData:   "#fixup_file=",
+							Regex:         actions.FixupFileCameraRegex,
+							FunctionName:  actions.CameraInterface,
+							AssetFile:     "../assets/config.txt",
+						},
+					},
+				},
+				3: {
+					Name:      actions.DisableOrEnableCameraInterface,
+					Reference: con.a.DisableOrEnableConfig,
+					Argument: []interface{}{
+						actions.EODC{
+							DirOrFilePath: con.i.GetConfigFiles()["bootconfig"].Path,
+							Action:        action,
+							Data:          "start_x=0",
+							Regex:         actions.DisableOrEnableCameraRegex,
+							FunctionName:  actions.CameraInterface,
+							AssetFile:     "../assets/config.txt",
+						},
+					},
+				},
+				4: {
+					Name:      "comment_start_file",
+					Reference: con.a.CommentOrUncommentInFile,
+					Argument: []interface{}{
+						actions.COUSLINF{
+							DirOrFilePath: con.i.GetConfigFiles()["bootconfig"].Path,
+							Action:        action,
+							DefaultData:   "#start_file=",
+							Regex:         actions.StartFileCameraRegex,
+							FunctionName:  actions.CameraInterface,
+							AssetFile:     "../assets/config.txt",
+						},
+					},
+				},
+			},
+		}
+	} else {
+		return rpi.Action{}, echo.NewHTTPError(http.StatusInternalServerError, "bad action type: enable or disable camera failed")
+	}
+
+	return con.consys.ExecuteCA(plan)
 }

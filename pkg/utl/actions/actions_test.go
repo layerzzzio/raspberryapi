@@ -1652,6 +1652,171 @@ func TestReplaceLineInFile(t *testing.T) {
 	}
 }
 
+func TestSetVariable(t *testing.T) {
+	cases := []struct {
+		name           string
+		file           string
+		permissions    uint32
+		regex          string
+		data           string
+		hasUniqueLines bool
+		isSuccess      bool
+		originalLines  []string
+		addLines       []string
+		wantedLines    []string
+		wantedErr      error
+	}{
+		{
+			name:           "success: empty gpu_mem",
+			isSuccess:      true,
+			file:           "./test_write_to_file",
+			permissions:    0755,
+			regex:          actions.GpuMemCameraRegex,
+			hasUniqueLines: true,
+			data:           "gpu_mem=128",
+			originalLines: []string{
+				"dummy line 1",
+				"hello my friend",
+			},
+			addLines: []string{
+				"     gpu_mem = ",
+			},
+			wantedErr: nil,
+			wantedLines: []string{
+				"dummy line 1",
+				"hello my friend",
+				"gpu_mem=128",
+			},
+		},
+		{
+			name:           "success: below threshold gpu_mem",
+			isSuccess:      true,
+			file:           "./test_write_to_file",
+			permissions:    0755,
+			regex:          actions.GpuMemCameraRegex,
+			hasUniqueLines: true,
+			data:           "gpu_mem=128",
+			originalLines: []string{
+				"dummy line 1",
+				"hello my friend",
+			},
+			addLines: []string{
+				"     gpu_mem =  127",
+			},
+			wantedErr: nil,
+			wantedLines: []string{
+				"dummy line 1",
+				"hello my friend",
+				"gpu_mem=128",
+			},
+		},
+		{
+			name:           "success: above threshold gpu_mem",
+			isSuccess:      true,
+			file:           "./test_write_to_file",
+			permissions:    0755,
+			regex:          actions.GpuMemCameraRegex,
+			hasUniqueLines: true,
+			data:           "gpu_mem=128",
+			originalLines: []string{
+				"dummy line 1",
+				"hello my friend",
+			},
+			addLines: []string{
+				"     gpu_mem =  129",
+			},
+			wantedErr: nil,
+			wantedLines: []string{
+				"dummy line 1",
+				"hello my friend",
+				"     gpu_mem =  129",
+			},
+		},
+		{
+			name:           "success: way above threshold gpu_mem",
+			isSuccess:      true,
+			file:           "./test_write_to_file",
+			permissions:    0755,
+			regex:          actions.GpuMemCameraRegex,
+			hasUniqueLines: true,
+			data:           "gpu_mem=128",
+			originalLines: []string{
+				"dummy line 1",
+				"hello my friend",
+			},
+			addLines: []string{
+				"     gpu_mem     =  55529   #comment",
+			},
+			wantedErr: nil,
+			wantedLines: []string{
+				"dummy line 1",
+				"hello my friend",
+				"     gpu_mem     =  55529   #comment",
+			},
+		},
+		{
+			name:           "success: empty gpu_mem",
+			isSuccess:      true,
+			file:           "./test_write_to_file",
+			permissions:    0755,
+			regex:          actions.GpuMemCameraRegex,
+			hasUniqueLines: true,
+			data:           "gpu_mem=128",
+			originalLines: []string{
+				"dummy line 1",
+				"hello my friend",
+			},
+			addLines: []string{
+				"     gpu_mem     =  ",
+			},
+			wantedErr: nil,
+			wantedLines: []string{
+				"dummy line 1",
+				"hello my friend",
+				"gpu_mem=128",
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.isSuccess {
+				// create and populate file
+				if err := actions.OverwriteToFile(actions.WriteToFileArg{
+					File:        tc.file,
+					Data:        append(tc.originalLines, tc.addLines...),
+					Multiline:   true,
+					Permissions: 0755,
+				}); err != nil {
+					log.Fatal(err)
+				}
+
+				// setVar in file
+				setVar := actions.SetVariable(
+					tc.file,
+					tc.permissions,
+					tc.regex,
+					tc.data,
+					tc.hasUniqueLines,
+				)
+
+				// read the new line
+				readLines, err := infos.New().ReadFile(tc.file)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				if e := os.Remove(tc.file); e != nil {
+					fmt.Println(e)
+				}
+
+				assert.Equal(t, tc.wantedLines, readLines)
+				assert.Equal(t, tc.wantedErr, setVar)
+			}
+		})
+	}
+}
+
 func TestChangeHostnameInHostnameFile(t *testing.T) {
 	cases := []struct {
 		name             string
@@ -2272,424 +2437,6 @@ func TestRemoveDuplicateStrings(t *testing.T) {
 	}
 }
 
-func TestDisableOrEnableOverscan(t *testing.T) {
-	cases := []struct {
-		name             string
-		argument         interface{}
-		isSuccess        bool
-		createFromAsset  bool
-		originalLines    []string
-		addLines         []string
-		wantedLines      []string
-		wantedExitStatus uint8
-		wantedStderr     string
-		wantedErr        error
-	}{
-		{
-			name: "error : no such file or directory (enable)",
-			argument: actions.EnableOrDisableConfig{
-				DirOrFilePath: "",
-				Action:        "enable",
-			},
-			isSuccess:        false,
-			wantedExitStatus: 1,
-			wantedStderr:     "creating and opening file failed",
-			wantedErr:        nil,
-		},
-		{
-			name: "error : no such file or directory (disable)",
-			argument: actions.EnableOrDisableConfig{
-				DirOrFilePath: "",
-				Action:        "disable",
-			},
-			isSuccess:        false,
-			wantedExitStatus: 1,
-			wantedStderr:     "creating and opening file failed",
-			wantedErr:        nil,
-		},
-		{
-			name: "error : too many arguments",
-			argument: []actions.OtherParams{
-				{
-					Value: map[string]string{
-						"path":     "target",
-						"action":   "enable",
-						"dummyarg": "dummyargvalue",
-					},
-				},
-			},
-			isSuccess:        false,
-			wantedExitStatus: 1,
-			wantedStderr:     "",
-			wantedErr:        &actions.Error{[]string{"path", "action"}},
-		},
-		{
-			name: "error : action not right",
-			argument: actions.OtherParams{
-				Value: map[string]string{
-					"path":   dummyfilepath,
-					"action": "enable-xxx",
-				},
-			},
-			isSuccess:        false,
-			wantedExitStatus: 1,
-			wantedStderr:     "bad action type",
-			wantedErr:        nil,
-		},
-		{
-			name: "success with otherParams (enable)",
-			argument: actions.OtherParams{
-				Value: map[string]string{
-					"path":   dummyfilepath,
-					"action": "enable",
-				},
-			},
-			isSuccess: true,
-			originalLines: []string{
-				"# uncomment if you get no picture on HDMI for a default safe mode",
-				"#hdmi_safe=1",
-				"# uncomment this if your display has a black border of unused pixels visible",
-				"# and your display can output without overscan",
-				"# uncomment the following to adjust overscan. Use positive numbers if console",
-				"# goes off screen, and negative if there is too much border",
-				"#overscan_left=16",
-			},
-			addLines: []string{
-				"     # disable_overscan = 1",
-			},
-			wantedLines: []string{
-				"# uncomment if you get no picture on HDMI for a default safe mode",
-				"#hdmi_safe=1",
-				"# uncomment this if your display has a black border of unused pixels visible",
-				"# and your display can output without overscan",
-				"# uncomment the following to adjust overscan. Use positive numbers if console",
-				"# goes off screen, and negative if there is too much border",
-				"#overscan_left=16",
-				"disable_overscan=0",
-			},
-			wantedExitStatus: 0,
-			wantedStderr:     "",
-			wantedErr:        nil,
-		},
-		{
-			name: "success with regular params (enable)",
-			argument: actions.EnableOrDisableConfig{
-				DirOrFilePath: dummyfilepath,
-				Action:        "enable",
-			},
-			isSuccess: true,
-			originalLines: []string{
-				"# uncomment if you get no picture on HDMI for a default safe mode",
-				"#hdmi_safe=1",
-				"# uncomment this if your display has a black border of unused pixels visible",
-				"# and your display can output without overscan",
-				"# uncomment the following to adjust overscan. Use positive numbers if console",
-				"# goes off screen, and negative if there is too much border",
-				"#overscan_left=16",
-			},
-			addLines: []string{
-				"  #           disable_overscan      = 1 #random comment",
-			},
-			wantedLines: []string{
-				"# uncomment if you get no picture on HDMI for a default safe mode",
-				"#hdmi_safe=1",
-				"# uncomment this if your display has a black border of unused pixels visible",
-				"# and your display can output without overscan",
-				"# uncomment the following to adjust overscan. Use positive numbers if console",
-				"# goes off screen, and negative if there is too much border",
-				"#overscan_left=16",
-				"disable_overscan=0",
-			},
-			wantedExitStatus: 0,
-			wantedStderr:     "",
-			wantedErr:        nil,
-		},
-		{
-			name: "success but no match (enable)",
-			argument: actions.EnableOrDisableConfig{
-				DirOrFilePath: dummyfilepath,
-				Action:        "enable",
-			},
-			isSuccess: true,
-			originalLines: []string{
-				"# uncomment if you get no picture on HDMI for a default safe mode",
-				"#hdmi_safe=1",
-				"# uncomment this if your display has a black border of unused pixels visible",
-				"# and your display can output without overscan",
-				"# uncomment the following to adjust overscan. Use positive numbers if console",
-				"# goes off screen, and negative if there is too much border",
-				"#overscan_left=16",
-			},
-			addLines: []string{
-				"  #   #        disable_overscan      = 1 #random comment",
-			},
-			wantedLines: []string{
-				"# uncomment if you get no picture on HDMI for a default safe mode",
-				"#hdmi_safe=1",
-				"# uncomment this if your display has a black border of unused pixels visible",
-				"# and your display can output without overscan",
-				"# uncomment the following to adjust overscan. Use positive numbers if console",
-				"# goes off screen, and negative if there is too much border",
-				"#overscan_left=16",
-				"  #   #        disable_overscan      = 1 #random comment",
-				"disable_overscan=0",
-			},
-			wantedExitStatus: 0,
-			wantedStderr:     "",
-			wantedErr:        nil,
-		},
-		{
-			name: "success with otherParams (disable)",
-			argument: actions.OtherParams{
-				Value: map[string]string{
-					"path":   dummyfilepath,
-					"action": "disable",
-				},
-			},
-			isSuccess: true,
-			originalLines: []string{
-				"# uncomment if you get no picture on HDMI for a default safe mode",
-				"#hdmi_safe=1",
-				"# uncomment this if your display has a black border of unused pixels visible",
-				"# and your display can output without overscan",
-				"# uncomment the following to adjust overscan. Use positive numbers if console",
-				"# goes off screen, and negative if there is too much border",
-				"#overscan_left=16",
-			},
-			addLines: []string{
-				"    disable_overscan  =   0",
-			},
-			wantedLines: []string{
-				"# uncomment if you get no picture on HDMI for a default safe mode",
-				"#hdmi_safe=1",
-				"# uncomment this if your display has a black border of unused pixels visible",
-				"# and your display can output without overscan",
-				"# uncomment the following to adjust overscan. Use positive numbers if console",
-				"# goes off screen, and negative if there is too much border",
-				"#overscan_left=16",
-				"#disable_overscan=1",
-			},
-			wantedExitStatus: 0,
-			wantedStderr:     "",
-			wantedErr:        nil,
-		},
-		{
-			name: "success with regular params (disable)",
-			argument: actions.EnableOrDisableConfig{
-				DirOrFilePath: dummyfilepath,
-				Action:        "disable",
-			},
-			isSuccess: true,
-			originalLines: []string{
-				"# uncomment if you get no picture on HDMI for a default safe mode",
-				"#hdmi_safe=1",
-				"# uncomment this if your display has a black border of unused pixels visible",
-				"# and your display can output without overscan",
-				"# uncomment the following to adjust overscan. Use positive numbers if console",
-				"# goes off screen, and negative if there is too much border",
-				"#overscan_left=16",
-			},
-			addLines: []string{
-				"    disable_overscan  =   0 # random comment",
-			},
-			wantedLines: []string{
-				"# uncomment if you get no picture on HDMI for a default safe mode",
-				"#hdmi_safe=1",
-				"# uncomment this if your display has a black border of unused pixels visible",
-				"# and your display can output without overscan",
-				"# uncomment the following to adjust overscan. Use positive numbers if console",
-				"# goes off screen, and negative if there is too much border",
-				"#overscan_left=16",
-				"#disable_overscan=1",
-			},
-			wantedExitStatus: 0,
-			wantedStderr:     "",
-			wantedErr:        nil,
-		},
-		{
-			name: "success with regular params but no match(disable)",
-			argument: actions.EnableOrDisableConfig{
-				DirOrFilePath: dummyfilepath,
-				Action:        "disable",
-			},
-			isSuccess: true,
-			originalLines: []string{
-				"# uncomment if you get no picture on HDMI for a default safe mode",
-				"#hdmi_safe=1",
-				"# uncomment this if your display has a black border of unused pixels visible",
-				"# and your display can output without overscan",
-				"# uncomment the following to adjust overscan. Use positive numbers if console",
-				"# goes off screen, and negative if there is too much border",
-				"#overscan_left=16",
-			},
-			addLines: []string{
-				"  ABC  disable_overscan  =   0 # random comment",
-			},
-			wantedLines: []string{
-				"# uncomment if you get no picture on HDMI for a default safe mode",
-				"#hdmi_safe=1",
-				"# uncomment this if your display has a black border of unused pixels visible",
-				"# and your display can output without overscan",
-				"# uncomment the following to adjust overscan. Use positive numbers if console",
-				"# goes off screen, and negative if there is too much border",
-				"#overscan_left=16",
-				"  ABC  disable_overscan  =   0 # random comment",
-				"#disable_overscan=1",
-			},
-			wantedExitStatus: 0,
-			wantedStderr:     "",
-			wantedErr:        nil,
-		},
-		{
-			name: "success with regular params (disable)",
-			argument: actions.EnableOrDisableConfig{
-				DirOrFilePath: dummyfilepath,
-				Action:        "disable",
-			},
-			isSuccess: true,
-			originalLines: []string{
-				"# uncomment if you get no picture on HDMI for a default safe mode",
-				"#hdmi_safe=1",
-				"# uncomment this if your display has a black border of unused pixels visible",
-				"# and your display can output without overscan",
-				"# uncomment the following to adjust overscan. Use positive numbers if console",
-				"# goes off screen, and negative if there is too much border",
-				"#overscan_left=16",
-			},
-			addLines: []string{
-				"    disable_overscan  =   0 # random comment",
-			},
-			wantedLines: []string{
-				"# uncomment if you get no picture on HDMI for a default safe mode",
-				"#hdmi_safe=1",
-				"# uncomment this if your display has a black border of unused pixels visible",
-				"# and your display can output without overscan",
-				"# uncomment the following to adjust overscan. Use positive numbers if console",
-				"# goes off screen, and negative if there is too much border",
-				"#overscan_left=16",
-				"#disable_overscan=1",
-			},
-			wantedExitStatus: 0,
-			wantedStderr:     "",
-			wantedErr:        nil,
-		},
-		{
-			name: "success: created from asset (disable)",
-			argument: actions.EnableOrDisableConfig{
-				DirOrFilePath: dummyfilepath,
-				Action:        "disable",
-			},
-			isSuccess:       true,
-			createFromAsset: true,
-			wantedLines: []string{
-				"# For more options and information see",
-				"# http://rpf.io/configtxt",
-				"# Some settings may impact device functionality. See link above for details",
-				"",
-				"# uncomment if you get no picture on HDMI for a default \"safe\" mode",
-				"#hdmi_safe=1",
-				"# uncomment this if your display has a black border of unused pixels visible",
-				"# and your display can output without overscan",
-				"#disable_overscan=1",
-				"# uncomment the following to adjust overscan. Use positive numbers if console",
-				"# goes off screen, and negative if there is too much border",
-				"#overscan_left=16",
-				"#overscan_right=16",
-				"#overscan_top=16",
-				"#overscan_bottom=16",
-				"# uncomment to force a console size. By default it will be display's size minus",
-				"# overscan.",
-				"#framebuffer_width=1280",
-				"#framebuffer_height=720",
-				"# uncomment if hdmi display is not detected and composite is being output",
-				"#hdmi_force_hotplug=1",
-				"# uncomment to force a specific HDMI mode (this will force VGA)",
-				"#hdmi_group=1",
-				"#hdmi_mode=1",
-				"# uncomment to force a HDMI mode rather than DVI. This can make audio work in",
-				"# DMT (computer monitor) modes",
-				"#hdmi_drive=2",
-				"# uncomment to increase signal to HDMI, if you have interference, blanking, or",
-				"# no display",
-				"#config_hdmi_boost=4",
-				"# uncomment for composite PAL",
-				"#sdtv_mode=2",
-				"#uncomment to overclock the arm. 700 MHz is the default.",
-				"#arm_freq=800",
-				"# Uncomment some or all of these to enable the optional hardware interfaces",
-				"#dtparam=i2c_arm=on",
-				"#dtparam=i2s=on",
-				"#dtparam=spi=on",
-				"# Uncomment this to enable infrared communication.",
-				"#dtoverlay=gpio-ir,gpio_pin=17",
-				"#dtoverlay=gpio-ir-tx,gpio_pin=18",
-				"# Additional overlays and parameters are documented /boot/overlays/README",
-				"# Enable audio (loads snd_bcm2835)",
-				"dtparam=audio=on",
-				"[pi4]",
-				"# Enable DRM VC4 V3D driver on top of the dispmanx display stack",
-				"dtoverlay=vc4-fkms-v3d",
-				"max_framebuffers=2",
-				"[all]",
-				"#dtoverlay=vc4-fkms-v3d",
-				"#disable_overscan=1",
-			},
-			wantedExitStatus: 0,
-			wantedStderr:     "",
-			wantedErr:        nil,
-		},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			var overscan rpi.Exec
-			var err error
-			a := actions.New()
-
-			if tc.isSuccess {
-				if tc.createFromAsset == false {
-					// create and populate file
-					if err := actions.OverwriteToFile(actions.WriteToFileArg{
-						File:        dummyfilepath,
-						Data:        append(tc.originalLines, tc.addLines...),
-						Multiline:   true,
-						Permissions: 0755,
-					}); err != nil {
-						log.Fatal(err)
-					}
-				}
-
-				overscan, err = a.DisableOrEnableOverscan(tc.argument)
-				if err != nil {
-					log.Fatal(err)
-				}
-
-				// if err := actions.ApplyPermissionsToFile(dummyfilepath, 0755); err != nil {
-				// 	log.Fatal(err)
-				// }
-
-				// read the new line and delete
-				readLines, err := infos.New().ReadFile(dummyfilepath)
-				if err != nil {
-					log.Fatal(err)
-				}
-
-				if e := os.Remove(dummyfilepath); e != nil {
-					fmt.Println(e)
-				}
-
-				assert.Equal(t, tc.wantedLines, readLines)
-			} else {
-				overscan, err = a.DisableOrEnableOverscan(tc.argument)
-			}
-
-			assert.Equal(t, tc.wantedExitStatus, overscan.ExitStatus)
-			assert.Equal(t, tc.wantedStderr, overscan.Stderr)
-			assert.Equal(t, tc.wantedErr, err)
-		})
-	}
-}
-
 func TestCommentOrUncommentLineInFile(t *testing.T) {
 	cases := []struct {
 		name          string
@@ -3094,6 +2841,271 @@ func TestCommentOverscan(t *testing.T) {
 				assert.Equal(t, tc.wantedLines, readLines)
 			} else {
 				commentOverscan, err = a.CommentOverscan(tc.argument)
+			}
+
+			assert.Equal(t, tc.wantedExitStatus, commentOverscan.ExitStatus)
+			assert.Equal(t, tc.wantedStderr, commentOverscan.Stderr)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
+func TestCommentOrUncommentInFile(t *testing.T) {
+	cases := []struct {
+		name             string
+		argument         interface{}
+		isSuccess        bool
+		createFromAsset  bool
+		originalLines    []string
+		addLines         []string
+		wantedLines      []string
+		wantedExitStatus uint8
+		wantedStderr     string
+		wantedErr        error
+	}{
+		{
+			name: "error : no such file or directory",
+			argument: actions.COUSLINF{
+				DirOrFilePath: "",
+				Action:        "comment",
+				FunctionName:  "",
+				Regex:         "",
+				DefaultData:   "",
+				AssetFile:     "",
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "couldn't find asset file",
+			wantedErr:        nil,
+		},
+		{
+			name: "error : too many arguments",
+			argument: []actions.OtherParams{
+				{Value: map[string]string{"path": dummydirectorypath}},
+				{Value: map[string]string{"action": "dummyaction"}},
+				{Value: map[string]string{"dummyextraarg": "dummyextraarg"}},
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "",
+			wantedErr:        &actions.Error{[]string{"name", "action", "path", "regex", "defaultData", "assetFile"}},
+		},
+		{
+			name: "error : action not right",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"action":       "comment-xxx",
+					"path":         "",
+					"functionName": "",
+					"regex":        "",
+					"defaultData":  "",
+					"assetFile":    "",
+				},
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "bad action type",
+			wantedErr:        nil,
+		},
+		{
+			name: "success with regular params and matches (comment)",
+			argument: actions.COUSLINF{
+				DirOrFilePath: dummyfilepath,
+				Action:        "comment",
+				FunctionName:  "functionName",
+				Regex:         actions.CommentOverscanRegex,
+				DefaultData:   "defaultData",
+				AssetFile:     "../assets/config.txt",
+			},
+			isSuccess: true,
+			originalLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#disable_overscan=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+			},
+			addLines: []string{
+				"overscan_left=1",
+			},
+			wantedLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#disable_overscan=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"#overscan_left=1",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+		{
+			name: "success with regular params and no matches (comment)",
+			argument: actions.COUSLINF{
+				DirOrFilePath: dummyfilepath,
+				Action:        "comment",
+				FunctionName:  "functionName",
+				Regex:         actions.CommentOverscanRegex,
+				DefaultData:   "defaultData",
+				AssetFile:     "../assets/config.txt",
+			},
+			isSuccess: true,
+			originalLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#disable_overscan=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+			},
+			addLines: []string{
+				"overcul_left=1",
+			},
+			wantedLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#disable_overscan=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"overcul_left=1",
+				"defaultData",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+		{
+			name: "success with regular params and matches (uncomment)",
+			argument: actions.COUSLINF{
+				DirOrFilePath: dummyfilepath,
+				Action:        "uncomment",
+				FunctionName:  "functionName",
+				Regex:         actions.DisableOrEnableOverscanRegex,
+				DefaultData:   "defaultData",
+				AssetFile:     "../assets/config.txt",
+			},
+			isSuccess: true,
+			originalLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"   #            disable_overscan =     1",
+			},
+			addLines: []string{
+				"   #    disable_overscan = 1",
+			},
+			wantedLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"disable_overscan =     1",
+				"disable_overscan = 1",
+				"defaultData", // this is added because there is more match than required: len=1 & 2 matches
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+
+		{
+			name: "success with other params (comment)",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"action":       "comment",
+					"path":         dummyfilepath,
+					"functionName": "functionName",
+					"regex":        actions.CommentOverscanRegex,
+					"defaultData":  "defaultData",
+					"assetFile":    "../assets/hosts",
+				},
+			},
+			isSuccess: true,
+			originalLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+			},
+			addLines: []string{
+				"       overscan_left = 1  #",
+			},
+			wantedLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#overscan_left = 1  #",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+		{
+			name: "success: file created from asset",
+			argument: actions.COUSLINF{
+				DirOrFilePath: dummyfilepath,
+				Action:        "comment",
+				FunctionName:  "functionName",
+				Regex:         actions.CommentOverscanRegex,
+				DefaultData:   "defaultData",
+				AssetFile:     "../assets/hosts",
+			},
+			isSuccess:       true,
+			createFromAsset: true,
+			wantedLines: []string{
+				"127.0.0.1	localhost",
+				"",
+				"::1		localhost ip6-localhost ip6-loopback",
+				"",
+				"ff02::1		ip6-allnodes",
+				"",
+				"ff02::2		ip6-allrouters",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var commentOverscan rpi.Exec
+			var err error
+			a := actions.New()
+
+			if tc.isSuccess {
+				if tc.createFromAsset == false {
+					// create and populate file
+					if err := actions.OverwriteToFile(actions.WriteToFileArg{
+						File:        dummyfilepath,
+						Data:        append(tc.originalLines, tc.addLines...),
+						Multiline:   true,
+						Permissions: 0755,
+					}); err != nil {
+						log.Fatal(err)
+					}
+				}
+
+				commentOverscan, err = a.CommentOrUncommentInFile(tc.argument)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				// read the new line and delete
+				readLines, err := infos.New().ReadFile(dummyfilepath)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				if e := os.Remove(dummyfilepath); e != nil {
+					fmt.Println(e)
+				}
+
+				assert.Equal(t, tc.wantedLines, readLines)
+			} else {
+				commentOverscan, err = a.CommentOrUncommentInFile(tc.argument)
 			}
 
 			assert.Equal(t, tc.wantedExitStatus, commentOverscan.ExitStatus)
@@ -3548,6 +3560,527 @@ func TestDeleteUser(t *testing.T) {
 			a := actions.New()
 
 			overscan, err = a.DeleteUser(tc.argument)
+
+			assert.Equal(t, tc.wantedExitStatus, overscan.ExitStatus)
+			assert.Equal(t, tc.wantedStderr, overscan.Stderr)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
+func TestDisableOrEnableConfig(t *testing.T) {
+	cases := []struct {
+		name             string
+		argument         interface{}
+		isSuccess        bool
+		createFromAsset  bool
+		originalLines    []string
+		addLines         []string
+		wantedLines      []string
+		wantedExitStatus uint8
+		wantedStderr     string
+		wantedErr        error
+	}{
+		{
+			name: "error : no such file or directory (enable)",
+			argument: actions.EODC{
+				DirOrFilePath: "",
+				Action:        "enable",
+				Data:          "",
+				Regex:         "",
+				AssetFile:     "",
+				FunctionName:  "",
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "couldn't find asset file",
+			wantedErr:        nil,
+		},
+		{
+			name: "error : no such file or directory (disable)",
+			argument: actions.EODC{
+				DirOrFilePath: "",
+				Action:        "enable",
+				Data:          "",
+				Regex:         "",
+				AssetFile:     "",
+				FunctionName:  "",
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "couldn't find asset file",
+			wantedErr:        nil,
+		},
+		{
+			name: "error : too many arguments",
+			argument: []actions.OtherParams{
+				{
+					Value: map[string]string{
+						"path":     "target",
+						"action":   "enable",
+						"dummyarg": "dummyargvalue",
+					},
+				},
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "",
+			wantedErr: &actions.Error{[]string{
+				"name", "action", "path", "regex", "data", "assetFile",
+			}},
+		},
+		{
+			name: "error : action not right",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"path":   dummyfilepath,
+					"action": "enable-xxx",
+				},
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "bad action type",
+			wantedErr:        nil,
+		},
+		{
+			name: "success with otherParams (enable)",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"action":       "enable",
+					"path":         dummyfilepath,
+					"functionName": "functionName",
+					"regex":        actions.DisableOrEnableOverscanRegex,
+					"data":         "enableData",
+					"assetFile":    "../assets/hosts",
+				},
+			},
+			isSuccess: true,
+			originalLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"#overscan_left=16",
+			},
+			addLines: []string{
+				"     # disable_overscan = 1",
+			},
+			wantedLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"#overscan_left=16",
+				"enableData",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+		{
+			name: "success with regular params (enable)",
+			argument: actions.EODC{
+				DirOrFilePath: dummyfilepath,
+				Action:        "enable",
+				Data:          "enableData",
+				Regex:         actions.DisableOrEnableOverscanRegex,
+				AssetFile:     "../assets/hosts",
+				FunctionName:  "functionName",
+			},
+			isSuccess: true,
+			originalLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"#overscan_left=16",
+			},
+			addLines: []string{
+				"  #           disable_overscan      = 1 #random comment",
+			},
+			wantedLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"#overscan_left=16",
+				"enableData",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+		{
+			name: "success with regular params (disable)",
+			argument: actions.EODC{
+				DirOrFilePath: dummyfilepath,
+				Action:        "disable",
+				Data:          "disableData",
+				Regex:         actions.DisableOrEnableOverscanRegex,
+				AssetFile:     "../assets/hosts",
+				FunctionName:  "functionName",
+			},
+			isSuccess: true,
+			originalLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"#overscan_left=16",
+			},
+			addLines: []string{
+				"  #           disable_overscan      = 1 #random comment",
+			},
+			wantedLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"#overscan_left=16",
+				"disableData",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+		{
+			name: "success but no match (disable)",
+			argument: actions.EODC{
+				DirOrFilePath: dummyfilepath,
+				Action:        "disable",
+				Data:          "disableData",
+				Regex:         actions.DisableOrEnableOverscanRegex,
+				AssetFile:     "../assets/hosts",
+				FunctionName:  "functionName",
+			},
+			isSuccess: true,
+			originalLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"#overscan_left=16",
+			},
+			addLines: []string{
+				"  #   #        disable_overscan      = 1 #random comment",
+			},
+			wantedLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"#overscan_left=16",
+				"  #   #        disable_overscan      = 1 #random comment",
+				"disableData",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+		{
+			name: "success: created from asset (disable)",
+			argument: actions.EODC{
+				DirOrFilePath: dummyfilepath,
+				Action:        "disable",
+				Data:          "disableData",
+				Regex:         actions.DisableOrEnableOverscanRegex,
+				AssetFile:     "../assets/hosts",
+				FunctionName:  "functionName",
+			},
+			isSuccess:       true,
+			createFromAsset: true,
+			wantedLines: []string{
+				"127.0.0.1	localhost",
+				"",
+				"::1		localhost ip6-localhost ip6-loopback",
+				"",
+				"ff02::1		ip6-allnodes",
+				"",
+				"ff02::2		ip6-allrouters",
+				"disableData",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var overscan rpi.Exec
+			var err error
+			a := actions.New()
+
+			if tc.isSuccess {
+				if tc.createFromAsset == false {
+					// create and populate file
+					if err := actions.OverwriteToFile(actions.WriteToFileArg{
+						File:        dummyfilepath,
+						Data:        append(tc.originalLines, tc.addLines...),
+						Multiline:   true,
+						Permissions: 0755,
+					}); err != nil {
+						log.Fatal(err)
+					}
+				}
+
+				overscan, err = a.DisableOrEnableConfig(tc.argument)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				// read the new line and delete
+				readLines, err := infos.New().ReadFile(dummyfilepath)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				if e := os.Remove(dummyfilepath); e != nil {
+					fmt.Println(e)
+				}
+
+				assert.Equal(t, tc.wantedLines, readLines)
+			} else {
+				overscan, err = a.DisableOrEnableConfig(tc.argument)
+			}
+
+			assert.Equal(t, tc.wantedExitStatus, overscan.ExitStatus)
+			assert.Equal(t, tc.wantedStderr, overscan.Stderr)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
+func TestSetVariableInConfigFile(t *testing.T) {
+	cases := []struct {
+		name             string
+		argument         interface{}
+		isSuccess        bool
+		createFromAsset  bool
+		originalLines    []string
+		addLines         []string
+		wantedLines      []string
+		wantedExitStatus uint8
+		wantedStderr     string
+		wantedErr        error
+	}{
+		{
+			name: "error : no such file or directory (enable)",
+			argument: actions.SVICF{
+				File:      "",
+				Data:      "",
+				Regex:     "",
+				AssetFile: "",
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "couldn't find asset file",
+			wantedErr:        nil,
+		},
+		{
+			name: "error : too many arguments",
+			argument: []actions.OtherParams{
+				{
+					Value: map[string]string{
+						"file":      "file",
+						"data":      "data",
+						"regex":     "regex",
+						"assetFile": "assetFile",
+						"dummyarg":  "dummyargvalue",
+					},
+				},
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "",
+			wantedErr: &actions.Error{[]string{
+				"file", "regex", "data", "assetFile",
+			}},
+		},
+		{
+			name: "success with otherParams",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"file":      dummyfilepath,
+					"data":      "gpu_mem=128",
+					"regex":     actions.GpuMemRegex,
+					"assetFile": "../assets/hosts",
+				},
+			},
+			isSuccess: true,
+			originalLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+			},
+			addLines: []string{
+				"   gpu_mem = 1 2 7",
+			},
+			wantedLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"gpu_mem=128",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+		{
+			name: "success with regular params",
+			argument: actions.SVICF{
+				File:      dummyfilepath,
+				Data:      "gpu_mem=128",
+				Regex:     actions.GpuMemRegex,
+				AssetFile: "../assets/hosts",
+			},
+			isSuccess: true,
+			originalLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+			},
+			addLines: []string{
+				"   gpu_mem = 5 2 7 #comment man",
+			},
+			wantedLines: []string{
+				"# uncomment if you get no picture on HDMI for a default safe mode",
+				"#hdmi_safe=1",
+				"# uncomment this if your display has a black border of unused pixels visible",
+				"# and your display can output without overscan",
+				"# uncomment the following to adjust overscan. Use positive numbers if console",
+				"# goes off screen, and negative if there is too much border",
+				"gpu_mem=128",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+		// {
+		// 	name: "success but no match",
+		// 	argument: actions.SVICF{
+		// 		File:      dummyfilepath,
+		// 		Data:      "gpu_mem=128",
+		// 		Regex:     actions.GpuMemRegex,
+		// 		AssetFile: "../assets/hosts",
+		// 	},
+		// 	isSuccess: true,
+		// 	originalLines: []string{
+		// 		"# uncomment if you get no picture on HDMI for a default safe mode",
+		// 		"#hdmi_safe=1",
+		// 		"# uncomment this if your display has a black border of unused pixels visible",
+		// 		"# and your display can output without overscan",
+		// 		"# uncomment the following to adjust overscan. Use positive numbers if console",
+		// 		"# goes off screen, and negative if there is too much border",
+		// 		"#overscan_left=16",
+		// 	},
+		// 	addLines: []string{
+		// 		"  #   #        disable_overscan      = 1 #random comment",
+		// 	},
+		// 	wantedLines: []string{
+		// 		"# uncomment if you get no picture on HDMI for a default safe mode",
+		// 		"#hdmi_safe=1",
+		// 		"# uncomment this if your display has a black border of unused pixels visible",
+		// 		"# and your display can output without overscan",
+		// 		"# uncomment the following to adjust overscan. Use positive numbers if console",
+		// 		"# goes off screen, and negative if there is too much border",
+		// 		"#overscan_left=16",
+		// 		"  #   #        disable_overscan      = 1 #random comment",
+		// 		"gpu_mem=128",
+		// 	},
+		// 	wantedExitStatus: 0,
+		// 	wantedStderr:     "",
+		// 	wantedErr:        nil,
+		// },
+		{
+			name: "success: created from asset (disable)",
+			argument: actions.SVICF{
+				File:      dummyfilepath,
+				Data:      "gpu_mem=128",
+				Regex:     actions.GpuMemRegex,
+				AssetFile: "../assets/hosts",
+			},
+			isSuccess:       true,
+			createFromAsset: true,
+			wantedLines: []string{
+				"127.0.0.1	localhost",
+				"",
+				"::1		localhost ip6-localhost ip6-loopback",
+				"",
+				"ff02::1		ip6-allnodes",
+				"",
+				"ff02::2		ip6-allrouters",
+				"gpu_mem=128",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var overscan rpi.Exec
+			var err error
+			a := actions.New()
+
+			if tc.isSuccess {
+				if tc.createFromAsset == false {
+					// create and populate file
+					if err := actions.OverwriteToFile(actions.WriteToFileArg{
+						File:        dummyfilepath,
+						Data:        append(tc.originalLines, tc.addLines...),
+						Multiline:   true,
+						Permissions: 0755,
+					}); err != nil {
+						log.Fatal(err)
+					}
+				}
+
+				overscan, err = a.SetVariableInConfigFile(tc.argument)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				// read the new line and delete
+				readLines, err := infos.New().ReadFile(dummyfilepath)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				if e := os.Remove(dummyfilepath); e != nil {
+					fmt.Println(e)
+				}
+
+				assert.Equal(t, tc.wantedLines, readLines)
+			} else {
+				overscan, err = a.SetVariableInConfigFile(tc.argument)
+			}
 
 			assert.Equal(t, tc.wantedExitStatus, overscan.ExitStatus)
 			assert.Equal(t, tc.wantedStderr, overscan.Stderr)

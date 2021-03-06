@@ -56,6 +56,24 @@ const (
 	// UncommentOverscanRegex is the regex used to detect overscan variable in /boot/config.txt
 	UncommentOverscanRegex = `^\s*#?\s*overscan_(left|right|bottom|top)\s*=.*`
 
+	// DisableOrEnableCameraRegex is the regex used to detect start_x variable in /boot/config.txt
+	DisableOrEnableCameraRegex = `^\s*#?\s*start_x\s*=.*`
+
+	// StartxCameraRegex is the regex used to detect startx variable in /boot/config.txt
+	StartxCameraRegex = `^\s*startx.*`
+
+	// FixupFileCameraRegex is the regex used to detect fixup_file variable in /boot/config.txt
+	FixupFileCameraRegex = `^\s*fixup_file.*`
+
+	// StartFileCameraRegex is the regex used to detect start_file variable in /boot/config.txt
+	StartFileCameraRegex = `^\s*start_file.*`
+
+	// GpuMemRegex regex
+	GpuMemRegex = `^\s*gpu_mem\s*=.*`
+
+	// GpuMemRegex regex
+	GpuMemCameraRegex = `^\s*gpu_mem\s*=\s*([0-1]\s*[0-2]\s*[0-7]\s*.*|\s*)$`
+
 	// Separator separates parent and child execution
 	Separator = "<|>"
 
@@ -88,6 +106,12 @@ const (
 
 	// Overscan is the name of the overscan actions
 	Overscan = "overscan"
+
+	// DisableOrEnableCameraInterface is the name of the disable or enable camera interface actions
+	DisableOrEnableCameraInterface = "disable_or_enable_camera_interface"
+
+	// CameraInterface is the name of the camera interface actions
+	CameraInterface = "camera_interface"
 
 	// DisableOrEnableOverscan is the name of the disable or enable overscan method
 	DisableOrEnableOverscan = "disable_or_enable_overscan"
@@ -659,80 +683,6 @@ func (s Service) WaitForNetworkAtBoot(arg interface{}) (rpi.Exec, error) {
 	}, nil
 }
 
-// DisableOrEnableOverscan enables or disables overscan
-func (s Service) DisableOrEnableOverscan(arg interface{}) (rpi.Exec, error) {
-	var path string
-	var action string
-
-	switch v := arg.(type) {
-	case EnableOrDisableConfig:
-		path = v.DirOrFilePath
-		action = v.Action
-	case OtherParams:
-		path = arg.(OtherParams).Value["path"]
-		action = arg.(OtherParams).Value["action"]
-	default:
-		return rpi.Exec{ExitStatus: 1}, &Error{[]string{"path", "action"}}
-	}
-
-	// execution start time
-	startTime := uint64(time.Now().Unix())
-	exitStatus := 0
-	var stdErr string
-	var newData string
-
-	if action == Enable {
-		newData = "disable_overscan=0"
-	} else if action == Disable {
-		newData = "#disable_overscan=1"
-	} else {
-		exitStatus = 1
-		stdErr = "bad action type"
-	}
-
-	if exitStatus == 0 {
-		if _, err := os.Stat(path); err == nil {
-			err := ReplaceLineInFile(ReplaceLineInFileArg{
-				File:  path,
-				Regex: DisableOrEnableOverscanRegex,
-				ReplaceType: ReplaceType{
-					nil,
-					&EntireLine{NewData: newData},
-				},
-				HasUniqueLines: true,
-				ToAddIfNoMatch: []string{newData},
-			})
-
-			if err != nil {
-				exitStatus = 1
-				stdErr = fmt.Sprint(err)
-			}
-		} else {
-			exitStatus, stdErr = CreateAssetFile(
-				// it will add the new data at the end of the file
-				// indeed all lines commented from asset
-				CreateAssetFileArg{
-					AssetFile:     "../assets/config.txt",
-					TargetFile:    path,
-					NewData:       []string{newData},
-					HasUniqueLine: true,
-				},
-			)
-		}
-	}
-
-	// execution end time
-	endTime := uint64(time.Now().Unix())
-
-	return rpi.Exec{
-		Name:       DisableOrEnableOverscan,
-		StartTime:  startTime,
-		EndTime:    endTime,
-		ExitStatus: uint8(exitStatus),
-		Stderr:     stdErr,
-	}, nil
-}
-
 // CommentOrUncommentConfig is the argument for comment or uncomment methods
 type CommentOrUncommentConfig struct {
 	DirOrFilePath string
@@ -813,6 +763,93 @@ func (s Service) CommentOverscan(arg interface{}) (rpi.Exec, error) {
 	}, nil
 }
 
+// COUSLINF comment or uncomment single line in file
+type COUSLINF struct {
+	FunctionName  string
+	Action        string
+	DirOrFilePath string
+	Regex         string
+	DefaultData   string
+	AssetFile     string
+}
+
+// CommentInFile comments overscan lines
+func (s Service) CommentOrUncommentInFile(arg interface{}) (rpi.Exec, error) {
+	var functionName string
+	var action string
+	var path string
+	var regex string
+	var defaultData string
+	var assetFile string
+
+	switch v := arg.(type) {
+	case COUSLINF:
+		functionName = v.FunctionName
+		action = v.Action
+		path = v.DirOrFilePath
+		regex = v.Regex
+		defaultData = v.DefaultData
+		assetFile = v.AssetFile
+	case OtherParams:
+		functionName = arg.(OtherParams).Value["functionName"]
+		action = arg.(OtherParams).Value["action"]
+		path = arg.(OtherParams).Value["path"]
+		regex = arg.(OtherParams).Value["regex"]
+		defaultData = arg.(OtherParams).Value["defaultData"]
+		assetFile = arg.(OtherParams).Value["assetFile"]
+	default:
+		return rpi.Exec{ExitStatus: 1}, &Error{[]string{
+			"name", "action", "path", "regex", "defaultData", "assetFile",
+		}}
+	}
+
+	// execution start time
+	startTime := uint64(time.Now().Unix())
+	exitStatus := 0
+	var stdErr string
+
+	if action != "comment" && action != "uncomment" {
+		exitStatus = 1
+		stdErr = "bad action type"
+	}
+
+	if exitStatus == 0 {
+		if _, err := os.Stat(path); err == nil {
+			err := CommentOrUncommentLineInFile(CommentLineInFileArg{
+				File:           path,
+				Regex:          regex,
+				Action:         action,
+				ToAddIfNoMatch: []string{defaultData},
+				HasUniqueLines: true,
+			})
+
+			if err != nil {
+				exitStatus = 1
+				stdErr = fmt.Sprint(err)
+			}
+		} else {
+			exitStatus, stdErr = CreateAssetFile(
+				// no new data because already commented in assets
+				CreateAssetFileArg{
+					AssetFile:  assetFile,
+					TargetFile: path,
+				},
+			)
+		}
+	}
+
+	// execution end time
+	endTime := uint64(time.Now().Unix())
+
+	return rpi.Exec{
+		Name:       functionName,
+		StartTime:  startTime,
+		EndTime:    endTime,
+		ExitStatus: uint8(exitStatus),
+		Stderr:     stdErr,
+	}, nil
+}
+
 // DisableOrEnableBlanking disables or enables blanking
 func (s Service) DisableOrEnableBlanking(arg interface{}) (rpi.Exec, error) {
 	var target string
@@ -881,6 +918,174 @@ func (s Service) DisableOrEnableBlanking(arg interface{}) (rpi.Exec, error) {
 
 	return rpi.Exec{
 		Name:       DisableOrEnableBlanking,
+		StartTime:  startTime,
+		EndTime:    endTime,
+		ExitStatus: uint8(exitStatus),
+		Stderr:     stdErr,
+	}, nil
+}
+
+type EODC struct {
+	Action        string
+	DirOrFilePath string
+	Data          string
+	Regex         string
+	AssetFile     string
+	FunctionName  string
+}
+
+const DisableOrEnableConfig = "disable_or_enable_config"
+
+// DisableOrEnableConfig disables or enables a config in a file
+func (s Service) DisableOrEnableConfig(arg interface{}) (rpi.Exec, error) {
+	var functionName string
+	var action string
+	var path string
+	var regex string
+	var data string
+	var assetFile string
+
+	switch v := arg.(type) {
+	case EODC:
+		functionName = v.FunctionName
+		action = v.Action
+		path = v.DirOrFilePath
+		regex = v.Regex
+		data = v.Data
+		assetFile = v.AssetFile
+	case OtherParams:
+		functionName = arg.(OtherParams).Value["functionName"]
+		action = arg.(OtherParams).Value["action"]
+		path = arg.(OtherParams).Value["path"]
+		regex = arg.(OtherParams).Value["regex"]
+		data = arg.(OtherParams).Value["data"]
+		assetFile = arg.(OtherParams).Value["assetFile"]
+	default:
+		return rpi.Exec{ExitStatus: 1}, &Error{[]string{
+			"name", "action", "path", "regex", "data", "assetFile",
+		}}
+	}
+
+	// execution start time
+	startTime := uint64(time.Now().Unix())
+	exitStatus := 0
+	var stdErr string
+	var newData string
+
+	if action == Enable {
+		newData = data
+	} else if action == Disable {
+		newData = data
+	} else {
+		exitStatus = 1
+		stdErr = "bad action type"
+	}
+
+	if exitStatus == 0 {
+		if _, err := os.Stat(path); err == nil {
+			err := ReplaceLineInFile(ReplaceLineInFileArg{
+				File:  path,
+				Regex: regex,
+				ReplaceType: ReplaceType{
+					nil,
+					&EntireLine{NewData: newData},
+				},
+				HasUniqueLines: true,
+				ToAddIfNoMatch: []string{newData},
+			})
+
+			if err != nil {
+				exitStatus = 1
+				stdErr = fmt.Sprint(err)
+			}
+		} else {
+			exitStatus, stdErr = CreateAssetFile(
+				// it will add the new data at the end of the file
+				// indeed all lines commented from asset
+				CreateAssetFileArg{
+					AssetFile:     assetFile,
+					TargetFile:    path,
+					NewData:       []string{newData},
+					HasUniqueLine: true,
+				},
+			)
+		}
+	}
+
+	// execution end time
+	endTime := uint64(time.Now().Unix())
+
+	return rpi.Exec{
+		Name:       functionName,
+		StartTime:  startTime,
+		EndTime:    endTime,
+		ExitStatus: uint8(exitStatus),
+		Stderr:     stdErr,
+	}, nil
+}
+
+const SetVariableInConfigFile = "set_variable_in_config_file"
+
+type SVICF struct {
+	File      string
+	Regex     string
+	Data      string
+	AssetFile string
+}
+
+// DisableOrEnableConfig disables or enables a config in a file
+func (s Service) SetVariableInConfigFile(arg interface{}) (rpi.Exec, error) {
+	var file string
+	var regex string
+	var data string
+	var assetFile string
+
+	switch v := arg.(type) {
+	case SVICF:
+		file = v.File
+		regex = v.Regex
+		data = v.Data
+		assetFile = v.AssetFile
+	case OtherParams:
+		file = arg.(OtherParams).Value["file"]
+		regex = arg.(OtherParams).Value["regex"]
+		data = arg.(OtherParams).Value["data"]
+		assetFile = arg.(OtherParams).Value["assetFile"]
+	default:
+		return rpi.Exec{ExitStatus: 1}, &Error{[]string{
+			"file", "regex", "data", "assetFile",
+		}}
+	}
+
+	// execution start time
+	startTime := uint64(time.Now().Unix())
+	exitStatus := 0
+	var stdErr string
+
+	if _, err := os.Stat(file); err == nil {
+		err := SetVariable(file, 0664, regex, data, true)
+		if err != nil {
+			exitStatus = 1
+			stdErr = fmt.Sprint(err)
+		}
+	} else {
+		exitStatus, stdErr = CreateAssetFile(
+			// it will add the new data at the end of the file
+			// indeed all lines commented from asset
+			CreateAssetFileArg{
+				AssetFile:     assetFile,
+				TargetFile:    file,
+				NewData:       []string{data},
+				HasUniqueLine: true,
+			},
+		)
+	}
+
+	// execution end time
+	endTime := uint64(time.Now().Unix())
+
+	return rpi.Exec{
+		Name:       SetVariableInConfigFile,
 		StartTime:  startTime,
 		EndTime:    endTime,
 		ExitStatus: uint8(exitStatus),
@@ -1287,6 +1492,59 @@ func ReplaceLineInFile(args ReplaceLineInFileArg) error {
 		Data:        newLines,
 		Multiline:   true,
 		Permissions: args.Permissions,
+	}); err != nil {
+		return fmt.Errorf("overwriting to file failed")
+	}
+
+	return nil
+}
+
+// SetVariable replace one or multiple line in file
+func SetVariable(
+	file string,
+	permissions uint32,
+	regex string,
+	data string,
+	hasUniqueLines bool,
+) error {
+	rawLines, err := infos.New().ReadFile(file)
+	if err != nil {
+		return fmt.Errorf("opening file failed")
+	}
+
+	if hasUniqueLines {
+		rawLines = RemoveDuplicateStrings(rawLines)
+	}
+
+	newLines := []string{}
+
+	for _, line := range rawLines {
+		if line != "" {
+			// apply the replace type here
+			re := regexp.MustCompile(regex)
+			if re.MatchString(line) {
+				line = strings.ReplaceAll(
+					line,
+					line,
+					data,
+				)
+				line = strings.TrimSpace(line)
+			}
+
+			newLines = append(newLines, strings.TrimSuffix(line, "\n"))
+		}
+	}
+
+	if hasUniqueLines {
+		newLines = RemoveDuplicateStrings(newLines)
+	}
+
+	// allLines is deduplicated
+	if err = OverwriteToFile(WriteToFileArg{
+		File:        file,
+		Data:        newLines,
+		Multiline:   true,
+		Permissions: permissions,
 	}); err != nil {
 		return fmt.Errorf("overwriting to file failed")
 	}

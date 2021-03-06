@@ -13,11 +13,13 @@ type Actions struct {
 	ChangeHostnameInHostsFileFn    func(arg interface{}) (rpi.Exec, error)
 	ChangePasswordFn               func(arg interface{}) (rpi.Exec, error)
 	WaitForNetworkAtBootFn         func(arg interface{}) (rpi.Exec, error)
-	DisableOrEnableOverscanFn      func(arg interface{}) (rpi.Exec, error)
+	DisableOrEnableConfigFn        func(arg interface{}) (rpi.Exec, error)
 	CommentOverscanFn              func(arg interface{}) (rpi.Exec, error)
 	DisableOrEnableBlankingFn      func(arg interface{}) (rpi.Exec, error)
 	AddUserFn                      func(arg interface{}) (rpi.Exec, error)
 	DeleteUserFn                   func(arg interface{}) (rpi.Exec, error)
+	CommentOrUncommentInFileFn     func(arg interface{}) (rpi.Exec, error)
+	SetVariableInConfigFileFn      func(arg interface{}) (rpi.Exec, error)
 }
 
 // DeleteFile mock
@@ -55,9 +57,9 @@ func (a Actions) WaitForNetworkAtBoot(arg interface{}) (rpi.Exec, error) {
 	return a.WaitForNetworkAtBootFn(arg)
 }
 
-// DisableOrEnableOverscan mock
-func (a Actions) DisableOrEnableOverscan(arg interface{}) (rpi.Exec, error) {
-	return a.DisableOrEnableOverscanFn(arg)
+// DisableOrEnableConfig mock
+func (a Actions) DisableOrEnableConfig(arg interface{}) (rpi.Exec, error) {
+	return a.DisableOrEnableConfigFn(arg)
 }
 
 // CommentOverscan mock
@@ -75,4 +77,12 @@ func (a Actions) AddUser(arg interface{}) (rpi.Exec, error) {
 
 func (a Actions) DeleteUser(arg interface{}) (rpi.Exec, error) {
 	return a.DeleteUserFn(arg)
+}
+
+func (a Actions) CommentOrUncommentInFile(arg interface{}) (rpi.Exec, error) {
+	return a.CommentOrUncommentInFileFn(arg)
+}
+
+func (a Actions) SetVariableInConfigFile(arg interface{}) (rpi.Exec, error) {
+	return a.SetVariableInConfigFileFn(arg)
 }

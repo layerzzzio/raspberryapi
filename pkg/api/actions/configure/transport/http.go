@@ -24,7 +24,7 @@ func NewHTTP(svc configure.Service, r *echo.Group) {
 	cr.POST("/blanking", h.blanking)
 	cr.POST("/adduser", h.adduser)
 	cr.POST("/deleteuser", h.deleteuser)
-
+	cr.POST("/camera", h.camera)
 }
 
 func (h *HTTP) changehostname(ctx echo.Context) error {
@@ -144,4 +144,18 @@ func ActionCheck(action string, regex string) error {
 	} else {
 		return nil
 	}
+}
+
+func (h *HTTP) camera(ctx echo.Context) error {
+	action := ctx.QueryParam("action")
+	if err := ActionCheck(action, `enable|disable`); err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - bad action type")
+	}
+
+	result, err := h.svc.ExecuteCA(action)
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(http.StatusOK, result)
 }

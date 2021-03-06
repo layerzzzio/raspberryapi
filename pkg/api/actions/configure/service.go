@@ -14,6 +14,7 @@ type Service interface {
 	ExecuteBL(string) (rpi.Action, error)
 	ExecuteAUS(string, string) (rpi.Action, error)
 	ExecuteDUS(string) (rpi.Action, error)
+	ExecuteCA(string) (rpi.Action, error)
 }
 
 // Configure represents a Configure application service.
@@ -32,6 +33,7 @@ type CONSYS interface {
 	ExecuteBL(map[int](map[int]actions.Func)) (rpi.Action, error)
 	ExecuteAUS(map[int](map[int]actions.Func)) (rpi.Action, error)
 	ExecuteDUS(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteCA(map[int](map[int]actions.Func)) (rpi.Action, error)
 }
 
 // Actions represents the actions interface
@@ -40,11 +42,13 @@ type Actions interface {
 	ChangeHostnameInHostsFile(interface{}) (rpi.Exec, error)
 	ChangePassword(interface{}) (rpi.Exec, error)
 	WaitForNetworkAtBoot(interface{}) (rpi.Exec, error)
-	DisableOrEnableOverscan(interface{}) (rpi.Exec, error)
 	CommentOverscan(interface{}) (rpi.Exec, error)
 	DisableOrEnableBlanking(interface{}) (rpi.Exec, error)
 	AddUser(interface{}) (rpi.Exec, error)
 	DeleteUser(interface{}) (rpi.Exec, error)
+	DisableOrEnableConfig(interface{}) (rpi.Exec, error)
+	CommentOrUncommentInFile(interface{}) (rpi.Exec, error)
+	SetVariableInConfigFile(interface{}) (rpi.Exec, error)
 }
 
 // Infos represents the infos interface
