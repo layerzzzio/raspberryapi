@@ -17,6 +17,12 @@ import (
 	icol "github.com/raspibuddy/rpi/pkg/api/infos/configfile/logging"
 	icos "github.com/raspibuddy/rpi/pkg/api/infos/configfile/platform/sys"
 	icot "github.com/raspibuddy/rpi/pkg/api/infos/configfile/transport"
+
+	"github.com/raspibuddy/rpi/pkg/api/infos/rpinterface"
+	iinl "github.com/raspibuddy/rpi/pkg/api/infos/rpinterface/logging"
+	iins "github.com/raspibuddy/rpi/pkg/api/infos/rpinterface/platform/sys"
+	iint "github.com/raspibuddy/rpi/pkg/api/infos/rpinterface/transport"
+
 	"github.com/raspibuddy/rpi/pkg/api/infos/display"
 	idil "github.com/raspibuddy/rpi/pkg/api/infos/display/logging"
 	idis "github.com/raspibuddy/rpi/pkg/api/infos/display/platform/sys"
@@ -103,6 +109,7 @@ func Start(cfg *config.Configuration) error {
 	ibot.NewHTTP(ibol.New(boot.New(ibos.Boot{}, i), log).Service, v1)
 	idit.NewHTTP(idil.New(display.New(idis.Display{}, i), log).Service, v1)
 	icot.NewHTTP(icol.New(configfile.New(icos.ConfigFile{}, i), log).Service, v1)
+	iint.NewHTTP(iinl.New(rpinterface.New(iins.RpInterface{}, i), log).Service, v1)
 
 	server.Start(e, &server.Config{
 		Port:                cfg.Server.Port,
