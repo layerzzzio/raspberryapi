@@ -72,7 +72,7 @@ const (
 	GpuMemRegex = `^\s*gpu_mem\s*=.*`
 
 	// GpuMemRegex regex
-	GpuMemCameraRegex = `^\s*gpu_mem\s*=\s*([0-1]\s*[0-2]\s*[0-7]\s*.*|\s*)$`
+	// GpuMemCameraRegex = `^\s*gpu_mem\s*=\s*([0-1]\s*[0-2]\s*[0-7]\s*.*|\s*)$`
 
 	// Separator separates parent and child execution
 	Separator = "<|>"
@@ -773,6 +773,8 @@ type COUSLINF struct {
 	AssetFile     string
 }
 
+const CommentOrUncommentInFile = "comment_or_uncomment_in_file"
+
 // CommentInFile comments overscan lines
 func (s Service) CommentOrUncommentInFile(arg interface{}) (rpi.Exec, error) {
 	var functionName string
@@ -1031,6 +1033,7 @@ type SVICF struct {
 	Regex     string
 	Data      string
 	AssetFile string
+	Threshold string
 }
 
 // DisableOrEnableConfig disables or enables a config in a file
@@ -1039,6 +1042,7 @@ func (s Service) SetVariableInConfigFile(arg interface{}) (rpi.Exec, error) {
 	var regex string
 	var data string
 	var assetFile string
+	var threshold string
 
 	switch v := arg.(type) {
 	case SVICF:
@@ -1046,14 +1050,16 @@ func (s Service) SetVariableInConfigFile(arg interface{}) (rpi.Exec, error) {
 		regex = v.Regex
 		data = v.Data
 		assetFile = v.AssetFile
+		threshold = v.Threshold
 	case OtherParams:
 		file = arg.(OtherParams).Value["file"]
 		regex = arg.(OtherParams).Value["regex"]
 		data = arg.(OtherParams).Value["data"]
 		assetFile = arg.(OtherParams).Value["assetFile"]
+		threshold = arg.(OtherParams).Value["threshold"]
 	default:
 		return rpi.Exec{ExitStatus: 1}, &Error{[]string{
-			"file", "regex", "data", "assetFile",
+			"file", "regex", "data", "assetFile", "threshold",
 		}}
 	}
 
@@ -1062,23 +1068,29 @@ func (s Service) SetVariableInConfigFile(arg interface{}) (rpi.Exec, error) {
 	exitStatus := 0
 	var stdErr string
 
-	if _, err := os.Stat(file); err == nil {
-		err := SetVariable(file, 0664, regex, data, true)
-		if err != nil {
-			exitStatus = 1
-			stdErr = fmt.Sprint(err)
-		}
+	thr, err := strconv.Atoi(threshold)
+	if err != nil {
+		exitStatus = 1
+		stdErr = fmt.Sprint(err)
 	} else {
-		exitStatus, stdErr = CreateAssetFile(
-			// it will add the new data at the end of the file
-			// indeed all lines commented from asset
-			CreateAssetFileArg{
-				AssetFile:     assetFile,
-				TargetFile:    file,
-				NewData:       []string{data},
-				HasUniqueLine: true,
-			},
-		)
+		if _, err := os.Stat(file); err == nil {
+			err := SetVariable(file, 0664, regex, data, true, thr)
+			if err != nil {
+				exitStatus = 1
+				stdErr = fmt.Sprint(err)
+			}
+		} else {
+			exitStatus, stdErr = CreateAssetFile(
+				// it will add the new data at the end of the file
+				// indeed all lines commented from asset
+				CreateAssetFileArg{
+					AssetFile:     assetFile,
+					TargetFile:    file,
+					NewData:       []string{data},
+					HasUniqueLine: true,
+				},
+			)
+		}
 	}
 
 	// execution end time
@@ -1506,6 +1518,7 @@ func SetVariable(
 	regex string,
 	data string,
 	hasUniqueLines bool,
+	threshold int,
 ) error {
 	rawLines, err := infos.New().ReadFile(file)
 	if err != nil {
@@ -1517,20 +1530,39 @@ func SetVariable(
 	}
 
 	newLines := []string{}
+	matchCounter := 0
+	isToReplace := true
 
 	for _, line := range rawLines {
 		if line != "" {
 			// apply the replace type here
 			re := regexp.MustCompile(regex)
 			if re.MatchString(line) {
-				line = strings.ReplaceAll(
-					line,
-					line,
-					data,
-				)
-				line = strings.TrimSpace(line)
-			}
+				reNum := regexp.MustCompile(`[0-9]+`)
+				valueStr := reNum.FindString(line)
+				if valueStr != "" {
+					valueNum, _ := strconv.Atoi(valueStr)
+					if threshold != -1 {
+						if valueNum > threshold {
+							isToReplace = false
+						}
+					}
+				}
 
+				if matchCounter == 0 && isToReplace {
+					line = strings.TrimSpace(
+						strings.ReplaceAll(
+							line,
+							line,
+							data,
+						),
+					)
+				} else if matchCounter >= 1 {
+					line = ""
+				}
+
+				matchCounter++
+			}
 			newLines = append(newLines, strings.TrimSuffix(line, "\n"))
 		}
 	}
@@ -1550,6 +1582,31 @@ func SetVariable(
 	}
 
 	return nil
+}
+
+// GetVariable get variable value from file
+func GetVariable(file string, regex string) (string, error) {
+	var result string
+
+	rawLines, err := infos.New().ReadFile(file)
+	if err != nil {
+		return "", fmt.Errorf("opening file failed")
+	}
+
+	rawLines = RemoveDuplicateStrings(rawLines)
+
+	for _, line := range rawLines {
+		if line != "" {
+			re := regexp.MustCompile(regex)
+			reNum := regexp.MustCompile(`[0-9]+`)
+			if re.MatchString(line) {
+				result = reNum.FindString(line)
+				break
+			}
+		}
+	}
+
+	return result, nil
 }
 
 // AddLinesEndOfFile adds one or multiple lines at the end of a file

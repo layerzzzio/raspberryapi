@@ -1660,6 +1660,7 @@ func TestSetVariable(t *testing.T) {
 		regex          string
 		data           string
 		hasUniqueLines bool
+		threshold      int
 		isSuccess      bool
 		originalLines  []string
 		addLines       []string
@@ -1671,9 +1672,10 @@ func TestSetVariable(t *testing.T) {
 			isSuccess:      true,
 			file:           "./test_write_to_file",
 			permissions:    0755,
-			regex:          actions.GpuMemCameraRegex,
+			regex:          actions.GpuMemRegex,
 			hasUniqueLines: true,
 			data:           "gpu_mem=128",
+			threshold:      128,
 			originalLines: []string{
 				"dummy line 1",
 				"hello my friend",
@@ -1693,9 +1695,10 @@ func TestSetVariable(t *testing.T) {
 			isSuccess:      true,
 			file:           "./test_write_to_file",
 			permissions:    0755,
-			regex:          actions.GpuMemCameraRegex,
+			regex:          actions.GpuMemRegex,
 			hasUniqueLines: true,
 			data:           "gpu_mem=128",
+			threshold:      128,
 			originalLines: []string{
 				"dummy line 1",
 				"hello my friend",
@@ -1711,13 +1714,37 @@ func TestSetVariable(t *testing.T) {
 			},
 		},
 		{
+			name:           "success: way below threshold gpu_mem",
+			isSuccess:      true,
+			file:           "./test_write_to_file",
+			permissions:    0755,
+			regex:          actions.GpuMemRegex,
+			hasUniqueLines: true,
+			data:           "gpu_mem=128",
+			threshold:      128,
+			originalLines: []string{
+				"dummy line 1",
+				"hello my friend",
+			},
+			addLines: []string{
+				"     gpu_mem =  18",
+			},
+			wantedErr: nil,
+			wantedLines: []string{
+				"dummy line 1",
+				"hello my friend",
+				"gpu_mem=128",
+			},
+		},
+		{
 			name:           "success: above threshold gpu_mem",
 			isSuccess:      true,
 			file:           "./test_write_to_file",
 			permissions:    0755,
-			regex:          actions.GpuMemCameraRegex,
+			regex:          actions.GpuMemRegex,
 			hasUniqueLines: true,
 			data:           "gpu_mem=128",
+			threshold:      128,
 			originalLines: []string{
 				"dummy line 1",
 				"hello my friend",
@@ -1737,9 +1764,10 @@ func TestSetVariable(t *testing.T) {
 			isSuccess:      true,
 			file:           "./test_write_to_file",
 			permissions:    0755,
-			regex:          actions.GpuMemCameraRegex,
+			regex:          actions.GpuMemRegex,
 			hasUniqueLines: true,
 			data:           "gpu_mem=128",
+			threshold:      128,
 			originalLines: []string{
 				"dummy line 1",
 				"hello my friend",
@@ -1755,13 +1783,68 @@ func TestSetVariable(t *testing.T) {
 			},
 		},
 		{
+			name:           "success: 3 matches",
+			isSuccess:      true,
+			file:           "./test_write_to_file",
+			permissions:    0755,
+			regex:          actions.GpuMemRegex,
+			hasUniqueLines: true,
+			data:           "gpu_mem=128",
+			threshold:      128,
+			originalLines: []string{
+				"dummy line 1",
+				"hello my friend",
+			},
+			addLines: []string{
+				"     gpu_mem     =  55529   #comment",
+				"     gpu_mem     =  127 ",
+				"     gpu_mem     =  127 ",
+			},
+			wantedErr: nil,
+			wantedLines: []string{
+				"dummy line 1",
+				"hello my friend",
+				"     gpu_mem     =  55529   #comment",
+				"",
+			},
+		},
+		{
+			name:           "success: 5 matches everywhere",
+			isSuccess:      true,
+			file:           "./test_write_to_file",
+			permissions:    0755,
+			regex:          actions.GpuMemRegex,
+			hasUniqueLines: true,
+			data:           "gpu_mem=128",
+			threshold:      128,
+			originalLines: []string{
+				"     gpu_mem     =  127 ",
+				"dummy line 1",
+				"     gpu_mem     =  55529   #comment",
+				"hello my friend",
+			},
+			addLines: []string{
+				"     gpu_mem     =  55529   #comment",
+				"     gpu_mem     =  127 ",
+				"     gpu_mem     =  127 ",
+			},
+			wantedErr: nil,
+			wantedLines: []string{
+				"gpu_mem=128",
+				"dummy line 1",
+				"",
+				"hello my friend",
+			},
+		},
+		{
 			name:           "success: empty gpu_mem",
 			isSuccess:      true,
 			file:           "./test_write_to_file",
 			permissions:    0755,
-			regex:          actions.GpuMemCameraRegex,
+			regex:          actions.GpuMemRegex,
 			hasUniqueLines: true,
 			data:           "gpu_mem=128",
+			threshold:      128,
 			originalLines: []string{
 				"dummy line 1",
 				"hello my friend",
@@ -1798,6 +1881,7 @@ func TestSetVariable(t *testing.T) {
 					tc.regex,
 					tc.data,
 					tc.hasUniqueLines,
+					tc.threshold,
 				)
 
 				// read the new line
@@ -1812,6 +1896,98 @@ func TestSetVariable(t *testing.T) {
 
 				assert.Equal(t, tc.wantedLines, readLines)
 				assert.Equal(t, tc.wantedErr, setVar)
+			}
+		})
+	}
+}
+
+func TestGetVariable(t *testing.T) {
+	cases := []struct {
+		name          string
+		file          string
+		regex         string
+		isSuccess     bool
+		originalLines []string
+		addLines      []string
+		wantedData    string
+		wantedErr     error
+	}{
+		{
+			name:      "success: normal gpu_mem",
+			isSuccess: true,
+			file:      "./test_write_to_file",
+			regex:     actions.GpuMemRegex,
+			originalLines: []string{
+				"dummy line 1",
+				"hello my friend",
+			},
+			addLines: []string{
+				"     gpu_mem = 128",
+			},
+			wantedErr:  nil,
+			wantedData: "128",
+		},
+		{
+			name:      "success: gpu_mem with comment and numbers",
+			isSuccess: true,
+			file:      "./test_write_to_file",
+			regex:     actions.GpuMemRegex,
+			originalLines: []string{
+				"dummy line 1",
+				"hello my friend",
+			},
+			addLines: []string{
+				"     gpu_mem = 128 #1",
+			},
+			wantedErr:  nil,
+			wantedData: "128",
+		},
+		{
+			name:      "success: gpu_mem with space and numbers",
+			isSuccess: true,
+			file:      "./test_write_to_file",
+			regex:     actions.GpuMemRegex,
+			originalLines: []string{
+				"dummy line 1",
+				"hello my friend",
+			},
+			addLines: []string{
+				"     gpu_mem = 128 1",
+			},
+			wantedErr:  nil,
+			wantedData: "128",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.isSuccess {
+				// create and populate file
+				if err := actions.OverwriteToFile(actions.WriteToFileArg{
+					File:        tc.file,
+					Data:        append(tc.originalLines, tc.addLines...),
+					Multiline:   true,
+					Permissions: 0755,
+				}); err != nil {
+					log.Fatal(err)
+				}
+
+				// setVar in file
+				getVar, err := actions.GetVariable(tc.file, tc.regex)
+
+				if e := os.Remove(tc.file); e != nil {
+					fmt.Println(e)
+				}
+
+				assert.Equal(t, tc.wantedData, getVar)
+				assert.Equal(t, tc.wantedErr, err)
+
+			} else {
+				// setVar in file
+				getVar, err := actions.GetVariable(tc.file, tc.regex)
+				assert.Equal(t, tc.wantedErr, getVar)
+				assert.Equal(t, tc.wantedErr, err)
+
 			}
 		})
 	}
@@ -3887,10 +4063,25 @@ func TestSetVariableInConfigFile(t *testing.T) {
 				Data:      "",
 				Regex:     "",
 				AssetFile: "",
+				Threshold: "128",
 			},
 			isSuccess:        false,
 			wantedExitStatus: 1,
 			wantedStderr:     "couldn't find asset file",
+			wantedErr:        nil,
+		},
+		{
+			name: "error : couldn't convert threshold",
+			argument: actions.SVICF{
+				File:      "",
+				Data:      "",
+				Regex:     "",
+				AssetFile: "",
+				Threshold: "",
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "strconv.Atoi: parsing \"\": invalid syntax",
 			wantedErr:        nil,
 		},
 		{
@@ -3903,6 +4094,7 @@ func TestSetVariableInConfigFile(t *testing.T) {
 						"regex":     "regex",
 						"assetFile": "assetFile",
 						"dummyarg":  "dummyargvalue",
+						"threshold": "threshold",
 					},
 				},
 			},
@@ -3910,7 +4102,7 @@ func TestSetVariableInConfigFile(t *testing.T) {
 			wantedExitStatus: 1,
 			wantedStderr:     "",
 			wantedErr: &actions.Error{[]string{
-				"file", "regex", "data", "assetFile",
+				"file", "regex", "data", "assetFile", "threshold",
 			}},
 		},
 		{
@@ -3921,6 +4113,7 @@ func TestSetVariableInConfigFile(t *testing.T) {
 					"data":      "gpu_mem=128",
 					"regex":     actions.GpuMemRegex,
 					"assetFile": "../assets/hosts",
+					"threshold": "128",
 				},
 			},
 			isSuccess: true,
@@ -3955,6 +4148,7 @@ func TestSetVariableInConfigFile(t *testing.T) {
 				Data:      "gpu_mem=128",
 				Regex:     actions.GpuMemRegex,
 				AssetFile: "../assets/hosts",
+				Threshold: "128",
 			},
 			isSuccess: true,
 			originalLines: []string{
@@ -4024,6 +4218,7 @@ func TestSetVariableInConfigFile(t *testing.T) {
 				Data:      "gpu_mem=128",
 				Regex:     actions.GpuMemRegex,
 				AssetFile: "../assets/hosts",
+				Threshold: "128",
 			},
 			isSuccess:       true,
 			createFromAsset: true,
