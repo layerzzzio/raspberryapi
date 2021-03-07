@@ -130,6 +130,9 @@ const (
 
 	// DeleteUser is the name of the deleting user method
 	DeleteUser = "delete_user"
+
+	// SSH is the name of the ssh user method
+	SSH = "ssh"
 )
 
 var (
@@ -596,6 +599,59 @@ func (s Service) DeleteUser(arg interface{}) (rpi.Exec, error) {
 
 	return rpi.Exec{
 		Name:       DeleteUser,
+		StartTime:  startTime,
+		EndTime:    endTime,
+		ExitStatus: uint8(exitStatus),
+		Stderr:     stdErr,
+	}, nil
+}
+
+type EBC struct {
+	Command string
+}
+
+const ExecuteBashCommand = "execute_bash_command"
+
+// DisableOrEnableBashCommand runs a bash command depending on the action value
+func (s Service) ExecuteBashCommand(arg interface{}) (rpi.Exec, error) {
+	var command string
+
+	switch v := arg.(type) {
+	case EBC:
+		command = v.Command
+	case OtherParams:
+		command = arg.(OtherParams).Value["command"]
+	default:
+		return rpi.Exec{ExitStatus: 1}, &Error{[]string{"command"}}
+	}
+
+	// execution start time
+	startTime := uint64(time.Now().Unix())
+	exitStatus := 0
+	var stdErr string
+
+	if command == "" {
+		exitStatus = 1
+		stdErr = "no command"
+	} else {
+		var err error
+		_, err = exec.Command(
+			"sh",
+			"-c",
+			command,
+		).Output()
+
+		if err != nil {
+			exitStatus = 1
+			stdErr = fmt.Sprint(err)
+		}
+	}
+
+	// execution end time
+	endTime := uint64(time.Now().Unix())
+
+	return rpi.Exec{
+		Name:       ExecuteBashCommand,
 		StartTime:  startTime,
 		EndTime:    endTime,
 		ExitStatus: uint8(exitStatus),

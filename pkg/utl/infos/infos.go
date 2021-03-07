@@ -186,3 +186,29 @@ func (s Service) IsQuietGrep(command string, grep string) bool {
 		return true
 	}
 }
+
+// IsSSHKeyGenerating checks if SSH keys are getting generated
+func (s Service) IsSSHKeyGenerating(path string) bool {
+	isFinished, err := exec.Command(
+		"sh",
+		"-c",
+		fmt.Sprintf("grep -q \"^finished\" %v ; echo $?", path),
+	).Output()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	isFinishedNum, err := strconv.Atoi(strings.TrimSpace(string(isFinished)))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	isSSHLogExist := s.IsFileExists(path)
+
+	if isFinishedNum == 1 && isSSHLogExist {
+		return true
+	} else {
+		return false
+	}
+}

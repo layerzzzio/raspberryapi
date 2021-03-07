@@ -12,6 +12,7 @@ type Infos struct {
 	GetEnrichedConfigFilesFn  func(configFiles map[string]rpi.ConfigFileDetails) map[string]rpi.ConfigFileDetails
 	IsXscreenSaverInstalledFn func() (bool, error)
 	IsQuietGrepFn             func(string, string) bool
+	IsSSHKeyGeneratingFn      func(string) bool
 }
 
 // ReadFile mock
@@ -42,4 +43,9 @@ func (i Infos) IsXscreenSaverInstalled() (bool, error) {
 // IsQuietGrep mock
 func (i Infos) IsQuietGrep(command string, quietGrep string) bool {
 	return i.IsQuietGrepFn(command, quietGrep)
+}
+
+// IsSSHKeyGenerating mock
+func (i Infos) IsSSHKeyGenerating(path string) bool {
+	return i.IsSSHKeyGeneratingFn(path)
 }
