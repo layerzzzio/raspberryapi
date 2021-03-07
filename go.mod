@@ -7,6 +7,7 @@ require (
 	github.com/go-ole/go-ole v1.2.5 // indirect
 	github.com/gorilla/websocket v1.4.2
 	github.com/kr/text v0.2.0 // indirect
+	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/echo/v4 v4.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.20.0

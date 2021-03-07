@@ -106,6 +106,11 @@ func (s Service) GetConfigFiles() map[string]rpi.ConfigFileDetails {
 			IsCritical:  false,
 			Description: "configures the blanking behavior of the monitor.",
 		},
+		"start_x_elf": {
+			Path:        "/boot/start_x.elf",
+			IsCritical:  true,
+			Description: "is a binary blob (firmware) that is loaded on to the VideoCore in the SoC and that includes camera drivers and codec.",
+		},
 	}
 }
 
