@@ -2,10 +2,12 @@ package infos_test
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"testing"
 
 	"github.com/raspibuddy/rpi"
+	"github.com/raspibuddy/rpi/pkg/utl/actions"
 	"github.com/raspibuddy/rpi/pkg/utl/infos"
 	"github.com/stretchr/testify/assert"
 )
@@ -223,6 +225,101 @@ func TestIsXscreenSaverInstalled(t *testing.T) {
 			command, err := infos.New().IsXscreenSaverInstalled()
 			assert.Equal(t, tc.wantData, command)
 			assert.Equal(t, tc.wantErr, err)
+		})
+	}
+}
+
+func TestIsQuietGrep(t *testing.T) {
+	cases := []struct {
+		name       string
+		command    string
+		quietGrep  string
+		wantedData bool
+	}{
+		{
+			name:       "success: 0",
+			command:    "pwd",
+			quietGrep:  ".",
+			wantedData: true,
+		},
+		{
+			name:       "success: 1",
+			command:    "pwd",
+			quietGrep:  "grep -q ABCDEFGHIJK",
+			wantedData: false,
+		},
+		{
+			name:       "success: 1",
+			command:    "cat /etc/passwd",
+			quietGrep:  "ssh",
+			wantedData: true,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			i := infos.New()
+			isFileExists := i.IsQuietGrep(tc.command, tc.quietGrep)
+			assert.Equal(t, tc.wantedData, isFileExists)
+		})
+	}
+}
+
+func TestIsSSHKeyGenerating(t *testing.T) {
+	cases := []struct {
+		name       string
+		path       string
+		addLines   []string
+		wantedData bool
+	}{
+		{
+			name: "success: there is not finished",
+			path: "./test",
+			addLines: []string{
+				"yes man",
+				"no it is not",
+			},
+			wantedData: true,
+		},
+		{
+			name: "success: cannot find a line that starts with 'finished'",
+			path: "./test",
+			addLines: []string{
+				"yes man",
+				"no it is not",
+				"   ^finished", // ^ == regex (start of the line)
+			},
+			wantedData: true,
+		},
+		{
+			name: "success: find 'finished'",
+			path: "./test",
+			addLines: []string{
+				"yes man",
+				"no it is not",
+				"finished",
+			},
+			wantedData: false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			i := infos.New()
+			if err := actions.OverwriteToFile(actions.WriteToFileArg{
+				File:        tc.path,
+				Data:        tc.addLines,
+				Multiline:   true,
+				Permissions: 0755,
+			}); err != nil {
+				log.Fatal(err)
+			}
+
+			isSSHGen := i.IsSSHKeyGenerating(tc.path)
+
+			os.Remove(tc.path)
+
+			assert.Equal(t, tc.wantedData, isSSHGen)
 		})
 	}
 }

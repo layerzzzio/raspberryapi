@@ -25,6 +25,7 @@ func NewHTTP(svc configure.Service, r *echo.Group) {
 	cr.POST("/adduser", h.adduser)
 	cr.POST("/deleteuser", h.deleteuser)
 	cr.POST("/camera", h.camera)
+	cr.POST("/ssh", h.ssh)
 }
 
 func (h *HTTP) changehostname(ctx echo.Context) error {
@@ -137,15 +138,6 @@ func (h *HTTP) deleteuser(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, result)
 }
 
-func ActionCheck(action string, regex string) error {
-	re := regexp.MustCompile(`^(` + regex + `)$`)
-	if !re.MatchString(action) || action == "" {
-		return echo.NewHTTPError(http.StatusNotFound, "Not found - bad action type or action type is null")
-	} else {
-		return nil
-	}
-}
-
 func (h *HTTP) camera(ctx echo.Context) error {
 	action := ctx.QueryParam("action")
 	if err := ActionCheck(action, `enable|disable`); err != nil {
@@ -158,4 +150,27 @@ func (h *HTTP) camera(ctx echo.Context) error {
 	}
 
 	return ctx.JSON(http.StatusOK, result)
+}
+
+func (h *HTTP) ssh(ctx echo.Context) error {
+	action := ctx.QueryParam("action")
+	if err := ActionCheck(action, `enable|disable`); err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - bad action type")
+	}
+
+	result, err := h.svc.ExecuteSSH(action)
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(http.StatusOK, result)
+}
+
+func ActionCheck(action string, regex string) error {
+	re := regexp.MustCompile(`^(` + regex + `)$`)
+	if !re.MatchString(action) || action == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - bad action type or action type is null")
+	} else {
+		return nil
+	}
 }

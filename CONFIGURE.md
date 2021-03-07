@@ -38,3 +38,15 @@ PS: it will fail it try to enable while it is already enabled - same with disabl
 ## Delete User
 1. check if user exists: GET /humanusers
 2. add or delete depending on the result: POST /configure/deleteuser?username=**username**
+
+## Camera
+1. check isStartXElf: GET /rpinterfaces. 
+2. if false, update firmware
+3. check isCamera: GET /rpinterfaces
+4. depending on the result: POST /configure/camera?action=**[enable/disable]**
+
+## SSH
+1. check isSSHKeyGenerating: GET /rpinterfaces. 
+2. if true, try later
+3. check isSSH: GET /rpinterfaces
+4. depending on the result: POST /configure/ssh?action=**[enable/disable]**

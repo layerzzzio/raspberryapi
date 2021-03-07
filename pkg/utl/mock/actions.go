@@ -20,6 +20,7 @@ type Actions struct {
 	DeleteUserFn                   func(arg interface{}) (rpi.Exec, error)
 	CommentOrUncommentInFileFn     func(arg interface{}) (rpi.Exec, error)
 	SetVariableInConfigFileFn      func(arg interface{}) (rpi.Exec, error)
+	ExecuteBashCommandFn           func(arg interface{}) (rpi.Exec, error)
 }
 
 // DeleteFile mock
@@ -85,4 +86,8 @@ func (a Actions) CommentOrUncommentInFile(arg interface{}) (rpi.Exec, error) {
 
 func (a Actions) SetVariableInConfigFile(arg interface{}) (rpi.Exec, error) {
 	return a.SetVariableInConfigFileFn(arg)
+}
+
+func (a Actions) ExecuteBashCommand(arg interface{}) (rpi.Exec, error) {
+	return a.ExecuteBashCommandFn(arg)
 }

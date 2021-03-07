@@ -350,3 +350,31 @@ func (con *Configure) ExecuteCA(action string) (rpi.Action, error) {
 
 	return con.consys.ExecuteCA(plan)
 }
+
+// ExecuteSSH enable or disable ssh
+func (con *Configure) ExecuteSSH(action string) (rpi.Action, error) {
+	var plan map[int]map[int]actions.Func
+	var command string
+
+	if action == "enable" {
+		command = "ssh-keygen -A && update-rc.d ssh enable && invoke-rc.d ssh start"
+	} else if action == "disable" {
+		command = "update-rc.d ssh disable && invoke-rc.d ssh stop"
+	} else {
+		return rpi.Action{}, echo.NewHTTPError(http.StatusInternalServerError, "bad action type: enable or disable ssh failed")
+	}
+
+	plan = map[int](map[int]actions.Func){
+		1: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{Command: command},
+				},
+			},
+		},
+	}
+
+	return con.consys.ExecuteSSH(plan)
+}

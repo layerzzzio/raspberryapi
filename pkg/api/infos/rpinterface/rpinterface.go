@@ -15,10 +15,12 @@ func (in *RpInterface) List() (rpi.RpInterface, error) {
 	startXElf := in.i.GetConfigFiles()["start_x_elf"].Path
 	isStartXElf := in.i.IsFileExists(startXElf)
 
+	isSSH := in.i.IsQuietGrep("service ssh status", "inactive")
+	isSSHKeyGenerating := in.i.IsSSHKeyGenerating("/var/log/regen_ssh_keys.log")
+
 	if errB != nil {
 		return rpi.RpInterface{}, echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the rpinterface details")
-
 	}
 
-	return in.intsys.List(bootConfig, isStartXElf)
+	return in.intsys.List(bootConfig, isStartXElf, !isSSH, isSSHKeyGenerating)
 }

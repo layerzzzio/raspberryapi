@@ -4,9 +4,11 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/raspibuddy/rpi"
@@ -159,4 +161,54 @@ func (s Service) IsXscreenSaverInstalled() (bool, error) {
 	}
 
 	return isInstalled, err
+}
+
+// IsCommandStatus checks if a command returns 0 (found) or 1 (not found)
+func (s Service) IsQuietGrep(command string, grep string) bool {
+	res, err := exec.Command(
+		"sh",
+		"-c",
+		fmt.Sprintf("%v | grep -q %v ; echo $?", command, grep),
+	).Output()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	resNum, err := strconv.Atoi(strings.TrimSpace(string(res)))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if resNum > 0 {
+		return false
+	} else {
+		return true
+	}
+}
+
+// IsSSHKeyGenerating checks if SSH keys are getting generated
+func (s Service) IsSSHKeyGenerating(path string) bool {
+	isFinished, err := exec.Command(
+		"sh",
+		"-c",
+		fmt.Sprintf("grep -q \"^finished\" %v ; echo $?", path),
+	).Output()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	isFinishedNum, err := strconv.Atoi(strings.TrimSpace(string(isFinished)))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	isSSHLogExist := s.IsFileExists(path)
+
+	if isFinishedNum == 1 && isSSHLogExist {
+		return true
+	} else {
+		return false
+	}
 }

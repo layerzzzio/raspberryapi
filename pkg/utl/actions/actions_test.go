@@ -4283,3 +4283,73 @@ func TestSetVariableInConfigFile(t *testing.T) {
 		})
 	}
 }
+
+func TestExecuteBashCommand(t *testing.T) {
+	cases := []struct {
+		name             string
+		argument         interface{}
+		wantedExitStatus uint8
+		wantedStderr     string
+		wantedErr        error
+	}{
+		{
+			name: "error : no command",
+			argument: actions.EBC{
+				Command: "",
+			},
+			wantedExitStatus: 1,
+			wantedStderr:     "no command",
+			wantedErr:        nil,
+		},
+		{
+			name: "error : command not right",
+			argument: actions.EBC{
+				Command: "x",
+			},
+			wantedExitStatus: 1,
+			wantedStderr:     "exit status 127",
+			wantedErr:        nil,
+		},
+		{
+			name: "error : too many arguments",
+			argument: []actions.OtherParams{
+				{Value: map[string]string{"command": dummyfilepath}},
+				{Value: map[string]string{"dummy": dummyfilepath}},
+			},
+			wantedExitStatus: 1,
+			wantedStderr:     "",
+			wantedErr:        &actions.Error{Arguments: []string{"command"}},
+		},
+		{
+			name: "success: other params",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"command": "pwd",
+				},
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+		{
+			name: "success: regular params",
+			argument: actions.EBC{
+				Command: "pwd",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			a := actions.New()
+			command, err := a.ExecuteBashCommand(tc.argument)
+			assert.Equal(t, tc.wantedExitStatus, command.ExitStatus)
+			assert.Equal(t, tc.wantedStderr, command.Stderr)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}

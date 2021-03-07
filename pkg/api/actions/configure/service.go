@@ -15,6 +15,7 @@ type Service interface {
 	ExecuteAUS(string, string) (rpi.Action, error)
 	ExecuteDUS(string) (rpi.Action, error)
 	ExecuteCA(string) (rpi.Action, error)
+	ExecuteSSH(string) (rpi.Action, error)
 }
 
 // Configure represents a Configure application service.
@@ -34,6 +35,7 @@ type CONSYS interface {
 	ExecuteAUS(map[int](map[int]actions.Func)) (rpi.Action, error)
 	ExecuteDUS(map[int](map[int]actions.Func)) (rpi.Action, error)
 	ExecuteCA(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteSSH(map[int](map[int]actions.Func)) (rpi.Action, error)
 }
 
 // Actions represents the actions interface
@@ -49,6 +51,7 @@ type Actions interface {
 	DisableOrEnableConfig(interface{}) (rpi.Exec, error)
 	CommentOrUncommentInFile(interface{}) (rpi.Exec, error)
 	SetVariableInConfigFile(interface{}) (rpi.Exec, error)
+	ExecuteBashCommand(interface{}) (rpi.Exec, error)
 }
 
 // Infos represents the infos interface

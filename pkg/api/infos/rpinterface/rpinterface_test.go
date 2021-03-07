@@ -38,9 +38,15 @@ func TestList(t *testing.T) {
 				IsFileExistsFn: func(string) bool {
 					return false
 				},
+				IsQuietGrepFn: func(string, string) bool {
+					return false
+				},
+				IsSSHKeyGeneratingFn: func(string) bool {
+					return false
+				},
 			},
 			intsys: mocksys.RpInterface{
-				ListFn: func([]string, bool) (rpi.RpInterface, error) {
+				ListFn: func([]string, bool, bool, bool) (rpi.RpInterface, error) {
 					return rpi.RpInterface{}, nil
 				},
 			},
@@ -64,18 +70,28 @@ func TestList(t *testing.T) {
 				IsFileExistsFn: func(string) bool {
 					return false
 				},
+				IsQuietGrepFn: func(string, string) bool {
+					return false
+				},
+				IsSSHKeyGeneratingFn: func(string) bool {
+					return false
+				},
 			},
 			intsys: mocksys.RpInterface{
-				ListFn: func([]string, bool) (rpi.RpInterface, error) {
+				ListFn: func([]string, bool, bool, bool) (rpi.RpInterface, error) {
 					return rpi.RpInterface{
-						IsStartXElf: true,
-						IsCamera:    false,
+						IsStartXElf:        true,
+						IsCamera:           false,
+						IsSSH:              true,
+						IsSSHKeyGenerating: true,
 					}, nil
 				},
 			},
 			wantedData: rpi.RpInterface{
-				IsStartXElf: true,
-				IsCamera:    false,
+				IsStartXElf:        true,
+				IsCamera:           false,
+				IsSSH:              true,
+				IsSSHKeyGenerating: true,
 			},
 			wantedErr: nil,
 		},

@@ -10,7 +10,12 @@ import (
 type RpInterface struct{}
 
 // List returns a list of RpInterface info
-func (int RpInterface) List(readLines []string, isStartXElf bool) (rpi.RpInterface, error) {
+func (int RpInterface) List(
+	readLines []string,
+	isStartXElf bool,
+	isSSH bool,
+	isSSHKeyGenerating bool,
+) (rpi.RpInterface, error) {
 	isCamera := false
 	// I use a regex here to cover the below cases:
 	// start_x=0 (regular)
@@ -25,7 +30,9 @@ func (int RpInterface) List(readLines []string, isStartXElf bool) (rpi.RpInterfa
 	}
 
 	return rpi.RpInterface{
-		IsStartXElf: isStartXElf,
-		IsCamera:    isCamera,
+		IsStartXElf:        isStartXElf,
+		IsCamera:           isCamera,
+		IsSSH:              isSSH,
+		IsSSHKeyGenerating: isSSHKeyGenerating,
 	}, nil
 }
