@@ -15,6 +15,7 @@ func TestList(t *testing.T) {
 		name        string
 		readLines   []string
 		isStartXElf bool
+		isSSH       bool
 		wantedData  rpi.RpInterface
 		wantedErr   error
 	}{
@@ -27,9 +28,11 @@ func TestList(t *testing.T) {
 				"line3",
 			},
 			isStartXElf: false,
+			isSSH:       false,
 			wantedData: rpi.RpInterface{
 				IsStartXElf: false,
 				IsCamera:    true,
+				IsSSH:       false,
 			},
 			wantedErr: nil,
 		},
@@ -38,7 +41,7 @@ func TestList(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			s := rpinterface.INTSYS(sys.RpInterface{})
-			intf, err := s.List(tc.readLines, tc.isStartXElf)
+			intf, err := s.List(tc.readLines, tc.isStartXElf, tc.isSSH)
 			assert.Equal(t, tc.wantedData, intf)
 			assert.Equal(t, tc.wantedErr, err)
 		})

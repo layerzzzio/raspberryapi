@@ -1,6 +1,8 @@
 package mock
 
-import "github.com/raspibuddy/rpi"
+import (
+	"github.com/raspibuddy/rpi"
+)
 
 // Infos mock
 type Infos struct {
@@ -9,6 +11,7 @@ type Infos struct {
 	GetConfigFilesFn          func() map[string]rpi.ConfigFileDetails
 	GetEnrichedConfigFilesFn  func(configFiles map[string]rpi.ConfigFileDetails) map[string]rpi.ConfigFileDetails
 	IsXscreenSaverInstalledFn func() (bool, error)
+	IsQuietGrepFn             func(string, string) bool
 }
 
 // ReadFile mock
@@ -34,4 +37,9 @@ func (i Infos) GetEnrichedConfigFiles(configFiles map[string]rpi.ConfigFileDetai
 // IsXscreenSaverInstalled mock
 func (i Infos) IsXscreenSaverInstalled() (bool, error) {
 	return i.IsXscreenSaverInstalledFn()
+}
+
+// IsQuietGrep mock
+func (i Infos) IsQuietGrep(command string, quietGrep string) bool {
+	return i.IsQuietGrepFn(command, quietGrep)
 }

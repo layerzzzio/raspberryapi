@@ -226,3 +226,39 @@ func TestIsXscreenSaverInstalled(t *testing.T) {
 		})
 	}
 }
+
+func TestIsQuietGrep(t *testing.T) {
+	cases := []struct {
+		name       string
+		command    string
+		quietGrep  string
+		wantedData bool
+	}{
+		{
+			name:       "success: 0",
+			command:    "pwd",
+			quietGrep:  ".",
+			wantedData: true,
+		},
+		{
+			name:       "success: 1",
+			command:    "pwd",
+			quietGrep:  "grep -q ABCDEFGHIJK",
+			wantedData: false,
+		},
+		{
+			name:       "success: 1",
+			command:    "cat /etc/passwd",
+			quietGrep:  "ssh",
+			wantedData: true,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			i := infos.New()
+			isFileExists := i.IsQuietGrep(tc.command, tc.quietGrep)
+			assert.Equal(t, tc.wantedData, isFileExists)
+		})
+	}
+}
