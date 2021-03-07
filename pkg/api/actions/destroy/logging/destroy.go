@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	"github.com/raspibuddy/rpi"
 	"github.com/raspibuddy/rpi/pkg/api/actions/destroy"
 )
 
-// New creates a new DeleteFile logging service instance.
+// New creates a new Destroy logging service instance.
 func New(svc destroy.Service, logger rpi.Logger) *LogService {
 	return &LogService{
 		Service: svc,
@@ -17,7 +17,7 @@ func New(svc destroy.Service, logger rpi.Logger) *LogService {
 	}
 }
 
-// LogService represents a DeleteFile logging service.
+// LogService represents a Destroy logging service.
 type LogService struct {
 	destroy.Service
 	logger rpi.Logger
@@ -25,7 +25,7 @@ type LogService struct {
 
 const name = "destroy"
 
-// ExecuteDF is the logging function attached to the Execute delete file destroy services and responsible for logging it out.
+// ExecuteDF is the logging function attached to the destroy services and responsible for logging it out.
 func (ls *LogService) ExecuteDF(ctx echo.Context, path string) (resp rpi.Action, err error) {
 	defer func(begin time.Time) {
 		ls.logger.Log(
@@ -40,22 +40,22 @@ func (ls *LogService) ExecuteDF(ctx echo.Context, path string) (resp rpi.Action,
 	return ls.Service.ExecuteDF(path)
 }
 
-// ExecuteDU is the logging function attached to the Execute delete file destroy services and responsible for logging it out.
-func (ls *LogService) ExecuteDU(ctx echo.Context, terminal string, username string) (resp rpi.Action, err error) {
+// ExecuteSUS is the logging function attached to the destroy services and responsible for logging it out.
+func (ls *LogService) ExecuteSUS(ctx echo.Context, processname string, processtype string) (resp rpi.Action, err error) {
 	defer func(begin time.Time) {
 		ls.logger.Log(
 			ctx,
-			name, fmt.Sprintf("request: execute disconnect user %v from terminal %v", terminal, username), err,
+			name, fmt.Sprintf("request: execute stop user session %v of type %v", processname, processtype), err,
 			map[string]interface{}{
 				"resp": resp,
 				"took": time.Since(begin),
 			},
 		)
 	}(time.Now())
-	return ls.Service.ExecuteDU(terminal, username)
+	return ls.Service.ExecuteSUS(processname, processtype)
 }
 
-// ExecuteKP is the logging function attached to the Execute kill process destroy services and responsible for logging it out.
+// ExecuteKP is the logging function attached to the destroy services and responsible for logging it out.
 func (ls *LogService) ExecuteKP(ctx echo.Context, pid int) (resp rpi.Action, err error) {
 	defer func(begin time.Time) {
 		ls.logger.Log(

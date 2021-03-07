@@ -1,6 +1,6 @@
 package rpi
 
-import "github.com/labstack/echo"
+import "github.com/labstack/echo/v4"
 
 // Logger represents a custom logging interface including arguments source, msg, error, params.
 type Logger interface {

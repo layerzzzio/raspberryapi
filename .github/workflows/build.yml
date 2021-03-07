@@ -13,7 +13,7 @@ jobs:
     name: Lint
     strategy:
       matrix:
-        go-version: [1.14.2]
+        go-version: [1.15]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -30,7 +30,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v1
         with:
-          go-version: 1.14.2
+          go-version: 1.15
 
       - name: Check out code
         uses: actions/checkout@v1
@@ -54,10 +54,10 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v1
         with:
-          go-version: 1.14.2
+          go-version: 1.15
 
       - name: Check out code
         uses: actions/checkout@v1
 
       - name: Build for Raspberry OS architecture
-        run: env GOOS=linux GOARCH=arm GOARM=5 go build -o rpi cmd/api/main.go
+        run: env GOOS=linux GOARCH=arm GOARM=5 go build -o raspibuddy cmd/api/main.go

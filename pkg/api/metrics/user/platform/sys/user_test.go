@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	"github.com/raspibuddy/rpi"
 	"github.com/raspibuddy/rpi/pkg/api/metrics/user"
 	"github.com/raspibuddy/rpi/pkg/api/metrics/user/platform/sys"

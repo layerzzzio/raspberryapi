@@ -1,38 +1,66 @@
 package destroy
 
 import (
+	"fmt"
+
 	"github.com/raspibuddy/rpi"
+	"github.com/raspibuddy/rpi/pkg/utl/actions"
 )
 
 // ExecuteDF delete file(s) and returns an action.
 func (des *Destroy) ExecuteDF(path string) (rpi.Action, error) {
-	// populate execs in the right execution order
-	// always start with 1, not with 0
-	execs := map[int]rpi.Exec{
-		1: des.a.DeleteFile(path),
+	plan := map[int](map[int]actions.Func){
+		1: {
+			1: {
+				Name:      actions.DeleteFile,
+				Reference: des.a.DeleteFile,
+				Argument: []interface{}{
+					actions.KP{
+						Pid: path,
+					},
+				},
+			},
+		},
 	}
 
-	return des.dessys.ExecuteDF(execs)
+	return des.dessys.ExecuteDF(plan)
 }
 
-// ExecuteDU disconnect user and returns an action.
-func (des *Destroy) ExecuteDU(terminal string, username string) (rpi.Action, error) {
-	// populate execs in the right execution order
-	// always start with 1, not with 0
-	execs := map[int]rpi.Exec{
-		1: des.a.DisconnectUser(terminal, username),
+// ExecuteSUS stop a user session and returns an action.
+func (des *Destroy) ExecuteSUS(processname string, processtype string) (rpi.Action, error) {
+	plan := map[int](map[int]actions.Func){
+		1: {
+			1: {
+				Name:      actions.KillProcessByName,
+				Reference: des.a.KillProcessByName,
+				Argument: []interface{}{
+					actions.KPBN{
+						Processname: processname,
+						Processtype: processtype,
+					},
+				},
+			},
+		},
 	}
 
-	return des.dessys.ExecuteDU(execs)
+	return des.dessys.ExecuteSUS(plan)
 }
 
 // ExecuteKP kill a process and returns an action.
 func (des *Destroy) ExecuteKP(pid int) (rpi.Action, error) {
-	// populate execs in the right execution order
-	// always start with 1, not with 0
-	execs := map[int]rpi.Exec{
-		1: des.a.KillProcess(pid),
+	plan := map[int](map[int]actions.Func){
+		1: {
+			1: {
+				Name:      actions.KillProcess,
+				Reference: des.a.KillProcess,
+				Argument: []interface{}{
+					actions.KP{
+						Pid: fmt.Sprint(pid),
+					},
+				},
+			},
+		},
 	}
 
-	return des.dessys.ExecuteKP(execs)
+	return des.dessys.ExecuteKP(plan)
 }

@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/raspibuddy/rpi"
@@ -17,6 +18,7 @@ import (
 	"github.com/raspibuddy/rpi/pkg/utl/mock/mocksys"
 	"github.com/raspibuddy/rpi/pkg/utl/server"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/goleak"
 )
 
 func TestList(t *testing.T) {
@@ -114,7 +116,6 @@ func TestList(t *testing.T) {
 }
 
 func TestListWs(t *testing.T) {
-
 	var response []rpi.Process
 
 	cases := []struct {
@@ -176,15 +177,17 @@ func TestListWs(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
+			// check for memory leak
+			defer goleak.VerifyNone(t)
+
 			r := server.New()
 			rg := r.Group("")
 			m := metrics.New(metrics.Service{})
 			s := process.New(tc.psys, m)
 			transport.NewHTTP(s, rg)
-
 			ts := httptest.NewServer(r)
-			defer ts.Close()
 
+			defer ts.Close()
 			path := ts.URL + "/processes-ws"
 			pathWS := "ws" + strings.TrimPrefix(path, "http")
 
@@ -194,16 +197,20 @@ func TestListWs(t *testing.T) {
 			}
 			defer ws.Close()
 
+			time.Sleep(40 * time.Second)
+
 			pathL := ts.URL + "/processes"
 			res, err := http.Get(pathL)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			defer res.Body.Close()
 			body, err := ioutil.ReadAll(res.Body)
 			if err != nil {
 				panic(err)
 			}
+
 			for i := 0; i < 10; i++ {
 				if tc.wantedResp != nil {
 					if err := json.Unmarshal(body, &response); err != nil {

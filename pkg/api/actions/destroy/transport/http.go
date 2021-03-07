@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	"github.com/raspibuddy/rpi/pkg/api/actions/destroy"
 )
 
@@ -17,9 +17,9 @@ type HTTP struct {
 func NewHTTP(svc destroy.Service, r *echo.Group) {
 	h := HTTP{svc}
 	cr := r.Group("/destroy")
-	cr.GET("/deletefile", h.deletefile)
-	cr.GET("/disconnectuser", h.disconnectuser)
-	cr.GET("/killprocess/:pid", h.killprocess)
+	cr.POST("/deletefile", h.deletefile)
+	cr.POST("/stopusersession", h.stopusersession)
+	cr.POST("/killprocess/:pid", h.killprocess)
 }
 
 func (h *HTTP) deletefile(ctx echo.Context) error {
@@ -35,15 +35,13 @@ func (h *HTTP) deletefile(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, result)
 }
 
-func (h *HTTP) disconnectuser(ctx echo.Context) error {
-	terminal := ctx.QueryParam("terminal")
-	username := ctx.QueryParam("username")
-
-	if terminal == "" || username == "" {
-		return echo.NewHTTPError(http.StatusNotFound, "Not found - terminal or username is null")
+func (h *HTTP) stopusersession(ctx echo.Context) error {
+	terminalname := ctx.QueryParam("processname")
+	if terminalname == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - processname is null")
 	}
 
-	result, err := h.svc.ExecuteDU(terminal, username)
+	result, err := h.svc.ExecuteSUS(terminalname, "terminal")
 	if err != nil {
 		return err
 	}

@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/raspibuddy/rpi"
@@ -532,6 +533,8 @@ func TestListWs(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
+			// defer goleak.VerifyNone(t)
+
 			r := server.New()
 			rg := r.Group("")
 			m := metrics.New(metrics.Service{})
@@ -550,6 +553,8 @@ func TestListWs(t *testing.T) {
 			}
 			defer ws.Close()
 
+			time.Sleep(20 * time.Second)
+
 			pathL := ts.URL + "/hosts"
 			res, err := http.Get(pathL)
 			if err != nil {
@@ -560,6 +565,7 @@ func TestListWs(t *testing.T) {
 			if err != nil {
 				panic(err)
 			}
+
 			for i := 0; i < 10; i++ {
 				if tc.wantedResp.ID != "" {
 					if err := json.Unmarshal(body, &response); err != nil {

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
 	"github.com/raspibuddy/rpi"
 	"github.com/raspibuddy/rpi/pkg/api/metrics/vcore"

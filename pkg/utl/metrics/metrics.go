@@ -1,13 +1,20 @@
 package metrics
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
+	"os"
 	"os/exec"
+	"os/user"
+	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
+	"github.com/raspibuddy/rpi"
 	"github.com/rs/zerolog/log"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/disk"
@@ -57,6 +64,15 @@ type PathSize struct {
 	Path string
 	Size int
 }
+
+// File structure representing files and folders with their accumulated sizes
+// type File struct {
+// 	Name   string
+// 	Parent *File
+// 	Size   int64
+// 	IsDir  bool
+// 	Files  []*File
+// }
 
 // PInfo represents several process key attributes.
 type PInfo struct {
@@ -473,11 +489,29 @@ func (s Service) NetStats() ([]net.IOCountersStat, error) {
 	return netStats, nil
 }
 
-// Top100Files returns the top 100 largest files in path.
-func (s Service) Top100Files(path string) ([]PathSize, string, error) {
-	cmd := exec.Command("sh", "-c", "find "+path+" -type f -printf '%s<sep>%p<end>\n' | sort -n -r | head -100")
-	// on mac with zsh and gfind installed
-	// cmd := exec.Command("zsh", "-c", "gfind "+path+" -type f -printf '%s<sep>%p<end>\n' | sort -n -r | head -100")
+// Path builds a file system location for given file
+func Path(f *rpi.File) string {
+	if f.Parent == nil {
+		return f.Name
+	}
+	return filepath.Join(Path(f.Parent), f.Name)
+}
+
+// FlattenFile goes through subfiles and subfolders and update a map composed of file size & name
+func FlattenFiles(f *rpi.File, flattenFiles map[int64]string) {
+	for _, child := range f.Files {
+		if child.IsDir {
+			FlattenFiles(child, flattenFiles)
+		} else {
+			flattenFiles[child.Size] = Path(child)
+		}
+	}
+}
+
+// DirSize measure the size of a directory
+func DirSize(path string) (float64, string) {
+	pathClean := strings.ReplaceAll(path, " ", "\\ ")
+	cmd := exec.Command("sh", "-c", "du -k -d0 "+pathClean+" | awk '{print $1}'")
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
@@ -487,21 +521,216 @@ func (s Service) Top100Files(path string) ([]PathSize, string, error) {
 		log.Error()
 	}
 
-	allFiles := make([]PathSize, 100)
-	allFilesWithSep := strings.Split(strings.TrimSpace(stdout.String()), "<end>\n")
+	outStdStr := strings.TrimSpace(stdout.String())
 
-	for index, file := range allFilesWithSep {
-		sizePath := strings.Split(file, "<sep>")
-		allFiles[index].Path = strings.ReplaceAll(sizePath[1], "<end>", "")
-
-		size, err := strconv.Atoi(sizePath[0])
-		if err != nil {
-			size = -1
-		}
-
-		allFiles[index].Size = size
+	if outStdStr == "" {
+		return 0, "forbidden"
 	}
 
-	outStd, errStd := allFiles, stderr.String()
-	return outStd, errStd, nil
+	outStd, errOut := strconv.ParseFloat(outStdStr, 64)
+	if errOut != nil {
+		panic("errOut is not nil")
+	}
+
+	return outStd, stderr.String()
 }
+
+// UpdateSize goes through subfiles and subfolders and accumulates their size
+func UpdateSize(f *rpi.File) {
+	if !f.IsDir {
+		return
+	}
+	var size int64
+	for _, child := range f.Files {
+		UpdateSize(child)
+		size += child.Size
+	}
+	f.Size = size
+}
+
+// ReadDir function can return list of files for given folder path
+type ReadDir func(dirname string) ([]os.FileInfo, error)
+
+// ShouldIgnoreFolder function decides whether a folder should be ignored
+type ShouldIgnoreFolder func(absolutePath string) bool
+
+func ignoringReadDir(shouldIgnore ShouldIgnoreFolder, originalReadDir ReadDir) ReadDir {
+	return func(path string) ([]os.FileInfo, error) {
+		if shouldIgnore(path) {
+			return []os.FileInfo{}, nil
+		}
+		return originalReadDir(path)
+	}
+}
+
+// WalkFolder will go through a given folder and subfolders and produces file structure with aggregated file sizes
+func (s Service) WalkFolder(
+	path string,
+	readDir ReadDir,
+	pathSize uint64,
+	fileLimit float32,
+	ignoreFunction ShouldIgnoreFolder,
+	progress chan (int),
+) (*rpi.File, map[int64]string) {
+	var flattenFiles = make(map[int64]string)
+	var wg sync.WaitGroup
+	c := make(chan bool, 2*runtime.NumCPU())
+	root := walkSubFolderConcurrently(
+		path,
+		nil,
+		ignoringReadDir(ignoreFunction, readDir),
+		pathSize,
+		fileLimit,
+		c,
+		&wg,
+		progress)
+
+	wg.Wait()
+	close(progress)
+	UpdateSize(root)
+	FlattenFiles(root, flattenFiles)
+	return root, flattenFiles
+}
+
+// func updateProgress(progress chan<- int, count *int) {
+// 	if *count > 0 {
+// 		progress <- *count
+// 	}
+// }
+
+func walkSubFolderConcurrently(
+	path string,
+	parent *rpi.File,
+	readDir ReadDir,
+	pathSize uint64,
+	fileLimit float32,
+	c chan bool,
+	wg *sync.WaitGroup,
+	progress chan int,
+) *rpi.File {
+	result := &rpi.File{}
+	entries, err := readDir(path)
+	if err != nil {
+		log.Print(err)
+		return result
+	}
+	dirName, name := filepath.Split(path)
+	result.Files = make([]*rpi.File, 0, len(entries))
+	numSubFolders := 0
+	// defer updateProgress(progress, &numSubFolders)
+	var mutex sync.Mutex
+	for _, entry := range entries {
+		fileRatio := float64(entry.Size()) / float64(pathSize)
+		if entry.IsDir() {
+			numSubFolders++
+			subFolderPath := filepath.Join(path, entry.Name())
+			wg.Add(1)
+			go func() {
+				c <- true
+				subFolder := walkSubFolderConcurrently(subFolderPath, result, readDir, pathSize, fileLimit, c, wg, progress)
+				mutex.Lock()
+				result.Files = append(result.Files, subFolder)
+				mutex.Unlock()
+				<-c
+				wg.Done()
+			}()
+		} else if fileRatio > float64(fileLimit)/100 && fileRatio <= 1 {
+			// check if file size > x% of path size
+			// fmt.Printf("file %v - fileRatio %v > fileLimit %v\n", entry.Name(), fileRatio, float64(fileLimit)/100)
+			size := entry.Size()
+			file := &rpi.File{
+				Name:   entry.Name(),
+				Parent: result,
+				Size:   size,
+				IsDir:  false,
+				Files:  []*rpi.File{},
+			}
+			mutex.Lock()
+			result.Files = append(result.Files, file)
+			mutex.Unlock()
+		} else {
+			continue
+		}
+	}
+
+	if parent != nil {
+		result.Name = name
+		result.Parent = parent
+	} else {
+		// Root dir
+		// TODO unit test this Join
+		result.Name = filepath.Join(dirName, name)
+	}
+	result.IsDir = true
+	return result
+}
+
+func IgnoreBasedOnIgnoreFile(ignoreFile []string) ShouldIgnoreFolder {
+	ignoredFolders := map[string]struct{}{}
+	for _, line := range ignoreFile {
+		ignoredFolders[line] = struct{}{}
+	}
+	return func(absolutePath string) bool {
+		_, name := filepath.Split(absolutePath)
+		// _, name := filepath.Split(absolutePath)
+		_, ignored := ignoredFolders[name]
+		return ignored
+	}
+}
+
+func ReadIgnoreFile() []string {
+	usr, err := user.Current()
+	if err != nil {
+		log.Print("Wasn't able to retrieve current user at runtime")
+		return []string{}
+	}
+	ignoreFileName := filepath.Join(usr.HomeDir, ".goduignore")
+	if _, err := os.Stat(ignoreFileName); os.IsNotExist(err) {
+		return []string{}
+	}
+	ignoreFile, err := os.Open(ignoreFileName)
+	if err != nil {
+		log.Printf("Failed to read ingorefile because %s\n", err.Error())
+		return []string{}
+	}
+	defer ignoreFile.Close()
+	scanner := bufio.NewScanner(ignoreFile)
+	lines := []string{}
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+	return lines
+}
+
+// Top100Files returns the top 100 largest files in path.
+// func (s Service) Top100Files(path string) ([]PathSize, string, error) {
+// 	cmd := exec.Command("sh", "-c", "find "+path+" -type f -printf '%s<sep>%p<end>\n' | sort -n -r | head -100")
+// 	// on mac with zsh and gfind installed
+// 	// cmd := exec.Command("zsh", "-c", "gfind "+path+" -type f -printf '%s<sep>%p<end>\n' | sort -n -r | head -100")
+// 	var stdout, stderr bytes.Buffer
+// 	cmd.Stdout = &stdout
+// 	cmd.Stderr = &stderr
+// 	err := cmd.Run()
+
+// 	if err != nil {
+// 		log.Error()
+// 	}
+
+// 	allFiles := make([]PathSize, 100)
+// 	allFilesWithSep := strings.Split(strings.TrimSpace(stdout.String()), "<end>\n")
+
+// 	for index, file := range allFilesWithSep {
+// 		sizePath := strings.Split(file, "<sep>")
+// 		allFiles[index].Path = strings.ReplaceAll(sizePath[1], "<end>", "")
+
+// 		size, err := strconv.Atoi(sizePath[0])
+// 		if err != nil {
+// 			size = -1
+// 		}
+
+// 		allFiles[index].Size = size
+// 	}
+
+// 	outStd, errStd := allFiles, stderr.String()
+// 	return outStd, errStd, nil
+// }

@@ -3,6 +3,7 @@ package mock
 import (
 	"time"
 
+	"github.com/raspibuddy/rpi"
 	"github.com/raspibuddy/rpi/pkg/utl/metrics"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/host"
@@ -41,7 +42,14 @@ type Metrics struct {
 	RaspModelFn      func() (string, string, error)
 	NetInfoFn        func() ([]net.InterfaceStat, error)
 	NetStatsFn       func() ([]net.IOCountersStat, error)
-	Top100FilesFn    func(path string) ([]metrics.PathSize, string, error)
+	WalkFolderFn     func(
+		string,
+		metrics.ReadDir,
+		uint64,
+		float32,
+		metrics.ShouldIgnoreFolder,
+		chan int,
+	) (*rpi.File, map[int64]string)
 }
 
 // CPUInfo mock
@@ -182,7 +190,14 @@ func (m Metrics) NetStats() ([]net.IOCountersStat, error) {
 	return m.NetStatsFn()
 }
 
-// Top100Files mock
-func (m Metrics) Top100Files(path string) ([]metrics.PathSize, string, error) {
-	return m.Top100FilesFn(path)
+// WalkFolder mock
+func (m Metrics) WalkFolder(
+	path string,
+	readDir metrics.ReadDir,
+	pathSize uint64,
+	fileLimit float32,
+	ignoreFunction metrics.ShouldIgnoreFolder,
+	progress chan int,
+) (*rpi.File, map[int64]string) {
+	return m.WalkFolderFn(path, readDir, pathSize, fileLimit, ignoreFunction, progress)
 }
