@@ -19,6 +19,7 @@ type Action struct {
 	ExecuteDUSFn func(map[int](map[int]actions.Func)) (rpi.Action, error)
 	ExecuteCAFn  func(map[int](map[int]actions.Func)) (rpi.Action, error)
 	ExecuteSSHFn func(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteVNCFn func(map[int](map[int]actions.Func)) (rpi.Action, error)
 }
 
 // ExecuteDF mock
@@ -79,4 +80,9 @@ func (a *Action) ExecuteCA(plan map[int](map[int]actions.Func)) (rpi.Action, err
 // ExecuteSSH mock
 func (a *Action) ExecuteSSH(plan map[int](map[int]actions.Func)) (rpi.Action, error) {
 	return a.ExecuteSSHFn(plan)
+}
+
+// ExecuteVNC mock
+func (a *Action) ExecuteVNC(plan map[int](map[int]actions.Func)) (rpi.Action, error) {
+	return a.ExecuteVNCFn(plan)
 }
