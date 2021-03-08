@@ -15,6 +15,8 @@ func (int RpInterface) List(
 	isStartXElf bool,
 	isSSH bool,
 	isSSHKeyGenerating bool,
+	isVNC bool,
+	isVNCInstalledCheck bool,
 ) (rpi.RpInterface, error) {
 	isCamera := false
 	// I use a regex here to cover the below cases:
@@ -34,5 +36,7 @@ func (int RpInterface) List(
 		IsCamera:           isCamera,
 		IsSSH:              isSSH,
 		IsSSHKeyGenerating: isSSHKeyGenerating,
+		IsVNC:              isVNC,
+		IsVNCInstalled:     isVNCInstalledCheck,
 	}, nil
 }

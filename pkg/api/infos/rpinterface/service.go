@@ -17,7 +17,7 @@ type RpInterface struct {
 
 // INTSYS represents an RpInterface repository service.
 type INTSYS interface {
-	List([]string, bool, bool, bool) (rpi.RpInterface, error)
+	List([]string, bool, bool, bool, bool, bool) (rpi.RpInterface, error)
 }
 
 // Infos represents the infos interface
@@ -25,8 +25,9 @@ type Infos interface {
 	ReadFile(string) ([]string, error)
 	IsFileExists(string) bool
 	GetConfigFiles() map[string]rpi.ConfigFileDetails
-	IsQuietGrep(string, string) bool
+	IsQuietGrep(string, string, string) bool
 	IsSSHKeyGenerating(string) bool
+	IsDPKGInstalled(string) bool
 }
 
 // New creates a RpInterface application service instance.

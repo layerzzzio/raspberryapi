@@ -133,6 +133,9 @@ const (
 
 	// SSH is the name of the ssh user method
 	SSH = "ssh"
+
+	// VNC is the name of the vnc user method
+	VNC = "vnc"
 )
 
 var (

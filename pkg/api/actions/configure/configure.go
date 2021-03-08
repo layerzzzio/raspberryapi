@@ -378,3 +378,31 @@ func (con *Configure) ExecuteSSH(action string) (rpi.Action, error) {
 
 	return con.consys.ExecuteSSH(plan)
 }
+
+// ExecuteVNC enable or disable vnc
+func (con *Configure) ExecuteVNC(action string) (rpi.Action, error) {
+	var plan map[int]map[int]actions.Func
+	var command string
+
+	if action == "enable" {
+		command = "systemctl enable vncserver-x11-serviced.service && systemctl start vncserver-x11-serviced.service"
+	} else if action == "disable" {
+		command = "systemctl disable vncserver-x11-serviced.service && systemctl stop vncserver-x11-serviced.service"
+	} else {
+		return rpi.Action{}, echo.NewHTTPError(http.StatusInternalServerError, "bad action type: enable or disable vnc failed")
+	}
+
+	plan = map[int](map[int]actions.Func){
+		1: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{Command: command},
+				},
+			},
+		},
+	}
+
+	return con.consys.ExecuteVNC(plan)
+}

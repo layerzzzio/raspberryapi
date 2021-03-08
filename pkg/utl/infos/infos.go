@@ -164,13 +164,18 @@ func (s Service) IsXscreenSaverInstalled() (bool, error) {
 }
 
 // IsCommandStatus checks if a command returns 0 (found) or 1 (not found)
-func (s Service) IsQuietGrep(command string, grep string) bool {
-	res, err := exec.Command(
-		"sh",
-		"-c",
-		fmt.Sprintf("%v | grep -q %v ; echo $?", command, grep),
-	).Output()
+func (s Service) IsQuietGrep(command string, grep string, grepType string) bool {
+	var grepCommand string
 
+	if grepType == "quiet" {
+		grepCommand = fmt.Sprintf("%v | grep -q %v ; echo $?", command, grep)
+	} else if grepType == "word-regexp" {
+		grepCommand = fmt.Sprintf("%v | grep -q -w %v ; echo $?", command, grep)
+	} else {
+		log.Fatal("bad grep type")
+	}
+
+	res, err := exec.Command("sh", "-c", grepCommand).Output()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -207,6 +212,21 @@ func (s Service) IsSSHKeyGenerating(path string) bool {
 	isSSHLogExist := s.IsFileExists(path)
 
 	if isFinishedNum == 1 && isSSHLogExist {
+		return true
+	} else {
+		return false
+	}
+}
+
+// IsDPKGInstalled checks if package is installed with dpkg
+func (s Service) IsDPKGInstalled(packageName string) bool {
+	command := fmt.Sprintf("dpkg -l %v 2> /dev/null | tail -n 1 | cut -d ' ' -f 1", packageName)
+	res, err := exec.Command("sh", "-c", command).Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if strings.TrimSpace(string(res)) == "ii" {
 		return true
 	} else {
 		return false

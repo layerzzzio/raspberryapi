@@ -12,13 +12,15 @@ import (
 
 func TestList(t *testing.T) {
 	cases := []struct {
-		name               string
-		readLines          []string
-		isStartXElf        bool
-		isSSH              bool
-		isSSHKeyGenerating bool
-		wantedData         rpi.RpInterface
-		wantedErr          error
+		name                string
+		readLines           []string
+		isStartXElf         bool
+		isSSH               bool
+		isSSHKeyGenerating  bool
+		isVNC               bool
+		isVNCInstalledCheck bool
+		wantedData          rpi.RpInterface
+		wantedErr           error
 	}{
 		{
 			name: "success: start_x.elf exists",
@@ -28,14 +30,18 @@ func TestList(t *testing.T) {
 				"     start_x     =    1  #random bash comment",
 				"line3",
 			},
-			isStartXElf:        false,
-			isSSH:              false,
-			isSSHKeyGenerating: false,
+			isStartXElf:         false,
+			isSSH:               false,
+			isSSHKeyGenerating:  false,
+			isVNC:               true,
+			isVNCInstalledCheck: true,
 			wantedData: rpi.RpInterface{
 				IsStartXElf:        false,
 				IsCamera:           true,
 				IsSSH:              false,
 				IsSSHKeyGenerating: false,
+				IsVNC:              true,
+				IsVNCInstalled:     true,
 			},
 			wantedErr: nil,
 		},
@@ -44,7 +50,14 @@ func TestList(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			s := rpinterface.INTSYS(sys.RpInterface{})
-			intf, err := s.List(tc.readLines, tc.isStartXElf, tc.isSSH, tc.isSSHKeyGenerating)
+			intf, err := s.List(
+				tc.readLines,
+				tc.isStartXElf,
+				tc.isSSH,
+				tc.isSSHKeyGenerating,
+				tc.isVNC,
+				tc.isVNCInstalledCheck,
+			)
 			assert.Equal(t, tc.wantedData, intf)
 			assert.Equal(t, tc.wantedErr, err)
 		})

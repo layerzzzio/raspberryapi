@@ -50,3 +50,11 @@ PS: it will fail it try to enable while it is already enabled - same with disabl
 2. if true, try later
 3. check isSSH: GET /rpinterfaces
 4. depending on the result: POST /configure/ssh?action=**[enable/disable]**
+
+## VNC
+1. check isVNCInstalled: GET /rpinterfaces. 
+CAUTION: isVNCInstalled is verified by two commands in raspi-config.
+Here I verified with the one option only.
+2. if true, continue
+3. check isVNC: GET /rpinterfaces
+4. depending on the result: POST /configure/vnc?action=**[enable/disable]**

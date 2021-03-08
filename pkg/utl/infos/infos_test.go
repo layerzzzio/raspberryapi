@@ -234,32 +234,43 @@ func TestIsQuietGrep(t *testing.T) {
 		name       string
 		command    string
 		quietGrep  string
+		grepType   string
 		wantedData bool
 	}{
 		{
-			name:       "success: 0",
+			name:       "success: 0 (with quiet)",
 			command:    "pwd",
 			quietGrep:  ".",
+			grepType:   "quiet",
 			wantedData: true,
 		},
 		{
-			name:       "success: 1",
+			name:       "success: 1 (with quiet)",
 			command:    "pwd",
 			quietGrep:  "grep -q ABCDEFGHIJK",
+			grepType:   "quiet",
 			wantedData: false,
 		},
 		{
-			name:       "success: 1",
+			name:       "success: 1 (with quiet)",
 			command:    "cat /etc/passwd",
 			quietGrep:  "ssh",
+			grepType:   "quiet",
 			wantedData: true,
+		},
+		{
+			name:       "success: 1 (with word-regexp)",
+			command:    "cat /etc/passwd",
+			quietGrep:  "ssh",
+			grepType:   "word-regexp",
+			wantedData: false,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			i := infos.New()
-			isFileExists := i.IsQuietGrep(tc.command, tc.quietGrep)
+			isFileExists := i.IsQuietGrep(tc.command, tc.quietGrep, tc.grepType)
 			assert.Equal(t, tc.wantedData, isFileExists)
 		})
 	}
@@ -320,6 +331,28 @@ func TestIsSSHKeyGenerating(t *testing.T) {
 			os.Remove(tc.path)
 
 			assert.Equal(t, tc.wantedData, isSSHGen)
+		})
+	}
+}
+
+func TestIsDPKGInstalled(t *testing.T) {
+	cases := []struct {
+		name        string
+		packageName string
+		wantedData  bool
+	}{
+		{
+			name:        "success: 0 (with quiet)",
+			packageName: "pwd",
+			wantedData:  false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			i := infos.New()
+			isFileExists := i.IsDPKGInstalled(tc.packageName)
+			assert.Equal(t, tc.wantedData, isFileExists)
 		})
 	}
 }

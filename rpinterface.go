@@ -6,4 +6,6 @@ type RpInterface struct {
 	IsCamera           bool `json:"isCamera"`
 	IsSSH              bool `json:"isSSH"`
 	IsSSHKeyGenerating bool `json:"isSSHKeyGenerating"`
+	IsVNC              bool `json:"isVNC"`
+	IsVNCInstalled     bool `json:"isVNCInstalled"`
 }

@@ -6,7 +6,7 @@ import (
 
 // RpInterface mock
 type RpInterface struct {
-	ListFn func([]string, bool, bool, bool) (rpi.RpInterface, error)
+	ListFn func([]string, bool, bool, bool, bool, bool) (rpi.RpInterface, error)
 }
 
 // List mock
@@ -15,6 +15,15 @@ func (in RpInterface) List(
 	isStartXElf bool,
 	isSSH bool,
 	isSSHKeyGenerating bool,
+	isVNC bool,
+	isVNCInstalledCheck bool,
 ) (rpi.RpInterface, error) {
-	return in.ListFn(readLines, isStartXElf, isSSH, isSSHKeyGenerating)
+	return in.ListFn(
+		readLines,
+		isStartXElf,
+		isSSH,
+		isSSHKeyGenerating,
+		isVNC,
+		isVNCInstalledCheck,
+	)
 }
