@@ -200,3 +200,20 @@ func (ls *LogService) ExecuteVNC(ctx echo.Context, action string) (resp rpi.Acti
 	}(time.Now())
 	return ls.Service.ExecuteVNC(action)
 }
+
+// ExecuteSPI is the logging function attached to the execute spi service and responsible for logging it out.
+func (ls *LogService) ExecuteSPI(ctx echo.Context, action string) (resp rpi.Action, err error) {
+	defer func(begin time.Time) {
+		ls.logger.Log(
+			ctx,
+			name,
+			fmt.Sprintf("request: execute %v spi", action),
+			err,
+			map[string]interface{}{
+				"resp": resp,
+				"took": time.Since(begin),
+			},
+		)
+	}(time.Now())
+	return ls.Service.ExecuteSPI(action)
+}

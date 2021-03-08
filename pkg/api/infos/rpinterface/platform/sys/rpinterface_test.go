@@ -19,6 +19,7 @@ func TestList(t *testing.T) {
 		isSSHKeyGenerating  bool
 		isVNC               bool
 		isVNCInstalledCheck bool
+		isSPI               bool
 		wantedData          rpi.RpInterface
 		wantedErr           error
 	}{
@@ -35,6 +36,7 @@ func TestList(t *testing.T) {
 			isSSHKeyGenerating:  false,
 			isVNC:               true,
 			isVNCInstalledCheck: true,
+			isSPI:               true,
 			wantedData: rpi.RpInterface{
 				IsStartXElf:        false,
 				IsCamera:           true,
@@ -42,6 +44,7 @@ func TestList(t *testing.T) {
 				IsSSHKeyGenerating: false,
 				IsVNC:              true,
 				IsVNCInstalled:     true,
+				IsSPI:              true,
 			},
 			wantedErr: nil,
 		},
@@ -57,6 +60,7 @@ func TestList(t *testing.T) {
 				tc.isSSHKeyGenerating,
 				tc.isVNC,
 				tc.isVNCInstalledCheck,
+				tc.isSPI,
 			)
 			assert.Equal(t, tc.wantedData, intf)
 			assert.Equal(t, tc.wantedErr, err)

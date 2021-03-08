@@ -17,6 +17,7 @@ type Service interface {
 	ExecuteCA(string) (rpi.Action, error)
 	ExecuteSSH(string) (rpi.Action, error)
 	ExecuteVNC(string) (rpi.Action, error)
+	ExecuteSPI(string) (rpi.Action, error)
 }
 
 // Configure represents a Configure application service.
@@ -38,6 +39,7 @@ type CONSYS interface {
 	ExecuteCA(map[int](map[int]actions.Func)) (rpi.Action, error)
 	ExecuteSSH(map[int](map[int]actions.Func)) (rpi.Action, error)
 	ExecuteVNC(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteSPI(map[int](map[int]actions.Func)) (rpi.Action, error)
 }
 
 // Actions represents the actions interface

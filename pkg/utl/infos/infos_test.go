@@ -356,3 +356,52 @@ func TestIsDPKGInstalled(t *testing.T) {
 		})
 	}
 }
+
+func TestIsSPI(t *testing.T) {
+	cases := []struct {
+		name       string
+		path       string
+		addLines   []string
+		wantedData bool
+	}{
+		{
+			name: "success: no match",
+			path: "./test",
+			addLines: []string{
+				"yes man",
+				"no it is not",
+			},
+			wantedData: false,
+		},
+		{
+			name: "success: match",
+			path: "./test",
+			addLines: []string{
+				"yes man",
+				"no it is not",
+				"dtparam=spi=on",
+			},
+			wantedData: true,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			i := infos.New()
+			if err := actions.OverwriteToFile(actions.WriteToFileArg{
+				File:        tc.path,
+				Data:        tc.addLines,
+				Multiline:   true,
+				Permissions: 0755,
+			}); err != nil {
+				log.Fatal(err)
+			}
+
+			isSPI := i.IsSPI(tc.path)
+
+			os.Remove(tc.path)
+
+			assert.Equal(t, tc.wantedData, isSPI)
+		})
+	}
+}

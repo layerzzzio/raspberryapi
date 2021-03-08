@@ -8,4 +8,5 @@ type RpInterface struct {
 	IsSSHKeyGenerating bool `json:"isSSHKeyGenerating"`
 	IsVNC              bool `json:"isVNC"`
 	IsVNCInstalled     bool `json:"isVNCInstalled"`
+	IsSPI              bool `json:"isSPI"`
 }

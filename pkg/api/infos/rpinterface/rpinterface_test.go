@@ -47,9 +47,12 @@ func TestList(t *testing.T) {
 				IsDPKGInstalledFn: func(string) bool {
 					return false
 				},
+				IsSPIFn: func(string) bool {
+					return false
+				},
 			},
 			intsys: mocksys.RpInterface{
-				ListFn: func([]string, bool, bool, bool, bool, bool) (rpi.RpInterface, error) {
+				ListFn: func([]string, bool, bool, bool, bool, bool, bool) (rpi.RpInterface, error) {
 					return rpi.RpInterface{}, nil
 				},
 			},
@@ -82,18 +85,19 @@ func TestList(t *testing.T) {
 				IsDPKGInstalledFn: func(string) bool {
 					return false
 				},
-				IsAPTGETInstalledFn: func(string) bool {
+				IsSPIFn: func(string) bool {
 					return false
 				},
 			},
 			intsys: mocksys.RpInterface{
-				ListFn: func([]string, bool, bool, bool, bool, bool) (rpi.RpInterface, error) {
+				ListFn: func([]string, bool, bool, bool, bool, bool, bool) (rpi.RpInterface, error) {
 					return rpi.RpInterface{
 						IsStartXElf:        true,
 						IsCamera:           false,
 						IsSSH:              true,
 						IsSSHKeyGenerating: true,
 						IsVNC:              true,
+						IsSPI:              true,
 					}, nil
 				},
 			},
@@ -103,6 +107,7 @@ func TestList(t *testing.T) {
 				IsSSH:              true,
 				IsSSHKeyGenerating: true,
 				IsVNC:              true,
+				IsSPI:              true,
 			},
 			wantedErr: nil,
 		},
