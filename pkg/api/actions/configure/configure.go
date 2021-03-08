@@ -1,6 +1,7 @@
 package configure
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -405,4 +406,75 @@ func (con *Configure) ExecuteVNC(action string) (rpi.Action, error) {
 	}
 
 	return con.consys.ExecuteVNC(plan)
+}
+
+// ExecuteSPI enable or disable spi
+func (con *Configure) ExecuteSPI(action string) (rpi.Action, error) {
+	var plan map[int]map[int]actions.Func
+	var data string
+
+	if action == "enable" {
+		data = "on"
+	} else if action == "disable" {
+		data = "off"
+	} else {
+		return rpi.Action{}, echo.NewHTTPError(http.StatusInternalServerError, "bad action type: enable or disable spi failed")
+	}
+
+	blacklist := "/etc/modprobe.d/raspi-blacklist.conf"
+	sedBlacklist := "s/^\\(blacklist[[:space:]]*spi[-_]bcm2708\\)/#\\1/"
+
+	plan = map[int](map[int]actions.Func){
+		1: {
+			1: {
+				Name:      actions.DisableOrEnableConfig,
+				Reference: con.a.DisableOrEnableConfig,
+				Argument: []interface{}{
+					actions.EODC{
+						DirOrFilePath: con.i.GetConfigFiles()["bootconfig"].Path,
+						Action:        action,
+						Data:          "dtparam=spi=" + data,
+						Regex:         actions.DisableOrEnableSPIRegex,
+						FunctionName:  actions.DisableOrEnableSPIInterface,
+						AssetFile:     "../assets/config.txt",
+					},
+				},
+			},
+		},
+		2: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: fmt.Sprintf("if ! [ -e %v ]; then touch %v ; fi", blacklist, blacklist),
+					},
+				},
+			},
+		},
+		3: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: fmt.Sprintf("sed %v -i -e \"%v\"", blacklist, sedBlacklist),
+					},
+				},
+			},
+		},
+		4: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: "dtparam spi=" + data,
+					},
+				},
+			},
+		},
+	}
+
+	return con.consys.ExecuteSPI(plan)
 }

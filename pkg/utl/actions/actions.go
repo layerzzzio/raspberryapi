@@ -59,6 +59,9 @@ const (
 	// DisableOrEnableCameraRegex is the regex used to detect start_x variable in /boot/config.txt
 	DisableOrEnableCameraRegex = `^\s*#?\s*start_x\s*=.*`
 
+	// DisableOrEnableSPIRegex is the regex used to detect start_x variable in /boot/config.txt
+	DisableOrEnableSPIRegex = `^\s*#?\s*dtparam\s*=\s*spi\s*=.*`
+
 	// StartxCameraRegex is the regex used to detect startx variable in /boot/config.txt
 	StartxCameraRegex = `^\s*startx.*`
 
@@ -110,6 +113,9 @@ const (
 	// DisableOrEnableCameraInterface is the name of the disable or enable camera interface actions
 	DisableOrEnableCameraInterface = "disable_or_enable_camera_interface"
 
+	// DisableOrEnableSPIInterface is the name of the disable or enable spi interface actions
+	DisableOrEnableSPIInterface = "disable_or_enable_spi_interface"
+
 	// CameraInterface is the name of the camera interface actions
 	CameraInterface = "camera_interface"
 
@@ -136,6 +142,9 @@ const (
 
 	// VNC is the name of the vnc user method
 	VNC = "vnc"
+
+	// SPI is the name of the spi user method
+	SPI = "spi"
 )
 
 var (

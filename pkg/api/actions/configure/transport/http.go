@@ -27,6 +27,16 @@ func NewHTTP(svc configure.Service, r *echo.Group) {
 	cr.POST("/camera", h.camera)
 	cr.POST("/ssh", h.ssh)
 	cr.POST("/vnc", h.vnc)
+	cr.POST("/spi", h.spi)
+}
+
+func ActionCheck(action string, regex string) error {
+	re := regexp.MustCompile(`^(` + regex + `)$`)
+	if !re.MatchString(action) || action == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - bad action type or action type is null")
+	} else {
+		return nil
+	}
 }
 
 func (h *HTTP) changehostname(ctx echo.Context) error {
@@ -181,11 +191,16 @@ func (h *HTTP) vnc(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, result)
 }
 
-func ActionCheck(action string, regex string) error {
-	re := regexp.MustCompile(`^(` + regex + `)$`)
-	if !re.MatchString(action) || action == "" {
-		return echo.NewHTTPError(http.StatusNotFound, "Not found - bad action type or action type is null")
-	} else {
-		return nil
+func (h *HTTP) spi(ctx echo.Context) error {
+	action := ctx.QueryParam("action")
+	if err := ActionCheck(action, `enable|disable`); err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - bad action type")
 	}
+
+	result, err := h.svc.ExecuteSPI(action)
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(http.StatusOK, result)
 }

@@ -22,6 +22,8 @@ func (in *RpInterface) List() (rpi.RpInterface, error) {
 	isVNC := in.i.IsQuietGrep("systemctl status vncserver-x11-serviced.service", "active", "word-regexp")
 	isVNCInstalledCheck := in.i.IsDPKGInstalled("realvnc-vnc-server")
 
+	isSPI := in.i.IsSPI(bootConfigPath)
+
 	if errB != nil {
 		return rpi.RpInterface{}, echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the rpinterface details")
 	}
@@ -33,5 +35,6 @@ func (in *RpInterface) List() (rpi.RpInterface, error) {
 		isSSHKeyGenerating,
 		isVNC,
 		isVNCInstalledCheck,
+		isSPI,
 	)
 }

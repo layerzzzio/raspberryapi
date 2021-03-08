@@ -14,7 +14,7 @@ type Infos struct {
 	IsQuietGrepFn             func(string, string, string) bool
 	IsSSHKeyGeneratingFn      func(string) bool
 	IsDPKGInstalledFn         func(string) bool
-	IsAPTGETInstalledFn       func(string) bool
+	IsSPIFn                   func(string) bool
 }
 
 // ReadFile mock
@@ -57,7 +57,7 @@ func (i Infos) IsDPKGInstalled(path string) bool {
 	return i.IsDPKGInstalledFn(path)
 }
 
-// IsAPTGETInstalled mock
-func (i Infos) IsAPTGETInstalled(path string) bool {
-	return i.IsAPTGETInstalledFn(path)
+// IsSPI mock
+func (i Infos) IsSPI(path string) bool {
+	return i.IsSPIFn(path)
 }

@@ -232,3 +232,26 @@ func (s Service) IsDPKGInstalled(packageName string) bool {
 		return false
 	}
 }
+
+// IsSPI checks if SPI is enabled or disables
+func (s Service) IsSPI(path string) bool {
+	command := fmt.Sprintf(
+		"grep -q -E \"^(device_tree_param|dtparam)=([^,]*,)*spi(=(on|true|yes|1))?(,.*)?$\" %v ; echo $?",
+		path,
+	)
+	res, err := exec.Command("sh", "-c", command).Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	resNum, err := strconv.Atoi(strings.TrimSpace(string(res)))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if resNum == 1 {
+		return false
+	} else {
+		return true
+	}
+}
