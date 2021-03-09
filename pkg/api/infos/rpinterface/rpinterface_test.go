@@ -58,7 +58,7 @@ func TestList(t *testing.T) {
 				},
 			},
 			intsys: mocksys.RpInterface{
-				ListFn: func([]string, bool, bool, bool, bool, bool, bool, bool, bool) (rpi.RpInterface, error) {
+				ListFn: func([]string, bool, bool, bool, bool, bool, bool, bool, bool, bool) (rpi.RpInterface, error) {
 					return rpi.RpInterface{}, nil
 				},
 			},
@@ -102,7 +102,7 @@ func TestList(t *testing.T) {
 				},
 			},
 			intsys: mocksys.RpInterface{
-				ListFn: func([]string, bool, bool, bool, bool, bool, bool, bool, bool) (rpi.RpInterface, error) {
+				ListFn: func([]string, bool, bool, bool, bool, bool, bool, bool, bool, bool) (rpi.RpInterface, error) {
 					return rpi.RpInterface{
 						IsStartXElf:        true,
 						IsCamera:           false,

@@ -73,3 +73,8 @@ Here I verified with the one option only.
 1. check isOneWire: GET /rpinterfaces. 
 2. depending on the result: POST /configure/onewire?action=**[enable/disable]**
 3. reboot
+
+## 14) Remote GPIO
+1. check isRemoteGpio: GET /rpinterfaces. 
+2. depending on the result: POST /configure/rgpio?action=**[enable/disable]**
+3. reboot

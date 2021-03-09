@@ -23,6 +23,7 @@ type Action struct {
 	ExecuteSPIFn func(map[int](map[int]actions.Func)) (rpi.Action, error)
 	ExecuteI2CFn func(map[int](map[int]actions.Func)) (rpi.Action, error)
 	ExecuteONWFn func(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteRGFn  func(map[int](map[int]actions.Func)) (rpi.Action, error)
 }
 
 // ExecuteDF mock
@@ -103,4 +104,9 @@ func (a *Action) ExecuteI2C(plan map[int](map[int]actions.Func)) (rpi.Action, er
 // ExecuteONW mock
 func (a *Action) ExecuteONW(plan map[int](map[int]actions.Func)) (rpi.Action, error) {
 	return a.ExecuteONWFn(plan)
+}
+
+// ExecuteRG mock
+func (a *Action) ExecuteRG(plan map[int](map[int]actions.Func)) (rpi.Action, error) {
+	return a.ExecuteRGFn(plan)
 }

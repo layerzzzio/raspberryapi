@@ -113,6 +113,9 @@ const (
 	// WaitForNetworkAtBoot is the name of the wait for network at boot
 	WaitForNetworkAtBoot = "wait_for_network_at_boot"
 
+	// DisableOrEnableRemoteGpio is the name of the disable or enable rgpio
+	DisableOrEnableRemoteGpio = "disable_or_enable_rgpio"
+
 	// Overscan is the name of the overscan actions
 	Overscan = "overscan"
 
@@ -163,6 +166,9 @@ const (
 
 	// OneWire is the name of the one-wire user method
 	OneWire = "one_wire"
+
+	// RGPIO is the name of the remote gpio user method
+	RGPIO = "remote_gpio"
 )
 
 var (
@@ -762,6 +768,73 @@ func (s Service) WaitForNetworkAtBoot(arg interface{}) (rpi.Exec, error) {
 
 	return rpi.Exec{
 		Name:       WaitForNetworkAtBoot,
+		StartTime:  startTime,
+		EndTime:    endTime,
+		ExitStatus: uint8(exitStatus),
+		Stderr:     stdErr,
+	}, nil
+}
+
+// DisableOrEnableRemoteGpio enable or disable remote gpio at boot
+func (s Service) DisableOrEnableRemoteGpio(arg interface{}) (rpi.Exec, error) {
+	var directory string
+	var action string
+
+	switch v := arg.(type) {
+	case EnableOrDisableConfig:
+		directory = v.DirOrFilePath
+		action = v.Action
+	case OtherParams:
+		directory = arg.(OtherParams).Value["directory"]
+		action = arg.(OtherParams).Value["action"]
+	default:
+		return rpi.Exec{ExitStatus: 1}, &Error{[]string{"directory", "action"}}
+	}
+
+	// execution start time
+	startTime := uint64(time.Now().Unix())
+	exitStatus := 0
+	var stdErr string
+
+	if action == Enable {
+		// create the directory and the parent directories
+		_ = os.MkdirAll(directory, 0755)
+
+		// create a file wait.conf and populate it
+		err := OverwriteToFile(WriteToFileArg{
+			File: directory + "/public.conf",
+			Data: []string{
+				"[Service]",
+				"ExecStart=",
+				"ExecStart=/usr/bin/pigpiod",
+			},
+			Multiline: true,
+		})
+
+		// if error, it is logged here
+		if err != nil {
+			exitStatus = 1
+			stdErr = fmt.Sprint(err)
+		}
+	} else if action == Disable {
+		// remove the file
+		err := os.Remove(directory + "/public.conf")
+
+		// if error, it is logged here
+		if err != nil {
+			exitStatus = 1
+			stdErr = fmt.Sprint(err)
+		}
+	} else {
+		exitStatus = 1
+		stdErr = "bad action type"
+	}
+
+	// execution end time
+	endTime := uint64(time.Now().Unix())
+
+	return rpi.Exec{
+		Name:       DisableOrEnableRemoteGpio,
 		StartTime:  startTime,
 		EndTime:    endTime,
 		ExitStatus: uint8(exitStatus),

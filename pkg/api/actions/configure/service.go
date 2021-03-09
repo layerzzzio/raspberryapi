@@ -20,6 +20,7 @@ type Service interface {
 	ExecuteSPI(string) (rpi.Action, error)
 	ExecuteI2C(string) (rpi.Action, error)
 	ExecuteONW(string) (rpi.Action, error)
+	ExecuteRG(string) (rpi.Action, error)
 }
 
 // Configure represents a Configure application service.
@@ -44,6 +45,7 @@ type CONSYS interface {
 	ExecuteSPI(map[int](map[int]actions.Func)) (rpi.Action, error)
 	ExecuteI2C(map[int](map[int]actions.Func)) (rpi.Action, error)
 	ExecuteONW(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteRG(map[int](map[int]actions.Func)) (rpi.Action, error)
 }
 
 // Actions represents the actions interface
@@ -60,6 +62,7 @@ type Actions interface {
 	CommentOrUncommentInFile(interface{}) (rpi.Exec, error)
 	SetVariableInConfigFile(interface{}) (rpi.Exec, error)
 	ExecuteBashCommand(interface{}) (rpi.Exec, error)
+	DisableOrEnableRemoteGpio(interface{}) (rpi.Exec, error)
 }
 
 // Infos represents the infos interface

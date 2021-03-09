@@ -11,4 +11,5 @@ type RpInterface struct {
 	IsSPI              bool `json:"isSPI"`
 	IsI2C              bool `json:"isI2C"`
 	IsOneWire          bool `json:"isOneWire"`
+	IsRemoteGpio       bool `json:"isRemoteGpio"`
 }

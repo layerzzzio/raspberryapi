@@ -10,4 +10,7 @@ const (
 
 	// RASPI-CONFIG X11SERVICE directory
 	RASPICONFIGX11SERVICE = "/usr/share/raspi-config"
+
+	// REMOTEGPIOSERVICE directory
+	RGPIOSERVICE = "/etc/systemd/system/pigpiod.service.d"
 )
