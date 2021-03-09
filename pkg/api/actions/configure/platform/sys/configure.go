@@ -217,3 +217,19 @@ func (con Configure) ExecuteONW(plan map[int](map[int]actions.Func)) (rpi.Action
 		EndTime:       uint64(time.Now().Unix()),
 	}, nil
 }
+
+// ExecuteRG returns an action response after enabling or disable remote gpio
+func (con Configure) ExecuteRG(plan map[int](map[int]actions.Func)) (rpi.Action, error) {
+	actionStartTime := uint64(time.Now().Unix())
+	progressInit := actions.FlattenPlan(plan)
+	progress, exitStatus := actions.ExecutePlan(plan, progressInit)
+
+	return rpi.Action{
+		Name:          actions.RGPIO,
+		NumberOfSteps: uint16(len(progressInit)),
+		Progress:      progress,
+		ExitStatus:    exitStatus,
+		StartTime:     actionStartTime,
+		EndTime:       uint64(time.Now().Unix()),
+	}, nil
+}

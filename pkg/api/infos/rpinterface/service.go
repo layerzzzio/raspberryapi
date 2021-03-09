@@ -17,7 +17,7 @@ type RpInterface struct {
 
 // INTSYS represents an RpInterface repository service.
 type INTSYS interface {
-	List([]string, bool, bool, bool, bool, bool, bool, bool, bool) (rpi.RpInterface, error)
+	List([]string, bool, bool, bool, bool, bool, bool, bool, bool, bool) (rpi.RpInterface, error)
 }
 
 // Infos represents the infos interface

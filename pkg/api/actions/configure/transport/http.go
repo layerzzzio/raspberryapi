@@ -30,6 +30,7 @@ func NewHTTP(svc configure.Service, r *echo.Group) {
 	cr.POST("/spi", h.spi)
 	cr.POST("/i2c", h.i2c)
 	cr.POST("/onewire", h.onewire)
+	cr.POST("/rgpio", h.rgpio)
 }
 
 func ActionCheck(action string, regex string) error {
@@ -228,6 +229,20 @@ func (h *HTTP) onewire(ctx echo.Context) error {
 	}
 
 	result, err := h.svc.ExecuteONW(action)
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(http.StatusOK, result)
+}
+
+func (h *HTTP) rgpio(ctx echo.Context) error {
+	action := ctx.QueryParam("action")
+	if err := ActionCheck(action, `enable|disable`); err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - bad action type")
+	}
+
+	result, err := h.svc.ExecuteRG(action)
 	if err != nil {
 		return err
 	}

@@ -34,7 +34,7 @@ func TestList(t *testing.T) {
 			name: "error: List result is nil",
 			intsys: &mocksys.RpInterface{
 				ListFn: func(
-					[]string, bool, bool, bool, bool, bool, bool, bool, bool,
+					[]string, bool, bool, bool, bool, bool, bool, bool, bool, bool,
 				) (rpi.RpInterface, error) {
 					return rpi.RpInterface{}, errors.New("test error")
 				},

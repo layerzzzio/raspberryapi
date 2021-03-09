@@ -114,6 +114,11 @@ func (s Service) GetConfigFiles() map[string]rpi.ConfigFileDetails {
 			IsCritical:  true,
 			Description: "is a binary blob (firmware) that is loaded on to the VideoCore in the SoC and that includes camera drivers and codec.",
 		},
+		"rgpio_public_conf": {
+			Path:        "/etc/systemd/system/pigpiod.service.d/public.conf",
+			IsCritical:  false,
+			Description: "is the daemon file for the remote GPIO service.",
+		},
 	}
 }
 

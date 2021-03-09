@@ -634,3 +634,45 @@ func (con *Configure) ExecuteONW(action string) (rpi.Action, error) {
 
 	return con.consys.ExecuteONW(plan)
 }
+
+// ExecuteRG enable or disable remote gpio
+func (con *Configure) ExecuteRG(action string) (rpi.Action, error) {
+	plan := map[int](map[int]actions.Func){
+		1: {
+			1: {
+				Name:      actions.DisableOrEnableRemoteGpio,
+				Reference: con.a.DisableOrEnableRemoteGpio,
+				Argument: []interface{}{
+					actions.EnableOrDisableConfig{
+						DirOrFilePath: constants.RGPIOSERVICE,
+						Action:        action,
+					},
+				},
+			},
+		},
+		2: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: "systemctl daemon-reload",
+					},
+				},
+			},
+		},
+		3: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: "if systemctl -q is-enabled pigpiod ; then systemctl restart pigpiod ; fi",
+					},
+				},
+			},
+		},
+	}
+
+	return con.consys.ExecuteRG(plan)
+}

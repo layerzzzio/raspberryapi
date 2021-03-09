@@ -21,6 +21,7 @@ type Actions struct {
 	CommentOrUncommentInFileFn     func(arg interface{}) (rpi.Exec, error)
 	SetVariableInConfigFileFn      func(arg interface{}) (rpi.Exec, error)
 	ExecuteBashCommandFn           func(arg interface{}) (rpi.Exec, error)
+	DisableOrEnableRemoteGpioFn    func(arg interface{}) (rpi.Exec, error)
 }
 
 // DeleteFile mock
@@ -90,4 +91,8 @@ func (a Actions) SetVariableInConfigFile(arg interface{}) (rpi.Exec, error) {
 
 func (a Actions) ExecuteBashCommand(arg interface{}) (rpi.Exec, error) {
 	return a.ExecuteBashCommandFn(arg)
+}
+
+func (a Actions) DisableOrEnableRemoteGpio(arg interface{}) (rpi.Exec, error) {
+	return a.DisableOrEnableRemoteGpioFn(arg)
 }

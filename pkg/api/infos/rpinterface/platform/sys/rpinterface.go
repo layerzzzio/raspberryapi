@@ -20,6 +20,7 @@ func (int RpInterface) List(
 	isSPI bool,
 	isI2C bool,
 	isOneWire bool,
+	isRemoteGpio bool,
 ) (rpi.RpInterface, error) {
 	isCamera := false
 	// I use a regex here to cover the below cases:
@@ -44,5 +45,6 @@ func (int RpInterface) List(
 		IsSPI:              isSPI,
 		IsI2C:              isI2C,
 		IsOneWire:          isOneWire,
+		IsRemoteGpio:       isRemoteGpio,
 	}, nil
 }

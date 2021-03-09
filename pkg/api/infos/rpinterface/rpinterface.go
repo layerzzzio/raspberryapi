@@ -15,6 +15,9 @@ func (in *RpInterface) List() (rpi.RpInterface, error) {
 	startXElf := in.i.GetConfigFiles()["start_x_elf"].Path
 	isStartXElf := in.i.IsFileExists(startXElf)
 
+	gpioServiceFile := in.i.GetConfigFiles()["rgpio_public_conf"].Path
+	isRemoteGpio := in.i.IsFileExists(gpioServiceFile)
+
 	// keep inactive as a keywork here
 	isSSH := in.i.IsQuietGrep("service ssh status", "inactive", "quiet")
 	isSSHKeyGenerating := in.i.IsSSHKeyGenerating("/var/log/regen_ssh_keys.log")
@@ -40,5 +43,6 @@ func (in *RpInterface) List() (rpi.RpInterface, error) {
 		isSPI,
 		isI2C,
 		isOneWire,
+		isRemoteGpio,
 	)
 }

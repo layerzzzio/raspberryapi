@@ -2572,6 +2572,180 @@ func TestWaitForNetworkAtBoot(t *testing.T) {
 	}
 }
 
+func TestDisableOrEnableRemoteGpio(t *testing.T) {
+	cases := []struct {
+		name             string
+		argument         interface{}
+		isSuccess        bool
+		enable           bool
+		wantedData       []string
+		wantedErr        error
+		wantedExitStatus uint8
+		wantedStderr     string
+	}{
+		{
+			name: "error : no such file or directory (enable)",
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: "",
+				Action:        actions.Enable,
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "creating and opening file failed",
+			wantedErr:        nil,
+		},
+		{
+			name: "error : no such file or directory (disable)",
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: "",
+				Action:        actions.Disable,
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "remove /public.conf: no such file or directory",
+			wantedErr:        nil,
+		},
+		{
+			name: "error : bad action type",
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: dummydirectorypath,
+				Action:        "dummyactiontype",
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "bad action type",
+			wantedErr:        nil,
+		},
+		{
+			name: "error : too many arguments",
+			argument: []actions.OtherParams{
+				{Value: map[string]string{"directory": dummydirectorypath}},
+				{Value: map[string]string{"action": "dummyaction"}},
+				{Value: map[string]string{"dummyextraarg": "dummyextraarg"}},
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "",
+			wantedErr:        &actions.Error{Arguments: []string{"directory", "action"}},
+		},
+		{
+			name: "success enabling with otherParams",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"directory": dummydirectorypath,
+					"action":    actions.Enable,
+				},
+			},
+			isSuccess: true,
+			enable:    true,
+			wantedData: []string{
+				"[Service]",
+				"ExecStart=",
+				"ExecStart=/usr/bin/pigpiod",
+			},
+			wantedErr:        nil,
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+		},
+		{
+			name: "success enabling with regular params",
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: dummydirectorypath,
+				Action:        actions.Enable,
+			},
+			isSuccess: true,
+			enable:    true,
+			wantedData: []string{
+				"[Service]",
+				"ExecStart=",
+				"ExecStart=/usr/bin/pigpiod",
+			},
+			wantedErr:        nil,
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+		},
+		{
+			name: "success disable with otherParams",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"directory": dummydirectorypath,
+					"action":    actions.Disable,
+				},
+			},
+			isSuccess:        true,
+			enable:           false,
+			wantedErr:        nil,
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+		},
+		{
+			name: "success disable with regular params",
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: dummydirectorypath,
+				Action:        actions.Disable,
+			},
+			isSuccess:        true,
+			enable:           false,
+			wantedErr:        nil,
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var remoteGpio rpi.Exec
+			var err error
+			a := actions.New()
+
+			if tc.isSuccess {
+				if tc.enable == false {
+					_ = os.MkdirAll(dummydirectorypath, 0755)
+					if err := actions.OverwriteToFile(actions.WriteToFileArg{
+						File:      "./" + dummydirectorypath + "/public.conf",
+						Data:      []string{"dummydata"},
+						Multiline: true,
+					}); err != nil {
+						fmt.Println(err)
+					}
+				}
+
+				remoteGpio, err = a.DisableOrEnableRemoteGpio(tc.argument)
+				if err != nil {
+					fmt.Println(err)
+				}
+
+				if tc.enable {
+					// read the new line and delete
+					readLines, err := infos.New().ReadFile("./" + dummydirectorypath + "/public.conf")
+					if err != nil {
+						fmt.Println(err)
+					}
+
+					// fmt.Println(readLines)
+
+					// assert statements
+					assert.Equal(t, tc.wantedData, readLines)
+				}
+
+				if err = os.RemoveAll(dummydirectorypath); err != nil {
+					fmt.Println(err)
+				}
+
+			} else {
+				remoteGpio, err = a.DisableOrEnableRemoteGpio(tc.argument)
+				if e := os.RemoveAll(dummydirectorypath); err != nil {
+					fmt.Println(e)
+				}
+			}
+
+			assert.Equal(t, tc.wantedExitStatus, remoteGpio.ExitStatus)
+			assert.Equal(t, tc.wantedStderr, remoteGpio.Stderr)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
 func TestRemoveDuplicateStrings(t *testing.T) {
 	cases := []struct {
 		name       string
