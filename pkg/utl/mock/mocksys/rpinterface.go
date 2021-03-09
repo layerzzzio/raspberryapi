@@ -6,7 +6,7 @@ import (
 
 // RpInterface mock
 type RpInterface struct {
-	ListFn func([]string, bool, bool, bool, bool, bool, bool) (rpi.RpInterface, error)
+	ListFn func([]string, bool, bool, bool, bool, bool, bool, bool) (rpi.RpInterface, error)
 }
 
 // List mock
@@ -18,6 +18,7 @@ func (in RpInterface) List(
 	isVNC bool,
 	isVNCInstalledCheck bool,
 	isSPI bool,
+	isI2C bool,
 ) (rpi.RpInterface, error) {
 	return in.ListFn(
 		readLines,
@@ -27,5 +28,6 @@ func (in RpInterface) List(
 		isVNC,
 		isVNCInstalledCheck,
 		isSPI,
+		isI2C,
 	)
 }

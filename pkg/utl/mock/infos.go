@@ -15,6 +15,7 @@ type Infos struct {
 	IsSSHKeyGeneratingFn      func(string) bool
 	IsDPKGInstalledFn         func(string) bool
 	IsSPIFn                   func(string) bool
+	IsI2CFn                   func(string) bool
 }
 
 // ReadFile mock
@@ -60,4 +61,9 @@ func (i Infos) IsDPKGInstalled(path string) bool {
 // IsSPI mock
 func (i Infos) IsSPI(path string) bool {
 	return i.IsSPIFn(path)
+}
+
+// IsI2C mock
+func (i Infos) IsI2C(path string) bool {
+	return i.IsI2CFn(path)
 }

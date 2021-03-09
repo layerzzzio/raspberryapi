@@ -59,8 +59,12 @@ Here I verified with the one option only.
 3. check isVNC: GET /rpinterfaces
 4. depending on the result: POST /configure/vnc?action=**[enable/disable]**
 
-
 ## 11) SPI
 1. check isSPI: GET /rpinterfaces. 
 2. depending on the result: POST /configure/spi?action=**[enable/disable]**
+3. reboot
+
+## 12) I2C
+1. check isSPI: GET /rpinterfaces. 
+2. depending on the result: POST /configure/i2c?action=**[enable/disable]**
 3. reboot

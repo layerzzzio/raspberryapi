@@ -478,3 +478,110 @@ func (con *Configure) ExecuteSPI(action string) (rpi.Action, error) {
 
 	return con.consys.ExecuteSPI(plan)
 }
+
+// ExecuteI2C enable or disable i2c
+func (con *Configure) ExecuteI2C(action string) (rpi.Action, error) {
+	var plan map[int]map[int]actions.Func
+	var data string
+
+	if action == "enable" {
+		data = "on"
+	} else if action == "disable" {
+		data = "off"
+	} else {
+		return rpi.Action{}, echo.NewHTTPError(http.StatusInternalServerError, "bad action type: enable or disable i2c failed")
+	}
+
+	blacklist := "/etc/modprobe.d/raspi-blacklist.conf"
+	sedBlacklist := "s/^\\(blacklist[[:space:]]*i2c[-_]bcm2708\\)/#\\1/"
+
+	etcModules := "/etc/modules"
+	setEtcModules := "s/^#[[:space:]]*\\(i2c[-_]dev\\)/\\1/"
+
+	plan = map[int](map[int]actions.Func){
+		1: {
+			1: {
+				Name:      actions.DisableOrEnableConfig,
+				Reference: con.a.DisableOrEnableConfig,
+				Argument: []interface{}{
+					actions.EODC{
+						DirOrFilePath: con.i.GetConfigFiles()["bootconfig"].Path,
+						Action:        action,
+						Data:          "dtparam=i2c_arm=" + data,
+						Regex:         actions.DisableOrEnableI2CRegex,
+						FunctionName:  actions.DisableOrEnableI2CInterface,
+						AssetFile:     "../assets/config.txt",
+					},
+				},
+			},
+		},
+		2: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: fmt.Sprintf("if ! [ -e %v ]; then touch %v ; fi", blacklist, blacklist),
+					},
+				},
+			},
+		},
+		3: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: fmt.Sprintf("sed %v -i -e \"%v\"", blacklist, sedBlacklist),
+					},
+				},
+			},
+		},
+		4: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: fmt.Sprintf("sed %v -i -e %v", etcModules, setEtcModules),
+					},
+				},
+			},
+		},
+		5: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: fmt.Sprintf("if ! grep -q \"^i2c[-_]dev\" %v; then printf \"i2c-dev\n\" >> %v ; fi", etcModules, etcModules),
+					},
+				},
+			},
+		},
+		6: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: fmt.Sprintf("dtparam i2c_arm=%v", data),
+					},
+				},
+			},
+		},
+		7: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: "modprobe i2c-dev",
+					},
+				},
+			},
+		},
+	}
+
+	return con.consys.ExecuteI2C(plan)
+}

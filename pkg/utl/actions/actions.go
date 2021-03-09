@@ -59,8 +59,11 @@ const (
 	// DisableOrEnableCameraRegex is the regex used to detect start_x variable in /boot/config.txt
 	DisableOrEnableCameraRegex = `^\s*#?\s*start_x\s*=.*`
 
-	// DisableOrEnableSPIRegex is the regex used to detect start_x variable in /boot/config.txt
+	// DisableOrEnableSPIRegex is the regex used to detect dtparam=spi variable in /boot/config.txt
 	DisableOrEnableSPIRegex = `^\s*#?\s*dtparam\s*=\s*spi\s*=.*`
+
+	// DisableOrEnableI2CRegex is the regex used to detect dtparam=i2c_arm variable in /boot/config.txt
+	DisableOrEnableI2CRegex = `^\s*#?\s*dtparam\s*=\s*i2c_arm\s*=.*`
 
 	// StartxCameraRegex is the regex used to detect startx variable in /boot/config.txt
 	StartxCameraRegex = `^\s*startx.*`
@@ -116,6 +119,9 @@ const (
 	// DisableOrEnableSPIInterface is the name of the disable or enable spi interface actions
 	DisableOrEnableSPIInterface = "disable_or_enable_spi_interface"
 
+	// DisableOrEnableI2CInterface is the name of the disable or enable i2c interface actions
+	DisableOrEnableI2CInterface = "disable_or_enable_i2c_interface"
+
 	// CameraInterface is the name of the camera interface actions
 	CameraInterface = "camera_interface"
 
@@ -145,6 +151,9 @@ const (
 
 	// SPI is the name of the spi user method
 	SPI = "spi"
+
+	// I2C is the name of the i2c user method
+	I2C = "i2c"
 )
 
 var (

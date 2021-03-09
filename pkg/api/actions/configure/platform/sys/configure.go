@@ -185,3 +185,19 @@ func (con Configure) ExecuteSPI(plan map[int](map[int]actions.Func)) (rpi.Action
 		EndTime:       uint64(time.Now().Unix()),
 	}, nil
 }
+
+// ExecuteI2C returns an action response after enabling or disable i2c
+func (con Configure) ExecuteI2C(plan map[int](map[int]actions.Func)) (rpi.Action, error) {
+	actionStartTime := uint64(time.Now().Unix())
+	progressInit := actions.FlattenPlan(plan)
+	progress, exitStatus := actions.ExecutePlan(plan, progressInit)
+
+	return rpi.Action{
+		Name:          actions.I2C,
+		NumberOfSteps: uint16(len(progressInit)),
+		Progress:      progress,
+		ExitStatus:    exitStatus,
+		StartTime:     actionStartTime,
+		EndTime:       uint64(time.Now().Unix()),
+	}, nil
+}

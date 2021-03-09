@@ -21,6 +21,7 @@ type Action struct {
 	ExecuteSSHFn func(map[int](map[int]actions.Func)) (rpi.Action, error)
 	ExecuteVNCFn func(map[int](map[int]actions.Func)) (rpi.Action, error)
 	ExecuteSPIFn func(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteI2CFn func(map[int](map[int]actions.Func)) (rpi.Action, error)
 }
 
 // ExecuteDF mock
@@ -88,7 +89,12 @@ func (a *Action) ExecuteVNC(plan map[int](map[int]actions.Func)) (rpi.Action, er
 	return a.ExecuteVNCFn(plan)
 }
 
-// ExeExecuteSPIcuteVNC mock
+// ExecuteSPI mock
 func (a *Action) ExecuteSPI(plan map[int](map[int]actions.Func)) (rpi.Action, error) {
 	return a.ExecuteSPIFn(plan)
+}
+
+// ExecuteI2C mock
+func (a *Action) ExecuteI2C(plan map[int](map[int]actions.Func)) (rpi.Action, error) {
+	return a.ExecuteI2CFn(plan)
 }

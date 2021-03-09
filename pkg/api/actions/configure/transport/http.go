@@ -28,6 +28,7 @@ func NewHTTP(svc configure.Service, r *echo.Group) {
 	cr.POST("/ssh", h.ssh)
 	cr.POST("/vnc", h.vnc)
 	cr.POST("/spi", h.spi)
+	cr.POST("/i2c", h.i2c)
 }
 
 func ActionCheck(action string, regex string) error {
@@ -198,6 +199,20 @@ func (h *HTTP) spi(ctx echo.Context) error {
 	}
 
 	result, err := h.svc.ExecuteSPI(action)
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(http.StatusOK, result)
+}
+
+func (h *HTTP) i2c(ctx echo.Context) error {
+	action := ctx.QueryParam("action")
+	if err := ActionCheck(action, `enable|disable`); err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - bad action type")
+	}
+
+	result, err := h.svc.ExecuteI2C(action)
 	if err != nil {
 		return err
 	}

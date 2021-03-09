@@ -233,10 +233,33 @@ func (s Service) IsDPKGInstalled(packageName string) bool {
 	}
 }
 
-// IsSPI checks if SPI is enabled or disables
+// IsSPI checks if SPI is enabled or disabled
 func (s Service) IsSPI(path string) bool {
 	command := fmt.Sprintf(
 		"grep -q -E \"^(device_tree_param|dtparam)=([^,]*,)*spi(=(on|true|yes|1))?(,.*)?$\" %v ; echo $?",
+		path,
+	)
+	res, err := exec.Command("sh", "-c", command).Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	resNum, err := strconv.Atoi(strings.TrimSpace(string(res)))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if resNum == 1 {
+		return false
+	} else {
+		return true
+	}
+}
+
+// IsI2C checks if I2C is enabled or disabled
+func (s Service) IsI2C(path string) bool {
+	command := fmt.Sprintf(
+		"grep -q -E \"^(device_tree_param|dtparam)=([^,]*,)*i2c(_arm)?(=(on|true|yes|1))?(,.*)?$\" %v ; echo $?",
 		path,
 	)
 	res, err := exec.Command("sh", "-c", command).Output()
