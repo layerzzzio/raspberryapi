@@ -19,6 +19,7 @@ func (int RpInterface) List(
 	isVNCInstalledCheck bool,
 	isSPI bool,
 	isI2C bool,
+	isOneWire bool,
 ) (rpi.RpInterface, error) {
 	isCamera := false
 	// I use a regex here to cover the below cases:
@@ -42,5 +43,6 @@ func (int RpInterface) List(
 		IsVNCInstalled:     isVNCInstalledCheck,
 		IsSPI:              isSPI,
 		IsI2C:              isI2C,
+		IsOneWire:          isOneWire,
 	}, nil
 }

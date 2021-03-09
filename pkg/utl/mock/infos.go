@@ -16,6 +16,7 @@ type Infos struct {
 	IsDPKGInstalledFn         func(string) bool
 	IsSPIFn                   func(string) bool
 	IsI2CFn                   func(string) bool
+	IsVariableSetFn           func([]string, string, string) bool
 }
 
 // ReadFile mock
@@ -66,4 +67,9 @@ func (i Infos) IsSPI(path string) bool {
 // IsI2C mock
 func (i Infos) IsI2C(path string) bool {
 	return i.IsI2CFn(path)
+}
+
+// IsVariableSetFn mock
+func (i Infos) IsVariableSet(rawLines []string, key string, value string) bool {
+	return i.IsVariableSetFn(rawLines, key, value)
 }

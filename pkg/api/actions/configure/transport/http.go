@@ -29,6 +29,7 @@ func NewHTTP(svc configure.Service, r *echo.Group) {
 	cr.POST("/vnc", h.vnc)
 	cr.POST("/spi", h.spi)
 	cr.POST("/i2c", h.i2c)
+	cr.POST("/onewire", h.onewire)
 }
 
 func ActionCheck(action string, regex string) error {
@@ -213,6 +214,20 @@ func (h *HTTP) i2c(ctx echo.Context) error {
 	}
 
 	result, err := h.svc.ExecuteI2C(action)
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(http.StatusOK, result)
+}
+
+func (h *HTTP) onewire(ctx echo.Context) error {
+	action := ctx.QueryParam("action")
+	if err := ActionCheck(action, `enable|disable`); err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - bad action type")
+	}
+
+	result, err := h.svc.ExecuteONW(action)
 	if err != nil {
 		return err
 	}

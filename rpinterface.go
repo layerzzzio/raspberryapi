@@ -10,4 +10,5 @@ type RpInterface struct {
 	IsVNCInstalled     bool `json:"isVNCInstalled"`
 	IsSPI              bool `json:"isSPI"`
 	IsI2C              bool `json:"isI2C"`
+	IsOneWire          bool `json:"isOneWire"`
 }

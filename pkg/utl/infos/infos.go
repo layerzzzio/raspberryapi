@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -277,4 +278,22 @@ func (s Service) IsI2C(path string) bool {
 	} else {
 		return true
 	}
+}
+
+// IsVariableSet checks if a variable equals a certain value in a file
+func (s Service) IsVariableSet(rawLines []string, key string, value string) bool {
+	reg := `^\s*` + key + `\s*=\s*` + value + `\s*#?.*`
+
+	isMatch := false
+
+	for _, line := range rawLines {
+		if line != "" {
+			re := regexp.MustCompile(reg)
+			if re.MatchString(line) {
+				isMatch = true
+			}
+		}
+	}
+
+	return isMatch
 }

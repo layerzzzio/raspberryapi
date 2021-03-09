@@ -24,6 +24,7 @@ func (in *RpInterface) List() (rpi.RpInterface, error) {
 
 	isSPI := in.i.IsSPI(bootConfigPath)
 	isI2C := in.i.IsI2C(bootConfigPath)
+	isOneWire := in.i.IsVariableSet(bootConfig, "dtoverlay", "w1-gpio")
 
 	if errB != nil {
 		return rpi.RpInterface{}, echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the rpinterface details")
@@ -38,5 +39,6 @@ func (in *RpInterface) List() (rpi.RpInterface, error) {
 		isVNCInstalledCheck,
 		isSPI,
 		isI2C,
+		isOneWire,
 	)
 }

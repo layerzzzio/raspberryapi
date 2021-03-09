@@ -68,3 +68,8 @@ Here I verified with the one option only.
 1. check isSPI: GET /rpinterfaces. 
 2. depending on the result: POST /configure/i2c?action=**[enable/disable]**
 3. reboot
+
+## 13) One Wire
+1. check isOneWire: GET /rpinterfaces. 
+2. depending on the result: POST /configure/onewire?action=**[enable/disable]**
+3. reboot
