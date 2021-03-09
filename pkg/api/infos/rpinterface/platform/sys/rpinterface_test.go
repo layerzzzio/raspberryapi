@@ -20,6 +20,7 @@ func TestList(t *testing.T) {
 		isVNC               bool
 		isVNCInstalledCheck bool
 		isSPI               bool
+		isI2C               bool
 		wantedData          rpi.RpInterface
 		wantedErr           error
 	}{
@@ -37,6 +38,7 @@ func TestList(t *testing.T) {
 			isVNC:               true,
 			isVNCInstalledCheck: true,
 			isSPI:               true,
+			isI2C:               true,
 			wantedData: rpi.RpInterface{
 				IsStartXElf:        false,
 				IsCamera:           true,
@@ -45,6 +47,7 @@ func TestList(t *testing.T) {
 				IsVNC:              true,
 				IsVNCInstalled:     true,
 				IsSPI:              true,
+				IsI2C:              true,
 			},
 			wantedErr: nil,
 		},
@@ -61,6 +64,7 @@ func TestList(t *testing.T) {
 				tc.isVNC,
 				tc.isVNCInstalledCheck,
 				tc.isSPI,
+				tc.isI2C,
 			)
 			assert.Equal(t, tc.wantedData, intf)
 			assert.Equal(t, tc.wantedErr, err)

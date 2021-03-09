@@ -23,6 +23,7 @@ func (in *RpInterface) List() (rpi.RpInterface, error) {
 	isVNCInstalledCheck := in.i.IsDPKGInstalled("realvnc-vnc-server")
 
 	isSPI := in.i.IsSPI(bootConfigPath)
+	isI2C := in.i.IsI2C(bootConfigPath)
 
 	if errB != nil {
 		return rpi.RpInterface{}, echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the rpinterface details")
@@ -36,5 +37,6 @@ func (in *RpInterface) List() (rpi.RpInterface, error) {
 		isVNC,
 		isVNCInstalledCheck,
 		isSPI,
+		isI2C,
 	)
 }

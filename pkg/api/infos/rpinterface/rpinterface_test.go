@@ -50,9 +50,12 @@ func TestList(t *testing.T) {
 				IsSPIFn: func(string) bool {
 					return false
 				},
+				IsI2CFn: func(string) bool {
+					return false
+				},
 			},
 			intsys: mocksys.RpInterface{
-				ListFn: func([]string, bool, bool, bool, bool, bool, bool) (rpi.RpInterface, error) {
+				ListFn: func([]string, bool, bool, bool, bool, bool, bool, bool) (rpi.RpInterface, error) {
 					return rpi.RpInterface{}, nil
 				},
 			},
@@ -88,9 +91,12 @@ func TestList(t *testing.T) {
 				IsSPIFn: func(string) bool {
 					return false
 				},
+				IsI2CFn: func(string) bool {
+					return false
+				},
 			},
 			intsys: mocksys.RpInterface{
-				ListFn: func([]string, bool, bool, bool, bool, bool, bool) (rpi.RpInterface, error) {
+				ListFn: func([]string, bool, bool, bool, bool, bool, bool, bool) (rpi.RpInterface, error) {
 					return rpi.RpInterface{
 						IsStartXElf:        true,
 						IsCamera:           false,
@@ -98,6 +104,7 @@ func TestList(t *testing.T) {
 						IsSSHKeyGenerating: true,
 						IsVNC:              true,
 						IsSPI:              true,
+						IsI2C:              true,
 					}, nil
 				},
 			},
@@ -108,6 +115,7 @@ func TestList(t *testing.T) {
 				IsSSHKeyGenerating: true,
 				IsVNC:              true,
 				IsSPI:              true,
+				IsI2C:              true,
 			},
 			wantedErr: nil,
 		},
