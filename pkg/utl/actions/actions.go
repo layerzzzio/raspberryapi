@@ -68,6 +68,9 @@ const (
 	// StartxCameraRegex is the regex used to detect startx variable in /boot/config.txt
 	StartxCameraRegex = `^\s*startx.*`
 
+	// OneWireCommentRegex is the regex used to comment one-wire variable in /boot/config.txt
+	OneWireCommentRegex = `^\s*#?\s*dtoverlay\s*=\s*w1-gpio.*`
+
 	// FixupFileCameraRegex is the regex used to detect fixup_file variable in /boot/config.txt
 	FixupFileCameraRegex = `^\s*fixup_file.*`
 
@@ -122,6 +125,9 @@ const (
 	// DisableOrEnableI2CInterface is the name of the disable or enable i2c interface actions
 	DisableOrEnableI2CInterface = "disable_or_enable_i2c_interface"
 
+	// DisableOrEnableONWInterface is the name of the disable or enable one-wore interface actions
+	DisableOrEnableONWInterface = "disable_or_enable_one_wire_interface"
+
 	// CameraInterface is the name of the camera interface actions
 	CameraInterface = "camera_interface"
 
@@ -154,6 +160,9 @@ const (
 
 	// I2C is the name of the i2c user method
 	I2C = "i2c"
+
+	// OneWire is the name of the one-wire user method
+	OneWire = "one_wire"
 )
 
 var (

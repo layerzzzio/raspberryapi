@@ -234,3 +234,20 @@ func (ls *LogService) ExecuteI2C(ctx echo.Context, action string) (resp rpi.Acti
 	}(time.Now())
 	return ls.Service.ExecuteI2C(action)
 }
+
+// ExecuteONW is the logging function attached to the execute one-wire service and responsible for logging it out.
+func (ls *LogService) ExecuteONW(ctx echo.Context, action string) (resp rpi.Action, err error) {
+	defer func(begin time.Time) {
+		ls.logger.Log(
+			ctx,
+			name,
+			fmt.Sprintf("request: execute %v one wire", action),
+			err,
+			map[string]interface{}{
+				"resp": resp,
+				"took": time.Since(begin),
+			},
+		)
+	}(time.Now())
+	return ls.Service.ExecuteONW(action)
+}

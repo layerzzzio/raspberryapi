@@ -454,3 +454,66 @@ func TestIsI2C(t *testing.T) {
 		})
 	}
 }
+
+func TestIsVariableSet(t *testing.T) {
+	cases := []struct {
+		name       string
+		rawLines   []string
+		key        string
+		value      string
+		addLines   []string
+		wantedData bool
+	}{
+		{
+			name:  "success: no match",
+			key:   "dtoverlay",
+			value: "w1-gpio",
+			rawLines: []string{
+				"yes man",
+				"no it is not",
+			},
+			wantedData: false,
+		},
+		{
+			name:  "success: match",
+			key:   "dtoverlay",
+			value: "w1-gpio",
+			rawLines: []string{
+				"yes man",
+				"no it is not",
+				"dtoverlay=w1-gpio",
+			},
+			wantedData: true,
+		},
+		{
+			name:  "success: match with spaces",
+			key:   "dtoverlay",
+			value: "w1-gpio",
+			rawLines: []string{
+				"yes man",
+				"no it is not",
+				"    dtoverlay =        w1-gpio #comment man",
+			},
+			wantedData: true,
+		},
+		{
+			name:  "success: no match with comment",
+			key:   "dtoverlay",
+			value: "w1-gpio",
+			rawLines: []string{
+				"yes man",
+				"no it is not",
+				" #dtoverlay=w1-gpio",
+			},
+			wantedData: false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			i := infos.New()
+			isMatch := i.IsVariableSet(tc.rawLines, tc.key, tc.value)
+			assert.Equal(t, tc.wantedData, isMatch)
+		})
+	}
+}

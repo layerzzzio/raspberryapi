@@ -585,3 +585,52 @@ func (con *Configure) ExecuteI2C(action string) (rpi.Action, error) {
 
 	return con.consys.ExecuteI2C(plan)
 }
+
+// ExecuteONW enable or disable one-wire
+func (con *Configure) ExecuteONW(action string) (rpi.Action, error) {
+	var plan map[int]map[int]actions.Func
+
+	if action == "enable" {
+		plan = map[int](map[int]actions.Func){
+			1: {
+				1: {
+					Name:      actions.CommentOrUncommentInFile,
+					Reference: con.a.CommentOrUncommentInFile,
+					Argument: []interface{}{
+						actions.COUSLINF{
+							DirOrFilePath: con.i.GetConfigFiles()["bootconfig"].Path,
+							Action:        "uncomment",
+							DefaultData:   "dtoverlay=w1-gpio",
+							Regex:         actions.OneWireCommentRegex,
+							FunctionName:  "uncomment_dtoverlay_w1_gpio",
+							AssetFile:     "../assets/config.txt",
+						},
+					},
+				},
+			},
+		}
+	} else if action == "disable" {
+		plan = map[int](map[int]actions.Func){
+			1: {
+				1: {
+					Name:      actions.CommentOrUncommentInFile,
+					Reference: con.a.CommentOrUncommentInFile,
+					Argument: []interface{}{
+						actions.COUSLINF{
+							DirOrFilePath: con.i.GetConfigFiles()["bootconfig"].Path,
+							Action:        "comment",
+							DefaultData:   "#dtoverlay=w1-gpio",
+							Regex:         actions.OneWireCommentRegex,
+							FunctionName:  "comment_dtoverlay_w1_gpio",
+							AssetFile:     "../assets/config.txt",
+						},
+					},
+				},
+			},
+		}
+	} else {
+		return rpi.Action{}, echo.NewHTTPError(http.StatusInternalServerError, "bad action type: enable or disable one-wire failed")
+	}
+
+	return con.consys.ExecuteONW(plan)
+}
