@@ -16,6 +16,7 @@ import (
 // New instantiates a new Echo server.
 func New() *echo.Echo {
 	e := echo.New()
+	// e.AutoTLSManager.Cache = autocert.DirCache("/var/www/.cache")
 	e.Use(middleware.Logger(), middleware.Recover())
 	e.GET("/", healthCheck)
 	return e

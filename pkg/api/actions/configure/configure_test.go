@@ -2052,3 +2052,255 @@ func TestExecuteRG(t *testing.T) {
 		})
 	}
 }
+
+func TestExecuteUPD(t *testing.T) {
+	cases := []struct {
+		name       string
+		plan       map[int](map[int]actions.Func)
+		actions    *mock.Actions
+		infos      *mock.Infos
+		consys     *mocksys.Action
+		wantedData rpi.Action
+		wantedErr  error
+	}{
+		{
+			name: "success",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      actions.ExecuteBashCommand,
+						Reference: actions.ExecuteBashCommand,
+						Argument: []interface{}{
+							actions.EBC{Command: "command"},
+						},
+					},
+				},
+			},
+			actions: &mock.Actions{
+				ExecuteBashCommandFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       actions.Update,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					}, nil
+				},
+			},
+			consys: &mocksys.Action{
+				ExecuteUPDFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.Update,
+						NumberOfSteps: 1,
+						Progress: map[string]rpi.Exec{
+							"1": {
+								Name:       actions.ExecuteBashCommand,
+								StartTime:  1,
+								EndTime:    2,
+								ExitStatus: 0,
+								Stdout:     "path-enable",
+							},
+						},
+						ExitStatus: 0,
+						StartTime:  2,
+						EndTime:    uint64(time.Now().Unix()),
+					}, nil
+				},
+			},
+			wantedData: rpi.Action{
+				Name:          actions.Update,
+				NumberOfSteps: 1,
+				Progress: map[string]rpi.Exec{
+					"1": {
+						Name:       actions.ExecuteBashCommand,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					},
+				},
+				ExitStatus: 0,
+				StartTime:  2,
+				EndTime:    uint64(time.Now().Unix()),
+			},
+			wantedErr: nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := configure.New(tc.consys, tc.actions, tc.infos)
+			camera, err := s.ExecuteUPD()
+			assert.Equal(t, tc.wantedData, camera)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
+func TestExecuteUPG(t *testing.T) {
+	cases := []struct {
+		name       string
+		plan       map[int](map[int]actions.Func)
+		actions    *mock.Actions
+		infos      *mock.Infos
+		consys     *mocksys.Action
+		wantedData rpi.Action
+		wantedErr  error
+	}{
+		{
+			name: "success",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      actions.ExecuteBashCommand,
+						Reference: actions.ExecuteBashCommand,
+						Argument: []interface{}{
+							actions.EBC{Command: "command"},
+						},
+					},
+				},
+			},
+			actions: &mock.Actions{
+				ExecuteBashCommandFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       actions.Upgrade,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					}, nil
+				},
+			},
+			consys: &mocksys.Action{
+				ExecuteUPGFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.Upgrade,
+						NumberOfSteps: 1,
+						Progress: map[string]rpi.Exec{
+							"1": {
+								Name:       actions.ExecuteBashCommand,
+								StartTime:  1,
+								EndTime:    2,
+								ExitStatus: 0,
+								Stdout:     "path-enable",
+							},
+						},
+						ExitStatus: 0,
+						StartTime:  2,
+						EndTime:    uint64(time.Now().Unix()),
+					}, nil
+				},
+			},
+			wantedData: rpi.Action{
+				Name:          actions.Upgrade,
+				NumberOfSteps: 1,
+				Progress: map[string]rpi.Exec{
+					"1": {
+						Name:       actions.ExecuteBashCommand,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					},
+				},
+				ExitStatus: 0,
+				StartTime:  2,
+				EndTime:    uint64(time.Now().Unix()),
+			},
+			wantedErr: nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := configure.New(tc.consys, tc.actions, tc.infos)
+			camera, err := s.ExecuteUPG()
+			assert.Equal(t, tc.wantedData, camera)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
+func TestExecuteUPDG(t *testing.T) {
+	cases := []struct {
+		name       string
+		plan       map[int](map[int]actions.Func)
+		actions    *mock.Actions
+		infos      *mock.Infos
+		consys     *mocksys.Action
+		wantedData rpi.Action
+		wantedErr  error
+	}{
+		{
+			name: "success",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      actions.ExecuteBashCommand,
+						Reference: actions.ExecuteBashCommand,
+						Argument: []interface{}{
+							actions.EBC{Command: "command"},
+						},
+					},
+				},
+			},
+			actions: &mock.Actions{
+				ExecuteBashCommandFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       actions.UpDateGrade,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					}, nil
+				},
+			},
+			consys: &mocksys.Action{
+				ExecuteUPDGFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.UpDateGrade,
+						NumberOfSteps: 1,
+						Progress: map[string]rpi.Exec{
+							"1": {
+								Name:       actions.ExecuteBashCommand,
+								StartTime:  1,
+								EndTime:    2,
+								ExitStatus: 0,
+								Stdout:     "path-enable",
+							},
+						},
+						ExitStatus: 0,
+						StartTime:  2,
+						EndTime:    uint64(time.Now().Unix()),
+					}, nil
+				},
+			},
+			wantedData: rpi.Action{
+				Name:          actions.UpDateGrade,
+				NumberOfSteps: 1,
+				Progress: map[string]rpi.Exec{
+					"1": {
+						Name:       actions.ExecuteBashCommand,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					},
+				},
+				ExitStatus: 0,
+				StartTime:  2,
+				EndTime:    uint64(time.Now().Unix()),
+			},
+			wantedErr: nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := configure.New(tc.consys, tc.actions, tc.infos)
+			camera, err := s.ExecuteUPDG()
+			assert.Equal(t, tc.wantedData, camera)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}

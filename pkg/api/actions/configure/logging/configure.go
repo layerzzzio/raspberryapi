@@ -268,3 +268,54 @@ func (ls *LogService) ExecuteRG(ctx echo.Context, action string) (resp rpi.Actio
 	}(time.Now())
 	return ls.Service.ExecuteRG(action)
 }
+
+// ExecuteUPD is the logging function attached to the execute update service and responsible for logging it out.
+func (ls *LogService) ExecuteUPD(ctx echo.Context) (resp rpi.Action, err error) {
+	defer func(begin time.Time) {
+		ls.logger.Log(
+			ctx,
+			name,
+			"request: execute %v update",
+			err,
+			map[string]interface{}{
+				"resp": resp,
+				"took": time.Since(begin),
+			},
+		)
+	}(time.Now())
+	return ls.Service.ExecuteUPD()
+}
+
+// ExecuteUPG is the logging function attached to the execute upgrade service and responsible for logging it out.
+func (ls *LogService) ExecuteUPG(ctx echo.Context) (resp rpi.Action, err error) {
+	defer func(begin time.Time) {
+		ls.logger.Log(
+			ctx,
+			name,
+			"request: execute %v upgrade",
+			err,
+			map[string]interface{}{
+				"resp": resp,
+				"took": time.Since(begin),
+			},
+		)
+	}(time.Now())
+	return ls.Service.ExecuteUPG()
+}
+
+// ExecuteUPDG is the logging function attached to the execute update & upgrade service and responsible for logging it out.
+func (ls *LogService) ExecuteUPDG(ctx echo.Context) (resp rpi.Action, err error) {
+	defer func(begin time.Time) {
+		ls.logger.Log(
+			ctx,
+			name,
+			"request: execute %v update & upgrade",
+			err,
+			map[string]interface{}{
+				"resp": resp,
+				"took": time.Since(begin),
+			},
+		)
+	}(time.Now())
+	return ls.Service.ExecuteUPDG()
+}

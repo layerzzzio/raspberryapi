@@ -676,3 +676,71 @@ func (con *Configure) ExecuteRG(action string) (rpi.Action, error) {
 
 	return con.consys.ExecuteRG(plan)
 }
+
+// ExecuteUPD update the system
+func (con *Configure) ExecuteUPD() (rpi.Action, error) {
+	plan := map[int](map[int]actions.Func){
+		1: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: "apt-get update -y",
+					},
+				},
+			},
+		},
+	}
+
+	return con.consys.ExecuteUPD(plan)
+}
+
+// ExecuteUPG upgrade the system
+func (con *Configure) ExecuteUPG() (rpi.Action, error) {
+	plan := map[int](map[int]actions.Func){
+		1: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: "apt-get upgrade -y",
+					},
+				},
+			},
+		},
+	}
+
+	return con.consys.ExecuteUPG(plan)
+}
+
+// ExecuteUPDG update & upgrade the system
+func (con *Configure) ExecuteUPDG() (rpi.Action, error) {
+	plan := map[int](map[int]actions.Func){
+		1: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: "apt-get update -y",
+					},
+				},
+			},
+		},
+		2: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: "apt-get upgrade -y",
+					},
+				},
+			},
+		},
+	}
+
+	return con.consys.ExecuteUPDG(plan)
+}

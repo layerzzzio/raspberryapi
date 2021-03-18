@@ -7,23 +7,26 @@ import (
 
 // Action mock
 type Action struct {
-	ExecuteDFFn  func(map[int](map[int]actions.Func)) (rpi.Action, error)
-	ExecuteSUSFn func(map[int](map[int]actions.Func)) (rpi.Action, error)
-	ExecuteKPFn  func(map[int](map[int]actions.Func)) (rpi.Action, error)
-	ExecuteCHFn  func(map[int](map[int]actions.Func)) (rpi.Action, error)
-	ExecuteCPFn  func(map[int](map[int]actions.Func)) (rpi.Action, error)
-	ExecuteWNBFn func(map[int](map[int]actions.Func)) (rpi.Action, error)
-	ExecuteOVFn  func(map[int](map[int]actions.Func)) (rpi.Action, error)
-	ExecuteBLFn  func(map[int](map[int]actions.Func)) (rpi.Action, error)
-	ExecuteAUSFn func(map[int](map[int]actions.Func)) (rpi.Action, error)
-	ExecuteDUSFn func(map[int](map[int]actions.Func)) (rpi.Action, error)
-	ExecuteCAFn  func(map[int](map[int]actions.Func)) (rpi.Action, error)
-	ExecuteSSHFn func(map[int](map[int]actions.Func)) (rpi.Action, error)
-	ExecuteVNCFn func(map[int](map[int]actions.Func)) (rpi.Action, error)
-	ExecuteSPIFn func(map[int](map[int]actions.Func)) (rpi.Action, error)
-	ExecuteI2CFn func(map[int](map[int]actions.Func)) (rpi.Action, error)
-	ExecuteONWFn func(map[int](map[int]actions.Func)) (rpi.Action, error)
-	ExecuteRGFn  func(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteDFFn   func(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteSUSFn  func(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteKPFn   func(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteCHFn   func(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteCPFn   func(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteWNBFn  func(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteOVFn   func(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteBLFn   func(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteAUSFn  func(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteDUSFn  func(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteCAFn   func(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteSSHFn  func(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteVNCFn  func(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteSPIFn  func(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteI2CFn  func(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteONWFn  func(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteRGFn   func(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteUPDFn  func(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteUPGFn  func(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteUPDGFn func(map[int](map[int]actions.Func)) (rpi.Action, error)
 }
 
 // ExecuteDF mock
@@ -109,4 +112,19 @@ func (a *Action) ExecuteONW(plan map[int](map[int]actions.Func)) (rpi.Action, er
 // ExecuteRG mock
 func (a *Action) ExecuteRG(plan map[int](map[int]actions.Func)) (rpi.Action, error) {
 	return a.ExecuteRGFn(plan)
+}
+
+// ExecuteUPD mock
+func (a *Action) ExecuteUPD(plan map[int](map[int]actions.Func)) (rpi.Action, error) {
+	return a.ExecuteUPDFn(plan)
+}
+
+// ExecuteUPG mock
+func (a *Action) ExecuteUPG(plan map[int](map[int]actions.Func)) (rpi.Action, error) {
+	return a.ExecuteUPGFn(plan)
+}
+
+// ExecuteUPDG mock
+func (a *Action) ExecuteUPDG(plan map[int](map[int]actions.Func)) (rpi.Action, error) {
+	return a.ExecuteUPDGFn(plan)
 }

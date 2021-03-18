@@ -31,6 +31,9 @@ func NewHTTP(svc configure.Service, r *echo.Group) {
 	cr.POST("/i2c", h.i2c)
 	cr.POST("/onewire", h.onewire)
 	cr.POST("/rgpio", h.rgpio)
+	cr.POST("/update", h.update)
+	cr.POST("/upgrade", h.upgrade)
+	cr.POST("/updateupgrade", h.updateupgrade)
 }
 
 func ActionCheck(action string, regex string) error {
@@ -243,6 +246,33 @@ func (h *HTTP) rgpio(ctx echo.Context) error {
 	}
 
 	result, err := h.svc.ExecuteRG(action)
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(http.StatusOK, result)
+}
+
+func (h *HTTP) update(ctx echo.Context) error {
+	result, err := h.svc.ExecuteUPD()
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(http.StatusOK, result)
+}
+
+func (h *HTTP) upgrade(ctx echo.Context) error {
+	result, err := h.svc.ExecuteUPG()
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(http.StatusOK, result)
+}
+
+func (h *HTTP) updateupgrade(ctx echo.Context) error {
+	result, err := h.svc.ExecuteUPDG()
 	if err != nil {
 		return err
 	}

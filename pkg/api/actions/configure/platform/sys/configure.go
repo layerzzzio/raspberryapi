@@ -233,3 +233,51 @@ func (con Configure) ExecuteRG(plan map[int](map[int]actions.Func)) (rpi.Action,
 		EndTime:       uint64(time.Now().Unix()),
 	}, nil
 }
+
+// ExecuteUPD returns an action response after updating the system
+func (con Configure) ExecuteUPD(plan map[int](map[int]actions.Func)) (rpi.Action, error) {
+	actionStartTime := uint64(time.Now().Unix())
+	progressInit := actions.FlattenPlan(plan)
+	progress, exitStatus := actions.ExecutePlan(plan, progressInit)
+
+	return rpi.Action{
+		Name:          actions.Update,
+		NumberOfSteps: uint16(len(progressInit)),
+		Progress:      progress,
+		ExitStatus:    exitStatus,
+		StartTime:     actionStartTime,
+		EndTime:       uint64(time.Now().Unix()),
+	}, nil
+}
+
+// ExecuteUPG returns an action response after upgrading the system
+func (con Configure) ExecuteUPG(plan map[int](map[int]actions.Func)) (rpi.Action, error) {
+	actionStartTime := uint64(time.Now().Unix())
+	progressInit := actions.FlattenPlan(plan)
+	progress, exitStatus := actions.ExecutePlan(plan, progressInit)
+
+	return rpi.Action{
+		Name:          actions.Upgrade,
+		NumberOfSteps: uint16(len(progressInit)),
+		Progress:      progress,
+		ExitStatus:    exitStatus,
+		StartTime:     actionStartTime,
+		EndTime:       uint64(time.Now().Unix()),
+	}, nil
+}
+
+// ExecuteUPDG returns an action response after updating & upgrading the system
+func (con Configure) ExecuteUPDG(plan map[int](map[int]actions.Func)) (rpi.Action, error) {
+	actionStartTime := uint64(time.Now().Unix())
+	progressInit := actions.FlattenPlan(plan)
+	progress, exitStatus := actions.ExecutePlan(plan, progressInit)
+
+	return rpi.Action{
+		Name:          actions.UpDateGrade,
+		NumberOfSteps: uint16(len(progressInit)),
+		Progress:      progress,
+		ExitStatus:    exitStatus,
+		StartTime:     actionStartTime,
+		EndTime:       uint64(time.Now().Unix()),
+	}, nil
+}

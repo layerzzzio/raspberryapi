@@ -1313,3 +1313,222 @@ func TestExecuteRG(t *testing.T) {
 		})
 	}
 }
+
+func TestExecuteUPD(t *testing.T) {
+	var response rpi.Action
+
+	cases := []struct {
+		name         string
+		req          string
+		consys       *mocksys.Action
+		wantedStatus int
+		wantedResp   rpi.Action
+	}{
+
+		{
+			name: "error: ExecuteUPD result is nil",
+			consys: &mocksys.Action{
+				ExecuteUPDFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{}, errors.New("test error")
+				},
+			},
+			wantedStatus: http.StatusInternalServerError,
+		},
+		{
+			name:         "success",
+			wantedStatus: http.StatusOK,
+			consys: &mocksys.Action{
+				ExecuteUPDFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.Update,
+						NumberOfSteps: 1,
+						StartTime:     uint64(time.Now().Unix()),
+						EndTime:       uint64(time.Now().Unix()),
+						ExitStatus:    0,
+					}, nil
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			r := server.New()
+			rg := r.Group("")
+			a := actions.New()
+			i := infos.New()
+			s := configure.New(tc.consys, a, i)
+			transport.NewHTTP(s, rg)
+			ts := httptest.NewServer(r)
+
+			defer ts.Close()
+			path := ts.URL + "/configure/update" + tc.req
+
+			res, err := http.Post(path, "application/json", bytes.NewBufferString(tc.req))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			defer res.Body.Close()
+
+			body, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				panic(err)
+			}
+
+			if tc.wantedResp.Name != "" {
+				if err := json.Unmarshal(body, &response); err != nil {
+					t.Fatal(err)
+				}
+				assert.Equal(t, tc.wantedResp, response)
+			}
+			assert.Equal(t, tc.wantedStatus, res.StatusCode)
+		})
+	}
+}
+
+func TestExecuteUPG(t *testing.T) {
+	var response rpi.Action
+
+	cases := []struct {
+		name         string
+		req          string
+		consys       *mocksys.Action
+		wantedStatus int
+		wantedResp   rpi.Action
+	}{
+
+		{
+			name: "error: ExecuteUPG result is nil",
+			consys: &mocksys.Action{
+				ExecuteUPGFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{}, errors.New("test error")
+				},
+			},
+			wantedStatus: http.StatusInternalServerError,
+		},
+		{
+			name:         "success",
+			wantedStatus: http.StatusOK,
+			consys: &mocksys.Action{
+				ExecuteUPGFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.Upgrade,
+						NumberOfSteps: 1,
+						StartTime:     uint64(time.Now().Unix()),
+						EndTime:       uint64(time.Now().Unix()),
+						ExitStatus:    0,
+					}, nil
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			r := server.New()
+			rg := r.Group("")
+			a := actions.New()
+			i := infos.New()
+			s := configure.New(tc.consys, a, i)
+			transport.NewHTTP(s, rg)
+			ts := httptest.NewServer(r)
+
+			defer ts.Close()
+			path := ts.URL + "/configure/upgrade" + tc.req
+
+			res, err := http.Post(path, "application/json", bytes.NewBufferString(tc.req))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			defer res.Body.Close()
+
+			body, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				panic(err)
+			}
+
+			if tc.wantedResp.Name != "" {
+				if err := json.Unmarshal(body, &response); err != nil {
+					t.Fatal(err)
+				}
+				assert.Equal(t, tc.wantedResp, response)
+			}
+			assert.Equal(t, tc.wantedStatus, res.StatusCode)
+		})
+	}
+}
+
+func TestExecuteUPDG(t *testing.T) {
+	var response rpi.Action
+
+	cases := []struct {
+		name         string
+		req          string
+		consys       *mocksys.Action
+		wantedStatus int
+		wantedResp   rpi.Action
+	}{
+
+		{
+			name: "error: ExecuteUPDG result is nil",
+			consys: &mocksys.Action{
+				ExecuteUPDGFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{}, errors.New("test error")
+				},
+			},
+			wantedStatus: http.StatusInternalServerError,
+		},
+		{
+			name:         "success",
+			wantedStatus: http.StatusOK,
+			consys: &mocksys.Action{
+				ExecuteUPDGFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.UpDateGrade,
+						NumberOfSteps: 1,
+						StartTime:     uint64(time.Now().Unix()),
+						EndTime:       uint64(time.Now().Unix()),
+						ExitStatus:    0,
+					}, nil
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			r := server.New()
+			rg := r.Group("")
+			a := actions.New()
+			i := infos.New()
+			s := configure.New(tc.consys, a, i)
+			transport.NewHTTP(s, rg)
+			ts := httptest.NewServer(r)
+
+			defer ts.Close()
+			path := ts.URL + "/configure/updateupgrade" + tc.req
+
+			res, err := http.Post(path, "application/json", bytes.NewBufferString(tc.req))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			defer res.Body.Close()
+
+			body, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				panic(err)
+			}
+
+			if tc.wantedResp.Name != "" {
+				if err := json.Unmarshal(body, &response); err != nil {
+					t.Fatal(err)
+				}
+				assert.Equal(t, tc.wantedResp, response)
+			}
+			assert.Equal(t, tc.wantedStatus, res.StatusCode)
+		})
+	}
+}

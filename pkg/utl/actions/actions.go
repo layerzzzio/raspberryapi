@@ -169,6 +169,15 @@ const (
 
 	// RGPIO is the name of the remote gpio user method
 	RGPIO = "remote_gpio"
+
+	// Update is the name of the update method
+	Update = "update"
+
+	// Upgrade is the name of the upgrade method
+	Upgrade = "upgrade"
+
+	// UpDateGrade is the name of the update & upgrade method
+	UpDateGrade = "update_upgrade"
 )
 
 var (
