@@ -302,3 +302,32 @@ func (s Service) IsVariableSet(rawLines []string, key string, value string) bool
 
 	return isMatch
 }
+
+// ListWifiInterfaces returns a list of wifi interfaces
+func (s Service) ListWifiInterfaces(directoryPath string) []string {
+	var wifiInterfaces []string
+
+	errD := filepath.Walk(
+		directoryPath,
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+
+			if info.Name() == "wireless" {
+				wifiInterfaces = append(wifiInterfaces, info.Name())
+			}
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			return nil
+		})
+
+	if errD != nil {
+		log.Fatal(errD)
+	}
+
+	return wifiInterfaces
+}

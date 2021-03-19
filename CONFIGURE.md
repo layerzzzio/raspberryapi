@@ -20,6 +20,9 @@ Here are some of the sources for those configurations:
 | remote gpio | https://github.com/RPi-Distro/raspi-config |
 | add user | https://www.digitalocean.com/community/tutorials/how-to-add-and-delete-users-on-ubuntu-18-04 |
 | delete user | https://www.digitalocean.com/community/tutorials/how-to-add-and-delete-users-on-ubuntu-18-04 |
+| update | https://www.cyberciti.biz/faq/how-do-i-update-ubuntu-linux-softwares/ |
+| upgrade | https://www.cyberciti.biz/faq/how-do-i-update-ubuntu-linux-softwares/ |
+| update & upgrade | https://www.cyberciti.biz/faq/how-do-i-update-ubuntu-linux-softwares/ |
 
 ## Logical flow
 ---
@@ -103,3 +106,15 @@ Here I verified with the one option only.
 1. check isRemoteGpio: GET /rpinterfaces. 
 2. depending on the result: POST /configure/rgpio?action=**[enable/disable]**
 3. reboot
+
+### 15) Update
+1. check lastUpdate in Firestore: GET <TBD>.
+2. update depending on the result: POST /configure/update
+
+### 16) Upgrade
+1. check lastUpgrade in Firestore: GET <TBD>.
+2. upgrade depending on the result: POST /configure/upgrade
+
+### 16) Update & Upgrade
+1. check lastUpgrade in Firestore: GET <TBD>.
+2. update & upgrade depending on the result: POST /configure/updateupgrade

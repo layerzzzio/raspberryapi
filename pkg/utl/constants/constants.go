@@ -13,4 +13,7 @@ const (
 
 	// REMOTEGPIOSERVICE directory
 	RGPIOSERVICE = "/etc/systemd/system/pigpiod.service.d"
+
+	// NETWORKINTERFACES directory
+	NETWORKINTERFACES = "/sys/class/net"
 )

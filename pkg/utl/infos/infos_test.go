@@ -522,3 +522,54 @@ func TestIsVariableSet(t *testing.T) {
 		})
 	}
 }
+
+func TestListWifiInterfaces(t *testing.T) {
+	cases := []struct {
+		name          string
+		isCreateFile  bool
+		directoryPath string
+		wantedData    []string
+	}{
+		{
+			name:          "success: cannot find the wireless file",
+			isCreateFile:  true,
+			directoryPath: ".",
+			wantedData:    []string{"wireless"},
+		},
+		{
+			name:          "success: found wireless file",
+			isCreateFile:  false,
+			directoryPath: ".",
+			wantedData:    nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			i := infos.New()
+
+			if tc.isCreateFile {
+				if err := os.Mkdir("./directory", 0755); err != nil {
+					log.Print(err)
+				}
+
+				if err := actions.OverwriteToFile(actions.WriteToFileArg{
+					File:        "./directory/wireless",
+					Data:        []string{""},
+					Multiline:   true,
+					Permissions: 0755,
+				}); err != nil {
+					log.Fatal(err)
+				}
+			}
+
+			interfaces := i.ListWifiInterfaces(tc.directoryPath)
+
+			if tc.isCreateFile {
+				os.RemoveAll("./directory")
+			}
+
+			assert.Equal(t, tc.wantedData, interfaces)
+		})
+	}
+}
