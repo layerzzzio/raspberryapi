@@ -17,6 +17,7 @@ type Infos struct {
 	IsSPIFn                   func(string) bool
 	IsI2CFn                   func(string) bool
 	IsVariableSetFn           func([]string, string, string) bool
+	ListWifiInterfacesFn      func(string) []string
 }
 
 // ReadFile mock
@@ -69,7 +70,12 @@ func (i Infos) IsI2C(path string) bool {
 	return i.IsI2CFn(path)
 }
 
-// IsVariableSetFn mock
+// IsVariableSet mock
 func (i Infos) IsVariableSet(rawLines []string, key string, value string) bool {
 	return i.IsVariableSetFn(rawLines, key, value)
+}
+
+// ListWifiInterfaces mock
+func (i Infos) ListWifiInterfaces(directoryPath string) []string {
+	return i.ListWifiInterfacesFn(directoryPath)
 }

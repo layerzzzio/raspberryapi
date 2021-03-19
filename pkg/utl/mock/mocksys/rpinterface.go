@@ -6,7 +6,7 @@ import (
 
 // RpInterface mock
 type RpInterface struct {
-	ListFn func([]string, bool, bool, bool, bool, bool, bool, bool, bool, bool) (rpi.RpInterface, error)
+	ListFn func([]string, bool, bool, bool, bool, bool, bool, bool, bool, bool, []string) (rpi.RpInterface, error)
 }
 
 // List mock
@@ -21,6 +21,7 @@ func (in RpInterface) List(
 	isI2C bool,
 	isVariableSet bool,
 	isRemoteGpio bool,
+	wifiInterfaces []string,
 ) (rpi.RpInterface, error) {
 	return in.ListFn(
 		readLines,
@@ -33,5 +34,6 @@ func (in RpInterface) List(
 		isI2C,
 		isVariableSet,
 		isRemoteGpio,
+		wifiInterfaces,
 	)
 }

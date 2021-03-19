@@ -524,6 +524,8 @@ func TestIsVariableSet(t *testing.T) {
 }
 
 func TestListWifiInterfaces(t *testing.T) {
+	currentDir, _ := os.Getwd()
+
 	cases := []struct {
 		name          string
 		isCreateFile  bool
@@ -532,15 +534,15 @@ func TestListWifiInterfaces(t *testing.T) {
 	}{
 		{
 			name:          "success: cannot find the wireless file",
-			isCreateFile:  true,
-			directoryPath: ".",
-			wantedData:    []string{"wireless"},
+			isCreateFile:  false,
+			directoryPath: currentDir,
+			wantedData:    nil,
 		},
 		{
 			name:          "success: found wireless file",
-			isCreateFile:  false,
-			directoryPath: ".",
-			wantedData:    nil,
+			isCreateFile:  true,
+			directoryPath: currentDir,
+			wantedData:    []string{"directory"},
 		},
 	}
 
@@ -549,16 +551,11 @@ func TestListWifiInterfaces(t *testing.T) {
 			i := infos.New()
 
 			if tc.isCreateFile {
-				if err := os.Mkdir("./directory", 0755); err != nil {
+				if err := os.MkdirAll(currentDir+"/directory", 0755); err != nil {
 					log.Print(err)
 				}
 
-				if err := actions.OverwriteToFile(actions.WriteToFileArg{
-					File:        "./directory/wireless",
-					Data:        []string{""},
-					Multiline:   true,
-					Permissions: 0755,
-				}); err != nil {
+				if err := os.Mkdir(currentDir+"/directory/wireless", 0755); err != nil {
 					log.Fatal(err)
 				}
 			}
@@ -566,7 +563,7 @@ func TestListWifiInterfaces(t *testing.T) {
 			interfaces := i.ListWifiInterfaces(tc.directoryPath)
 
 			if tc.isCreateFile {
-				os.RemoveAll("./directory")
+				os.RemoveAll(currentDir + "/directory")
 			}
 
 			assert.Equal(t, tc.wantedData, interfaces)

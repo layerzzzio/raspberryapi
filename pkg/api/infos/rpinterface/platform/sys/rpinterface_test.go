@@ -23,6 +23,7 @@ func TestList(t *testing.T) {
 		isI2C               bool
 		isOneWire           bool
 		isRemoteGpio        bool
+		wifiInterfaces      []string
 		wantedData          rpi.RpInterface
 		wantedErr           error
 	}{
@@ -43,6 +44,7 @@ func TestList(t *testing.T) {
 			isI2C:               true,
 			isOneWire:           true,
 			isRemoteGpio:        true,
+			wifiInterfaces:      []string{"dummy"},
 			wantedData: rpi.RpInterface{
 				IsStartXElf:        false,
 				IsCamera:           true,
@@ -54,6 +56,7 @@ func TestList(t *testing.T) {
 				IsI2C:              true,
 				IsOneWire:          true,
 				IsRemoteGpio:       true,
+				IsWifiInterfaces:   true,
 			},
 			wantedErr: nil,
 		},
@@ -73,6 +76,7 @@ func TestList(t *testing.T) {
 				tc.isI2C,
 				tc.isOneWire,
 				tc.isRemoteGpio,
+				tc.wifiInterfaces,
 			)
 			assert.Equal(t, tc.wantedData, intf)
 			assert.Equal(t, tc.wantedErr, err)

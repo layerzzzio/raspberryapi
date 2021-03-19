@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -307,26 +308,17 @@ func (s Service) IsVariableSet(rawLines []string, key string, value string) bool
 func (s Service) ListWifiInterfaces(directoryPath string) []string {
 	var wifiInterfaces []string
 
-	errD := filepath.Walk(
-		directoryPath,
-		func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
+	files, err := ioutil.ReadDir(directoryPath)
+	if err != nil {
+		log.Fatal()
+	}
 
-			if info.Name() == "wireless" {
-				wifiInterfaces = append(wifiInterfaces, info.Name())
-			}
-
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			return nil
-		})
-
-	if errD != nil {
-		log.Fatal(errD)
+	for _, f := range files {
+		wirelessPath := fmt.Sprintf("%v/%v/wireless", directoryPath, f.Name())
+		fmt.Println(wirelessPath)
+		if s.IsFileExists(wirelessPath) {
+			wifiInterfaces = append(wifiInterfaces, f.Name())
+		}
 	}
 
 	return wifiInterfaces
