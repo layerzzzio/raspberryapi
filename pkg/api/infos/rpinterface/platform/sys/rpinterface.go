@@ -22,6 +22,7 @@ func (int RpInterface) List(
 	isOneWire bool,
 	isRemoteGpio bool,
 	wifiInterfaces []string,
+	zoneInfo map[string]string,
 ) (rpi.RpInterface, error) {
 	isCamera := false
 	// I use a regex here to cover the below cases:
@@ -53,5 +54,6 @@ func (int RpInterface) List(
 		IsOneWire:          isOneWire,
 		IsRemoteGpio:       isRemoteGpio,
 		IsWifiInterfaces:   isWifiInterfaces,
+		ZoneInfo:           zoneInfo,
 	}, nil
 }

@@ -120,6 +120,11 @@ func (s Service) GetConfigFiles() map[string]rpi.ConfigFileDetails {
 			IsCritical:  false,
 			Description: "is the daemon file for the remote GPIO service.",
 		},
+		"iso3166": {
+			Path:        "/usr/share/zoneinfo/iso3166.tab",
+			IsCritical:  false,
+			Description: "is a file containing the standards published by the International Organization for Standardization (ISO) that defines codes for the names of countries, dependent territories, special areas of geographical interest, and their principal subdivisions (e.g., provinces or states).",
+		},
 	}
 }
 
@@ -322,4 +327,23 @@ func (s Service) ListWifiInterfaces(directoryPath string) []string {
 	}
 
 	return wifiInterfaces
+}
+
+func (s Service) ZoneInfo(filePath string) map[string]string {
+	result := make(map[string]string)
+	zi, err := s.ReadFile(filePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, v := range zi {
+		if !strings.HasPrefix(v, "#") {
+			split := strings.SplitAfter(v, "\t")
+			countryCode := strings.ReplaceAll(split[0], "\t", "")
+			countryName := split[1]
+			result[countryCode] = countryName
+		}
+	}
+
+	return result
 }

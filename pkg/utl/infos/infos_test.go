@@ -151,6 +151,11 @@ func TestGetConfigFiles(t *testing.T) {
 					IsCritical:  false,
 					Description: "is the daemon file for the remote GPIO service.",
 				},
+				"iso3166": {
+					Path:        "/usr/share/zoneinfo/iso3166.tab",
+					IsCritical:  false,
+					Description: "is a file containing the standards published by the International Organization for Standardization (ISO) that defines codes for the names of countries, dependent territories, special areas of geographical interest, and their principal subdivisions (e.g., provinces or states).",
+				},
 			},
 		},
 	}
@@ -566,6 +571,33 @@ func TestListWifiInterfaces(t *testing.T) {
 				os.RemoveAll(currentDir + "/directory")
 			}
 
+			assert.Equal(t, tc.wantedData, interfaces)
+		})
+	}
+}
+
+func TestZoneInfo(t *testing.T) {
+	cases := []struct {
+		name       string
+		filePath   string
+		wantedData map[string]string
+	}{
+		{
+			name:     "success: found wireless file",
+			filePath: "./testdata/iso3166.tab",
+			wantedData: map[string]string{
+				"AD": "Andorra",
+				"AE": "United Arab Emirates",
+				"AF": "Afghanistan",
+				"AG": "Antigua & Barbuda",
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			i := infos.New()
+			interfaces := i.ZoneInfo(tc.filePath)
 			assert.Equal(t, tc.wantedData, interfaces)
 		})
 	}

@@ -18,6 +18,7 @@ type Infos struct {
 	IsI2CFn                   func(string) bool
 	IsVariableSetFn           func([]string, string, string) bool
 	ListWifiInterfacesFn      func(string) []string
+	ZoneInfoFn                func(string) map[string]string
 }
 
 // ReadFile mock
@@ -78,4 +79,9 @@ func (i Infos) IsVariableSet(rawLines []string, key string, value string) bool {
 // ListWifiInterfaces mock
 func (i Infos) ListWifiInterfaces(directoryPath string) []string {
 	return i.ListWifiInterfacesFn(directoryPath)
+}
+
+// ZoneInfo mock
+func (i Infos) ZoneInfo(filePath string) map[string]string {
+	return i.ZoneInfoFn(filePath)
 }
