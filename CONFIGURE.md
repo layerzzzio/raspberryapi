@@ -23,6 +23,7 @@ Here are some of the sources for those configurations:
 | update | https://www.cyberciti.biz/faq/how-do-i-update-ubuntu-linux-softwares/ |
 | upgrade | https://www.cyberciti.biz/faq/how-do-i-update-ubuntu-linux-softwares/ |
 | update & upgrade | https://www.cyberciti.biz/faq/how-do-i-update-ubuntu-linux-softwares/ |
+| wifi country | https://github.com/RPi-Distro/raspi-config |
 
 ## Logical flow
 ---
@@ -118,3 +119,8 @@ Here I verified with the one option only.
 ### 16) Update & Upgrade
 1. check lastUpgrade in Firestore: GET <TBD>.
 2. update & upgrade depending on the result: POST /configure/updateupgrade
+
+### 17) Wifi Country
+1. check isWifiInterfaces and isWpaSupCom for a given **[iface]**: GET /rpinterfaces.
+2. change wifi country for wireless network: POST /configure/wificountry?iface=**[iface]**&country=**[code]**
+3. reboot
