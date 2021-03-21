@@ -26,7 +26,7 @@ Here are some of the sources for those configurations:
 ## VPN
 ---
 ### 1) Open VPN
-1. 
+1. check if OpenVPN is already installed: GET /softwares
 
 ### 2) Nord VPN
 1. 
