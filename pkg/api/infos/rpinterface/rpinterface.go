@@ -31,6 +31,7 @@ func (in *RpInterface) List() (rpi.RpInterface, error) {
 	isOneWire := in.i.IsVariableSet(bootConfig, "dtoverlay", "w1-gpio")
 	wifiInterfaces := in.i.ListWifiInterfaces(constants.NETWORKINTERFACES)
 
+	isWpaSupCom := in.i.IsWpaSupCom()
 	zoneInfoFile := in.i.GetConfigFiles()["iso3166"].Path
 	zoneInfo := in.i.ZoneInfo(zoneInfoFile)
 
@@ -50,6 +51,7 @@ func (in *RpInterface) List() (rpi.RpInterface, error) {
 		isOneWire,
 		isRemoteGpio,
 		wifiInterfaces,
+		isWpaSupCom,
 		zoneInfo,
 	)
 }

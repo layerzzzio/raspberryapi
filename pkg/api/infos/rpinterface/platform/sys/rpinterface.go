@@ -22,6 +22,7 @@ func (int RpInterface) List(
 	isOneWire bool,
 	isRemoteGpio bool,
 	wifiInterfaces []string,
+	isWpaSupCom map[string]bool,
 	zoneInfo map[string]string,
 ) (rpi.RpInterface, error) {
 	isCamera := false
@@ -54,6 +55,7 @@ func (int RpInterface) List(
 		IsOneWire:          isOneWire,
 		IsRemoteGpio:       isRemoteGpio,
 		IsWifiInterfaces:   isWifiInterfaces,
+		IsWpaSupCom:        isWpaSupCom,
 		ZoneInfo:           zoneInfo,
 	}, nil
 }

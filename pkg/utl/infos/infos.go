@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/raspibuddy/rpi"
+	"github.com/raspibuddy/rpi/pkg/utl/constants"
 )
 
 // Service represents several system scripts.
@@ -327,6 +328,34 @@ func (s Service) ListWifiInterfaces(directoryPath string) []string {
 	}
 
 	return wifiInterfaces
+}
+
+func (s Service) IsWpaSupCom() map[string]bool {
+	ifaces := s.ListWifiInterfaces(constants.NETWORKINTERFACES)
+	result := map[string]bool{}
+
+	for _, i := range ifaces {
+		command := fmt.Sprintf(
+			"wpa_cli -i %v status > /dev/null 2>&1 ; echo $?",
+			i,
+		)
+		res, err := exec.Command("sh", "-c", command).Output()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		resNum, err := strconv.Atoi(strings.TrimSpace(string(res)))
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if resNum == 1 {
+			result[i] = false
+		} else {
+			result[i] = true
+		}
+	}
+	return result
 }
 
 func (s Service) ZoneInfo(filePath string) map[string]string {

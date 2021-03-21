@@ -2304,3 +2304,100 @@ func TestExecuteUPDG(t *testing.T) {
 		})
 	}
 }
+
+func TestExecuteWC(t *testing.T) {
+	cases := []struct {
+		name       string
+		iface      string
+		country    string
+		plan       map[int](map[int]actions.Func)
+		actions    *mock.Actions
+		infos      *mock.Infos
+		consys     *mocksys.Action
+		wantedData rpi.Action
+		wantedErr  error
+	}{
+		{
+			name:    "success",
+			iface:   "wlan0",
+			country: "france",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      actions.ExecuteBashCommand,
+						Reference: actions.ExecuteBashCommand,
+						Argument: []interface{}{
+							actions.EBC{Command: "command"},
+						},
+					},
+				},
+			},
+			infos: &mock.Infos{
+				GetConfigFilesFn: func() map[string]rpi.ConfigFileDetails {
+					return map[string]rpi.ConfigFileDetails{
+						"iso3166": {
+							Path: "/dummy/path",
+						},
+					}
+				},
+			},
+			actions: &mock.Actions{
+				ExecuteBashCommandFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       actions.ExecuteBashCommand,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					}, nil
+				},
+			},
+			consys: &mocksys.Action{
+				ExecuteWCFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.WifiCountry,
+						NumberOfSteps: 1,
+						Progress: map[string]rpi.Exec{
+							"1": {
+								Name:       actions.ExecuteBashCommand,
+								StartTime:  1,
+								EndTime:    2,
+								ExitStatus: 0,
+								Stdout:     "password-username",
+							},
+						},
+						ExitStatus: 0,
+						StartTime:  2,
+						EndTime:    uint64(time.Now().Unix()),
+					}, nil
+				},
+			},
+			wantedData: rpi.Action{
+				Name:          actions.WifiCountry,
+				NumberOfSteps: 1,
+				Progress: map[string]rpi.Exec{
+					"1": {
+						Name:       actions.ExecuteBashCommand,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "password-username",
+					},
+				},
+				ExitStatus: 0,
+				StartTime:  2,
+				EndTime:    uint64(time.Now().Unix()),
+			},
+			wantedErr: nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := configure.New(tc.consys, tc.actions, tc.infos)
+			changePassword, err := s.ExecuteWC(tc.iface, tc.country)
+			assert.Equal(t, tc.wantedData, changePassword)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}

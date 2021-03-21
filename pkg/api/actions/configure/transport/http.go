@@ -34,6 +34,7 @@ func NewHTTP(svc configure.Service, r *echo.Group) {
 	cr.POST("/update", h.update)
 	cr.POST("/upgrade", h.upgrade)
 	cr.POST("/updateupgrade", h.updateupgrade)
+	cr.POST("/wificountry", h.wificountry)
 }
 
 func ActionCheck(action string, regex string) error {
@@ -273,6 +274,25 @@ func (h *HTTP) upgrade(ctx echo.Context) error {
 
 func (h *HTTP) updateupgrade(ctx echo.Context) error {
 	result, err := h.svc.ExecuteUPDG()
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(http.StatusOK, result)
+}
+
+func (h *HTTP) wificountry(ctx echo.Context) error {
+	iface := ctx.QueryParam("iface")
+	if iface == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - iface is null")
+	}
+
+	country := ctx.QueryParam("country")
+	if country == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - country is null")
+	}
+
+	result, err := h.svc.ExecuteWC(iface, country)
 	if err != nil {
 		return err
 	}

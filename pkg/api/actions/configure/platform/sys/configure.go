@@ -281,3 +281,19 @@ func (con Configure) ExecuteUPDG(plan map[int](map[int]actions.Func)) (rpi.Actio
 		EndTime:       uint64(time.Now().Unix()),
 	}, nil
 }
+
+// ExecuteWC returns an action response after changing system the wifi country
+func (con Configure) ExecuteWC(plan map[int](map[int]actions.Func)) (rpi.Action, error) {
+	actionStartTime := uint64(time.Now().Unix())
+	progressInit := actions.FlattenPlan(plan)
+	progress, exitStatus := actions.ExecutePlan(plan, progressInit)
+
+	return rpi.Action{
+		Name:          actions.WifiCountry,
+		NumberOfSteps: uint16(len(progressInit)),
+		Progress:      progress,
+		ExitStatus:    exitStatus,
+		StartTime:     actionStartTime,
+		EndTime:       uint64(time.Now().Unix()),
+	}, nil
+}

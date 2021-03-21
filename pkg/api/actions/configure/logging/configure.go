@@ -319,3 +319,20 @@ func (ls *LogService) ExecuteUPDG(ctx echo.Context) (resp rpi.Action, err error)
 	}(time.Now())
 	return ls.Service.ExecuteUPDG()
 }
+
+// ExecuteWC is the logging function attached to the execute wifi country service and responsible for logging it out.
+func (ls *LogService) ExecuteWC(ctx echo.Context, iface string, country string) (resp rpi.Action, err error) {
+	defer func(begin time.Time) {
+		ls.logger.Log(
+			ctx,
+			name,
+			"request: execute %v wifi country",
+			err,
+			map[string]interface{}{
+				"resp": resp,
+				"took": time.Since(begin),
+			},
+		)
+	}(time.Now())
+	return ls.Service.ExecuteWC(iface, country)
+}

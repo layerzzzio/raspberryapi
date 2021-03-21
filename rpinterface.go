@@ -13,5 +13,6 @@ type RpInterface struct {
 	IsOneWire          bool              `json:"isOneWire"`
 	IsRemoteGpio       bool              `json:"isRemoteGpio"`
 	IsWifiInterfaces   bool              `json:"isWifiInterfaces"`
+	IsWpaSupCom        map[string]bool   `json:"isWpaSupCom"`
 	ZoneInfo           map[string]string `json:"zoneInfo"`
 }

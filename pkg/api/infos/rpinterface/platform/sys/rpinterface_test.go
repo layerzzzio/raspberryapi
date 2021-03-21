@@ -24,6 +24,7 @@ func TestList(t *testing.T) {
 		isOneWire           bool
 		isRemoteGpio        bool
 		wifiInterfaces      []string
+		isWpaSupCom         map[string]bool
 		zoneInfo            map[string]string
 		wantedData          rpi.RpInterface
 		wantedErr           error
@@ -46,6 +47,7 @@ func TestList(t *testing.T) {
 			isOneWire:           true,
 			isRemoteGpio:        true,
 			wifiInterfaces:      []string{"dummy"},
+			isWpaSupCom:         map[string]bool{"wlan0": true},
 			zoneInfo:            map[string]string{"FR": "France"},
 			wantedData: rpi.RpInterface{
 				IsStartXElf:        false,
@@ -59,6 +61,7 @@ func TestList(t *testing.T) {
 				IsOneWire:          true,
 				IsRemoteGpio:       true,
 				IsWifiInterfaces:   true,
+				IsWpaSupCom:        map[string]bool{"wlan0": true},
 				ZoneInfo:           map[string]string{"FR": "France"},
 			},
 			wantedErr: nil,
@@ -80,6 +83,7 @@ func TestList(t *testing.T) {
 				tc.isOneWire,
 				tc.isRemoteGpio,
 				tc.wifiInterfaces,
+				tc.isWpaSupCom,
 				tc.zoneInfo,
 			)
 			assert.Equal(t, tc.wantedData, intf)

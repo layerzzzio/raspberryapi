@@ -808,3 +808,50 @@ func TestExecuteUPDG(t *testing.T) {
 		})
 	}
 }
+
+func TestExecuteWC(t *testing.T) {
+	cases := []struct {
+		name                  string
+		plan                  map[int](map[int]actions.Func)
+		wantedDataName        string
+		wantedDataNumSteps    uint16
+		wantedDataStdOutStep1 string
+		wantedDataExitStatus  uint8
+		wantedErr             error
+	}{
+		{
+			name: "success",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      actions.WifiCountry,
+						Reference: test_utl.FuncA,
+						Argument: []interface{}{
+							test_utl.ArgFuncA{
+								Arg0: "string0",
+								Arg1: "string1",
+							},
+						},
+					},
+				},
+			},
+			wantedDataName:        "wifi_country",
+			wantedDataNumSteps:    1,
+			wantedDataStdOutStep1: "string0-string1",
+			wantedDataExitStatus:  0,
+			wantedErr:             nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := configure.CONSYS(Configure{})
+			overscan, err := s.ExecuteWC(tc.plan)
+			assert.Equal(t, tc.wantedDataName, overscan.Name)
+			assert.Equal(t, tc.wantedDataNumSteps, overscan.NumberOfSteps)
+			assert.Equal(t, tc.wantedDataStdOutStep1, overscan.Progress["1<|>1"].Stdout)
+			assert.Equal(t, tc.wantedDataExitStatus, overscan.ExitStatus)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}

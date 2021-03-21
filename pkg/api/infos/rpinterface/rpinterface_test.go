@@ -59,12 +59,29 @@ func TestList(t *testing.T) {
 				ListWifiInterfacesFn: func(string) []string {
 					return []string{}
 				},
+				IsWpaSupComFn: func() map[string]bool {
+					return map[string]bool{}
+				},
 				ZoneInfoFn: func(string) map[string]string {
 					return map[string]string{}
 				},
 			},
 			intsys: mocksys.RpInterface{
-				ListFn: func([]string, bool, bool, bool, bool, bool, bool, bool, bool, bool, []string, map[string]string) (rpi.RpInterface, error) {
+				ListFn: func(
+					[]string,
+					bool,
+					bool,
+					bool,
+					bool,
+					bool,
+					bool,
+					bool,
+					bool,
+					bool,
+					[]string,
+					map[string]bool,
+					map[string]string,
+				) (rpi.RpInterface, error) {
 					return rpi.RpInterface{}, nil
 				},
 			},
@@ -109,12 +126,29 @@ func TestList(t *testing.T) {
 				ListWifiInterfacesFn: func(string) []string {
 					return []string{}
 				},
+				IsWpaSupComFn: func() map[string]bool {
+					return map[string]bool{}
+				},
 				ZoneInfoFn: func(string) map[string]string {
 					return map[string]string{"FR": "France"}
 				},
 			},
 			intsys: mocksys.RpInterface{
-				ListFn: func([]string, bool, bool, bool, bool, bool, bool, bool, bool, bool, []string, map[string]string) (rpi.RpInterface, error) {
+				ListFn: func(
+					[]string,
+					bool,
+					bool,
+					bool,
+					bool,
+					bool,
+					bool,
+					bool,
+					bool,
+					bool,
+					[]string,
+					map[string]bool,
+					map[string]string,
+				) (rpi.RpInterface, error) {
 					return rpi.RpInterface{
 						IsStartXElf:        true,
 						IsCamera:           false,
@@ -127,6 +161,7 @@ func TestList(t *testing.T) {
 						IsOneWire:          true,
 						IsRemoteGpio:       true,
 						IsWifiInterfaces:   false,
+						IsWpaSupCom:        map[string]bool{"wlan0": true},
 						ZoneInfo:           map[string]string{"FR": "France"},
 					}, nil
 				},
@@ -143,6 +178,7 @@ func TestList(t *testing.T) {
 				IsOneWire:          true,
 				IsRemoteGpio:       true,
 				IsWifiInterfaces:   false,
+				IsWpaSupCom:        map[string]bool{"wlan0": true},
 				ZoneInfo:           map[string]string{"FR": "France"},
 			},
 			wantedErr: nil,

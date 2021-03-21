@@ -24,6 +24,7 @@ type Service interface {
 	ExecuteUPD() (rpi.Action, error)
 	ExecuteUPG() (rpi.Action, error)
 	ExecuteUPDG() (rpi.Action, error)
+	ExecuteWC(string, string) (rpi.Action, error)
 }
 
 // Configure represents a Configure application service.
@@ -52,6 +53,7 @@ type CONSYS interface {
 	ExecuteUPD(map[int](map[int]actions.Func)) (rpi.Action, error)
 	ExecuteUPG(map[int](map[int]actions.Func)) (rpi.Action, error)
 	ExecuteUPDG(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteWC(map[int](map[int]actions.Func)) (rpi.Action, error)
 }
 
 // Actions represents the actions interface

@@ -178,6 +178,9 @@ const (
 
 	// UpDateGrade is the name of the update & upgrade method
 	UpDateGrade = "update_upgrade"
+
+	// WifiCountry is the name of the wifi country method
+	WifiCountry = "wifi_country"
 )
 
 var (

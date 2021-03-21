@@ -18,6 +18,7 @@ type Infos struct {
 	IsI2CFn                   func(string) bool
 	IsVariableSetFn           func([]string, string, string) bool
 	ListWifiInterfacesFn      func(string) []string
+	IsWpaSupComFn             func() map[string]bool
 	ZoneInfoFn                func(string) map[string]string
 }
 
@@ -79,6 +80,11 @@ func (i Infos) IsVariableSet(rawLines []string, key string, value string) bool {
 // ListWifiInterfaces mock
 func (i Infos) ListWifiInterfaces(directoryPath string) []string {
 	return i.ListWifiInterfacesFn(directoryPath)
+}
+
+// IsWpaSupCom mock
+func (i Infos) IsWpaSupCom() map[string]bool {
+	return i.IsWpaSupComFn()
 }
 
 // ZoneInfo mock
