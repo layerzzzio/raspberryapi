@@ -36,6 +36,7 @@ func TestList(t *testing.T) {
 				ListFn: func(
 					bool,
 					bool,
+					bool,
 				) (rpi.Software, error) {
 					return rpi.Software{}, errors.New("test error")
 				},
@@ -48,10 +49,12 @@ func TestList(t *testing.T) {
 				ListFn: func(
 					bool,
 					bool,
+					bool,
 				) (rpi.Software, error) {
 					return rpi.Software{
 						IsVNC:     true,
 						IsOpenVPN: true,
+						IsUnzip:   true,
 					}, nil
 				},
 			},
@@ -59,6 +62,7 @@ func TestList(t *testing.T) {
 			wantedResp: rpi.Software{
 				IsVNC:     true,
 				IsOpenVPN: true,
+				IsUnzip:   true,
 			},
 		},
 	}

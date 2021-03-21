@@ -15,6 +15,7 @@ func TestList(t *testing.T) {
 		name       string
 		isVNC      bool
 		isOpenVPN  bool
+		isUnzip    bool
 		wantedData rpi.Software
 		wantedErr  error
 	}{
@@ -22,9 +23,11 @@ func TestList(t *testing.T) {
 			name:      "success",
 			isVNC:     true,
 			isOpenVPN: true,
+			isUnzip:   true,
 			wantedData: rpi.Software{
 				IsVNC:     true,
 				IsOpenVPN: true,
+				IsUnzip:   true,
 			},
 			wantedErr: nil,
 		},
@@ -36,6 +39,7 @@ func TestList(t *testing.T) {
 			intf, err := s.List(
 				tc.isVNC,
 				tc.isOpenVPN,
+				tc.isUnzip,
 			)
 			assert.Equal(t, tc.wantedData, intf)
 			assert.Equal(t, tc.wantedErr, err)

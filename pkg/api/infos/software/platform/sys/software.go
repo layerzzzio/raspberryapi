@@ -11,9 +11,11 @@ type Software struct{}
 func (int Software) List(
 	isVNC bool,
 	isOpenVPN bool,
+	isUnzip bool,
 ) (rpi.Software, error) {
 	return rpi.Software{
 		IsVNC:     isVNC,
 		IsOpenVPN: isOpenVPN,
+		IsUnzip:   isUnzip,
 	}, nil
 }

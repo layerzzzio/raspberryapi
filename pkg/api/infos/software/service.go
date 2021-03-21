@@ -20,6 +20,7 @@ type SOFSYS interface {
 	List(
 		bool,
 		bool,
+		bool,
 	) (rpi.Software, error)
 }
 

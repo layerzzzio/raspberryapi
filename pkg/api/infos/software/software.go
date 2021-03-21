@@ -8,9 +8,11 @@ import (
 func (so *Software) List() (rpi.Software, error) {
 	isVNC := so.i.IsDPKGInstalled("realvnc-vnc-server")
 	isOpenVPN := so.i.IsDPKGInstalled("openvpn")
-	
+	isUnzip := so.i.IsDPKGInstalled("unzip")
+
 	return so.sofsys.List(
 		isVNC,
 		isOpenVPN,
+		isUnzip,
 	)
 }

@@ -4,4 +4,5 @@ package rpi
 type Software struct {
 	IsVNC     bool `json:"isVNC"`
 	IsOpenVPN bool `json:"isOpenVPN"`
+	IsUnzip   bool `json:"isUnzip"`
 }

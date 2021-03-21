@@ -9,6 +9,7 @@ type Software struct {
 	ListFn func(
 		bool,
 		bool,
+		bool,
 	) (rpi.Software, error)
 }
 
@@ -16,9 +17,11 @@ type Software struct {
 func (in Software) List(
 	isVNC bool,
 	isOpenVPN bool,
+	isUnzip bool,
 ) (rpi.Software, error) {
 	return in.ListFn(
 		isVNC,
 		isOpenVPN,
+		isUnzip,
 	)
 }

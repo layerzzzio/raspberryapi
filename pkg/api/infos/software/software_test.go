@@ -29,16 +29,19 @@ func TestList(t *testing.T) {
 				ListFn: func(
 					bool,
 					bool,
+					bool,
 				) (rpi.Software, error) {
 					return rpi.Software{
 						IsVNC:     false,
 						IsOpenVPN: false,
+						IsUnzip:   true,
 					}, nil
 				},
 			},
 			wantedData: rpi.Software{
 				IsVNC:     false,
 				IsOpenVPN: false,
+				IsUnzip:   true,
 			},
 			wantedErr: nil,
 		},
