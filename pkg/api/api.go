@@ -9,6 +9,10 @@ import (
 	adl "github.com/raspibuddy/rpi/pkg/api/actions/destroy/logging"
 	ads "github.com/raspibuddy/rpi/pkg/api/actions/destroy/platform/sys"
 	adt "github.com/raspibuddy/rpi/pkg/api/actions/destroy/transport"
+	"github.com/raspibuddy/rpi/pkg/api/actions/install"
+	ail "github.com/raspibuddy/rpi/pkg/api/actions/install/logging"
+	ais "github.com/raspibuddy/rpi/pkg/api/actions/install/platform/sys"
+	ait "github.com/raspibuddy/rpi/pkg/api/actions/install/transport"
 	"github.com/raspibuddy/rpi/pkg/api/infos/boot"
 	ibol "github.com/raspibuddy/rpi/pkg/api/infos/boot/logging"
 	ibos "github.com/raspibuddy/rpi/pkg/api/infos/boot/platform/sys"
@@ -105,6 +109,7 @@ func Start(cfg *config.Configuration) error {
 	// actions
 	adt.NewHTTP(adl.New(destroy.New(ads.Destroy{}, a), log).Service, v1)
 	act.NewHTTP(acl.New(configure.New(acs.Configure{}, a, i), log).Service, v1)
+	ait.NewHTTP(ail.New(install.New(ais.Install{}, a), log).Service, v1)
 
 	// infos
 	ihut.NewHTTP(ihul.New(humanuser.New(ihus.HumanUser{}, i), log).Service, v1)

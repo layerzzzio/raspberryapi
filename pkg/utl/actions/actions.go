@@ -181,6 +181,9 @@ const (
 
 	// WifiCountry is the name of the wifi country method
 	WifiCountry = "wifi_country"
+
+	// InstallAptGet is the name of the install with apt-get method
+	InstallAptGet = "install_apt_get"
 )
 
 var (

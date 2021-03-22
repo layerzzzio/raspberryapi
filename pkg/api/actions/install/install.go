@@ -16,7 +16,7 @@ func (ins *Install) ExecuteAG(action string, pkg string) (rpi.Action, error) {
 				Reference: ins.a.ExecuteBashCommand,
 				Argument: []interface{}{
 					actions.EBC{
-						Command: fmt.Sprintf("apt-get %v %v", pkg, action),
+						Command: fmt.Sprintf("apt-get %v -y %v", action, pkg),
 					},
 				},
 			},

@@ -26,7 +26,8 @@ Here are some of the sources for those configurations:
 ## VPN
 ---
 ### 1) Open VPN
-1. check if OpenVPN is already installed: GET /softwares
+1. check isOpenVPN & isUnzip: GET /softwares
+2. install package: POST /install/aptget?action=**[install/uninstall]**&pkg=openvpn
 
 ### 2) Nord VPN
 1. 
