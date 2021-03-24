@@ -16,18 +16,41 @@ func TestList(t *testing.T) {
 		isVNC      bool
 		isOpenVPN  bool
 		isUnzip    bool
+		nordVPN    software.NordVPN
 		wantedData rpi.Software
 		wantedErr  error
 	}{
 		{
-			name:      "success",
+			name:      "success: isNordVPN true",
 			isVNC:     true,
 			isOpenVPN: true,
 			isUnzip:   true,
+			nordVPN: software.NordVPN{
+				TCP: true,
+				UDP: true,
+			},
 			wantedData: rpi.Software{
 				IsVNC:     true,
 				IsOpenVPN: true,
 				IsUnzip:   true,
+				IsNordVpn: true,
+			},
+			wantedErr: nil,
+		},
+		{
+			name:      "success: isNordVPN false",
+			isVNC:     true,
+			isOpenVPN: true,
+			isUnzip:   true,
+			nordVPN: software.NordVPN{
+				TCP: true,
+				UDP: false,
+			},
+			wantedData: rpi.Software{
+				IsVNC:     true,
+				IsOpenVPN: true,
+				IsUnzip:   true,
+				IsNordVpn: false,
 			},
 			wantedErr: nil,
 		},
@@ -40,6 +63,7 @@ func TestList(t *testing.T) {
 				tc.isVNC,
 				tc.isOpenVPN,
 				tc.isUnzip,
+				tc.nordVPN,
 			)
 			assert.Equal(t, tc.wantedData, intf)
 			assert.Equal(t, tc.wantedErr, err)

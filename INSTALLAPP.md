@@ -26,11 +26,18 @@ Here are some of the sources for those configurations:
 ## VPN
 ---
 ### 1) Open VPN
+#### 1.A) Install
 1. check isOpenVPN & isUnzip: GET /softwares
 2. install package: POST /install/aptget?action=**[install/uninstall]**&pkg=openvpn
 
+
 ### 2) Nord VPN
-1. 
+#### 2.A) Install
+1. check isOpenVPN & isUnzip: GET /softwares
+2. install NordVPN: POST /install/nordvpn?action=**[install/uninstall]**
+#### 2.B) Connect/Disconnect NordVPN
+
+
 
 ### 3) Surfshark
 1. 

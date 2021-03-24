@@ -184,6 +184,9 @@ const (
 
 	// InstallAptGet is the name of the install with apt-get method
 	InstallAptGet = "install_apt_get"
+
+	// InstallNordVPN is the name of the install nordvpn method
+	InstallNordVPN = "install_nord_vpn"
 )
 
 var (

@@ -18,11 +18,12 @@ func NewHTTP(svc install.Service, r *echo.Group) {
 	h := HTTP{svc}
 	cr := r.Group("/install")
 	cr.POST("/aptget", h.aptget)
+	cr.POST("/nordvpn", h.nordvpn)
 }
 
 func (h *HTTP) aptget(ctx echo.Context) error {
 	action := ctx.QueryParam("action")
-	if err := transport.ActionCheck(action, `install|uninstall`); err != nil {
+	if err := transport.ActionCheck(action, `install|purge`); err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, "Not found - bad action type")
 	}
 
@@ -32,6 +33,19 @@ func (h *HTTP) aptget(ctx echo.Context) error {
 	}
 
 	result, err := h.svc.ExecuteAG(action, pkg)
+	if err != nil {
+		return err
+	}
+	return ctx.JSON(http.StatusOK, result)
+}
+
+func (h *HTTP) nordvpn(ctx echo.Context) error {
+	action := ctx.QueryParam("action")
+	if err := transport.ActionCheck(action, `install|purge`); err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - bad action type")
+	}
+
+	result, err := h.svc.ExecuteNV(action)
 	if err != nil {
 		return err
 	}

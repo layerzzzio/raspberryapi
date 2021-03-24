@@ -24,17 +24,22 @@ func TestList(t *testing.T) {
 				IsDPKGInstalledFn: func(string) bool {
 					return false
 				},
+				IsFileExistsFn: func(string) bool {
+					return false
+				},
 			},
 			sofsys: mocksys.Software{
 				ListFn: func(
 					bool,
 					bool,
 					bool,
+					software.NordVPN,
 				) (rpi.Software, error) {
 					return rpi.Software{
 						IsVNC:     false,
 						IsOpenVPN: false,
 						IsUnzip:   true,
+						IsNordVpn: true,
 					}, nil
 				},
 			},
@@ -42,6 +47,7 @@ func TestList(t *testing.T) {
 				IsVNC:     false,
 				IsOpenVPN: false,
 				IsUnzip:   true,
+				IsNordVpn: true,
 			},
 			wantedErr: nil,
 		},

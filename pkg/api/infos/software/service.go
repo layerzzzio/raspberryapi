@@ -21,12 +21,14 @@ type SOFSYS interface {
 		bool,
 		bool,
 		bool,
+		NordVPN,
 	) (rpi.Software, error)
 }
 
 // Infos represents the infos interface
 type Infos interface {
 	IsDPKGInstalled(string) bool
+	IsFileExists(string) bool
 }
 
 // New creates a Software application service instance.
