@@ -602,3 +602,27 @@ func TestZoneInfo(t *testing.T) {
 		})
 	}
 }
+
+func TestListNameFilesInDirectory(t *testing.T) {
+	cases := []struct {
+		name          string
+		directoryPath string
+		wantedData    []string
+	}{
+		{
+			name:          "success: found wireless file",
+			directoryPath: "./testdata",
+			wantedData: []string{
+				"iso3166.tab", "passwd",
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			i := infos.New()
+			interfaces := i.ListNameFilesInDirectory(tc.directoryPath)
+			assert.Equal(t, tc.wantedData, interfaces)
+		})
+	}
+}

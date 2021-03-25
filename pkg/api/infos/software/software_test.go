@@ -39,7 +39,7 @@ func TestList(t *testing.T) {
 						IsVNC:     false,
 						IsOpenVPN: false,
 						IsUnzip:   true,
-						IsNordVpn: true,
+						IsNordVPN: true,
 					}, nil
 				},
 			},
@@ -47,7 +47,7 @@ func TestList(t *testing.T) {
 				IsVNC:     false,
 				IsOpenVPN: false,
 				IsUnzip:   true,
-				IsNordVpn: true,
+				IsNordVPN: true,
 			},
 			wantedErr: nil,
 		},

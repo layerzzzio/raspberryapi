@@ -16,7 +16,7 @@ func (int Software) List(
 	nordVPN software.NordVPN,
 ) (rpi.Software, error) {
 	isNordVPN := false
-	if isOpenVPN && nordVPN.TCP && nordVPN.UDP {
+	if isOpenVPN && nordVPN.IsTCP && nordVPN.IsUDP {
 		isNordVPN = true
 	}
 
@@ -24,6 +24,6 @@ func (int Software) List(
 		IsVNC:     isVNC,
 		IsOpenVPN: isOpenVPN,
 		IsUnzip:   isUnzip,
-		IsNordVpn: isNordVPN,
+		IsNordVPN: isNordVPN,
 	}, nil
 }

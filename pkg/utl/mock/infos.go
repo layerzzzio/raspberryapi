@@ -6,20 +6,21 @@ import (
 
 // Infos mock
 type Infos struct {
-	ReadFileFn                func(path string) ([]string, error)
-	IsFileExistsFn            func(path string) bool
-	GetConfigFilesFn          func() map[string]rpi.ConfigFileDetails
-	GetEnrichedConfigFilesFn  func(configFiles map[string]rpi.ConfigFileDetails) map[string]rpi.ConfigFileDetails
-	IsXscreenSaverInstalledFn func() (bool, error)
-	IsQuietGrepFn             func(string, string, string) bool
-	IsSSHKeyGeneratingFn      func(string) bool
-	IsDPKGInstalledFn         func(string) bool
-	IsSPIFn                   func(string) bool
-	IsI2CFn                   func(string) bool
-	IsVariableSetFn           func([]string, string, string) bool
-	ListWifiInterfacesFn      func(string) []string
-	IsWpaSupComFn             func() map[string]bool
-	ZoneInfoFn                func(string) map[string]string
+	ReadFileFn                 func(path string) ([]string, error)
+	IsFileExistsFn             func(path string) bool
+	GetConfigFilesFn           func() map[string]rpi.ConfigFileDetails
+	GetEnrichedConfigFilesFn   func(configFiles map[string]rpi.ConfigFileDetails) map[string]rpi.ConfigFileDetails
+	IsXscreenSaverInstalledFn  func() (bool, error)
+	IsQuietGrepFn              func(string, string, string) bool
+	IsSSHKeyGeneratingFn       func(string) bool
+	IsDPKGInstalledFn          func(string) bool
+	IsSPIFn                    func(string) bool
+	IsI2CFn                    func(string) bool
+	IsVariableSetFn            func([]string, string, string) bool
+	ListWifiInterfacesFn       func(string) []string
+	IsWpaSupComFn              func() map[string]bool
+	ZoneInfoFn                 func(string) map[string]string
+	ListNameFilesInDirectoryFn func(string) []string
 }
 
 // ReadFile mock
@@ -90,4 +91,9 @@ func (i Infos) IsWpaSupCom() map[string]bool {
 // ZoneInfo mock
 func (i Infos) ZoneInfo(filePath string) map[string]string {
 	return i.ZoneInfoFn(filePath)
+}
+
+// ListNameFilesInDirectory mock
+func (i Infos) ListNameFilesInDirectory(directoryPath string) []string {
+	return i.ListNameFilesInDirectoryFn(directoryPath)
 }

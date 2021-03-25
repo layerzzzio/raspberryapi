@@ -10,9 +10,11 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
+	"github.com/karrick/godirwalk"
 	"github.com/raspibuddy/rpi"
 	"github.com/raspibuddy/rpi/pkg/utl/constants"
 )
@@ -373,6 +375,41 @@ func (s Service) ZoneInfo(filePath string) map[string]string {
 			result[countryCode] = countryName
 		}
 	}
+
+	return result
+}
+
+// ListNameFilesInDirectory lists all files in directory
+func (s Service) ListNameFilesInDirectory(directoryPath string) []string {
+	var result []string
+
+	// files, err := ioutil.ReadDir(directoryPath)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// for _, file := range files {
+	// 	if !file.IsDir() {
+	// 		result = append(result, file.Name())
+	// 	}
+	// }
+
+	err := godirwalk.Walk(directoryPath, &godirwalk.Options{
+		Callback: func(osPathname string, de *godirwalk.Dirent) error {
+			if !de.IsDir() {
+				result = append(result, de.Name())
+			}
+			return nil
+		},
+		// (optional) set true for faster yet non-deterministic enumeration (see godoc)
+		Unsorted: true,
+	})
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	sort.Strings(result)
 
 	return result
 }

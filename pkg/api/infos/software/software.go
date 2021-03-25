@@ -5,8 +5,8 @@ import (
 )
 
 type NordVPN struct {
-	TCP bool
-	UDP bool
+	IsTCP bool
+	IsUDP bool
 }
 
 // List populates and returns an array of Software model.
@@ -15,9 +15,12 @@ func (so *Software) List() (rpi.Software, error) {
 	isOpenVPN := so.i.IsDPKGInstalled("openvpn")
 	isUnzip := so.i.IsDPKGInstalled("unzip")
 
+	tcp := "/etc/openvpn/nordvpn/ovpn_tcp"
+	udp := "/etc/openvpn/nordvpn/ovpn_udp"
+
 	nordVPN := NordVPN{
-		TCP: so.i.IsFileExists("/etc/openvpn/nordvpn/ovpn_tcp"),
-		UDP: so.i.IsFileExists("/etc/openvpn/nordvpn/ovpn_udp"),
+		IsTCP: so.i.IsFileExists(tcp),
+		IsUDP: so.i.IsFileExists(udp),
 	}
 
 	return so.sofsys.List(
