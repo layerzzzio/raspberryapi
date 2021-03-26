@@ -14,8 +14,8 @@ func (int SoftwareConfig) List(
 ) (rpi.SoftwareConfig, error) {
 	return rpi.SoftwareConfig{
 		NordVPN: rpi.NordVPN{
-			TCPFiles: nordVPN.TCPFiles,
-			UDPFiles: nordVPN.UDPFiles,
+			TCPCountries: nordVPN.TCPCountries,
+			UDPCountries: nordVPN.UDPCountries,
 		},
 	}, nil
 }

@@ -383,17 +383,6 @@ func (s Service) ZoneInfo(filePath string) map[string]string {
 func (s Service) ListNameFilesInDirectory(directoryPath string) []string {
 	var result []string
 
-	// files, err := ioutil.ReadDir(directoryPath)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// for _, file := range files {
-	// 	if !file.IsDir() {
-	// 		result = append(result, file.Name())
-	// 	}
-	// }
-
 	err := godirwalk.Walk(directoryPath, &godirwalk.Options{
 		Callback: func(osPathname string, de *godirwalk.Dirent) error {
 			if !de.IsDir() {
@@ -412,4 +401,44 @@ func (s Service) ListNameFilesInDirectory(directoryPath string) []string {
 	sort.Strings(result)
 
 	return result
+}
+
+// VPNCountries lists countries available for vpn
+func (s Service) VPNCountries(directoryPath string) []string {
+	var result []string
+	var truncFileName []string
+
+	err := godirwalk.Walk(directoryPath, &godirwalk.Options{
+		Callback: func(osPathname string, de *godirwalk.Dirent) error {
+
+			if !de.IsDir() && !StringItemExists(truncFileName, de.Name()[:2]) {
+				country := constants.COUNTRYCODENAME[strings.ToUpper(de.Name()[:2])]
+				if country != "" {
+					result = append(result, country)
+				}
+				truncFileName = append(truncFileName, de.Name()[:2])
+			}
+			return nil
+		},
+		// (optional) set true for faster yet non-deterministic enumeration (see godoc)
+		Unsorted: true,
+	})
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	sort.Strings(result)
+
+	return result
+}
+
+func StringItemExists(array []string, item string) bool {
+	for i := 0; i < len(array); i++ {
+		if array[i] == item {
+			return true
+		}
+	}
+
+	return false
 }

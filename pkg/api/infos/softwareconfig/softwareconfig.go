@@ -5,8 +5,8 @@ import (
 )
 
 type NordVPN struct {
-	TCPFiles []string
-	UDPFiles []string
+	TCPCountries []string
+	UDPCountries []string
 }
 
 // List populates and returns an array of SoftwareConfig model.
@@ -14,8 +14,8 @@ func (soc *SoftwareConfig) List() (rpi.SoftwareConfig, error) {
 	tcp := "/etc/openvpn/nordvpn/ovpn_tcp"
 	udp := "/etc/openvpn/nordvpn/ovpn_udp"
 	nordVPN := NordVPN{
-		TCPFiles: soc.i.ListNameFilesInDirectory(tcp),
-		UDPFiles: soc.i.ListNameFilesInDirectory(udp),
+		TCPCountries: soc.i.VPNCountries(tcp),
+		UDPCountries: soc.i.VPNCountries(udp),
 	}
 
 	return soc.socfsys.List(

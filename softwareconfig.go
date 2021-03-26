@@ -6,6 +6,6 @@ type SoftwareConfig struct {
 }
 
 type NordVPN struct {
-	TCPFiles []string `json:"tcpFiles"`
-	UDPFiles []string `json:"udpFiles"`
+	TCPCountries []string `json:"tcpCountries "`
+	UDPCountries []string `json:"udpCountries "`
 }

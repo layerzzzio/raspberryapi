@@ -20,13 +20,13 @@ func TestList(t *testing.T) {
 		{
 			name: "success: isNordVPN true",
 			nordVPN: softwareconfig.NordVPN{
-				TCPFiles: []string{"file1"},
-				UDPFiles: []string{"file2"},
+				TCPCountries: []string{"file1"},
+				UDPCountries: []string{"file2"},
 			},
 			wantedData: rpi.SoftwareConfig{
 				NordVPN: rpi.NordVPN{
-					TCPFiles: []string{"file1"},
-					UDPFiles: []string{"file2"},
+					TCPCountries: []string{"file1"},
+					UDPCountries: []string{"file2"},
 				},
 			},
 			wantedErr: nil,
@@ -34,13 +34,13 @@ func TestList(t *testing.T) {
 		{
 			name: "success: isNordVPN false",
 			nordVPN: softwareconfig.NordVPN{
-				TCPFiles: []string{"file1"},
-				UDPFiles: []string{"file2"},
+				TCPCountries: []string{"file1"},
+				UDPCountries: []string{"file2"},
 			},
 			wantedData: rpi.SoftwareConfig{
 				NordVPN: rpi.NordVPN{
-					TCPFiles: []string{"file1"},
-					UDPFiles: []string{"file2"},
+					TCPCountries: []string{"file1"},
+					UDPCountries: []string{"file2"},
 				},
 			},
 			wantedErr: nil,

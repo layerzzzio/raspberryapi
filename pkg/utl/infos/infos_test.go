@@ -626,3 +626,89 @@ func TestListNameFilesInDirectory(t *testing.T) {
 		})
 	}
 }
+
+func TestStringItemExists(t *testing.T) {
+	cases := []struct {
+		name       string
+		item       string
+		array      []string
+		wantedData bool
+	}{
+		{
+			name:       "success: array of strings",
+			item:       "France",
+			array:      []string{"India", "Canada", "Japan", "Germany", "France"},
+			wantedData: true,
+		},
+		{
+			name:       "failure: array of strings",
+			item:       "Francexxx",
+			array:      []string{"India", "Canada", "Japan", "Germany", "Italy"},
+			wantedData: false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			interfaces := infos.StringItemExists(tc.array, tc.item)
+			assert.Equal(t, tc.wantedData, interfaces)
+		})
+	}
+}
+
+func TestVPNCountries(t *testing.T) {
+	cases := []struct {
+		name          string
+		isCreateFile  bool
+		directoryPath string
+		wantedData    []string
+	}{
+		{
+			name:          "success: the current file are not found in COUNTRYCODENAME",
+			isCreateFile:  false,
+			directoryPath: "./testdata",
+			wantedData: []string{
+				"Iceland", "Panama",
+			},
+		},
+		{
+			name:          "success: the current file are found in COUNTRYCODENAME",
+			isCreateFile:  true,
+			directoryPath: "./testdata",
+			wantedData: []string{
+				"Albania", "France", "Iceland", "Panama",
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			i := infos.New()
+			if tc.isCreateFile {
+				if err := actions.OverwriteToFile(
+					actions.WriteToFileArg{
+						File: "./testdata/frcul",
+					},
+				); err != nil {
+					log.Fatal(err)
+				}
+
+				if err := actions.OverwriteToFile(
+					actions.WriteToFileArg{
+						File: "./testdata/alcul",
+					},
+				); err != nil {
+					log.Fatal(err)
+				}
+			}
+
+			interfaces := i.VPNCountries(tc.directoryPath)
+
+			if tc.isCreateFile {
+				os.RemoveAll("./testdata/frcul")
+				os.RemoveAll("./testdata/alcul")
+			}
+			assert.Equal(t, tc.wantedData, interfaces)
+		})
+	}
+}

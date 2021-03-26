@@ -48,7 +48,7 @@ func TestList(t *testing.T) {
 		// 		) (rpi.SoftwareConfig, error) {
 		// 			return rpi.SoftwareConfig{
 		// 				NordVPN: rpi.NordVPN{
-		// 					TCPFiles: []string{"file"},
+		// 					TCPCountries: []string{"file"},
 		// 				},
 		// 			}, nil
 		// 		},
@@ -56,7 +56,7 @@ func TestList(t *testing.T) {
 		// 	wantedStatus: http.StatusOK,
 		// 	wantedResp: rpi.SoftwareConfig{
 		// 		NordVPN: rpi.NordVPN{
-		// 			TCPFiles: []string{"file"},
+		// 			TCPCountries: []string{"file"},
 		// 		},
 		// 	},
 		// },
@@ -85,7 +85,7 @@ func TestList(t *testing.T) {
 				panic(err)
 			}
 
-			if tc.wantedResp.NordVPN.TCPFiles != nil {
+			if tc.wantedResp.NordVPN.TCPCountries != nil {
 				if err := json.Unmarshal(body, &response); err != nil {
 					t.Fatal(err)
 				}

@@ -24,7 +24,7 @@ type SOCFSYS interface {
 
 // Infos represents the infos interface
 type Infos interface {
-	ListNameFilesInDirectory(string) []string
+	VPNCountries(string) []string
 }
 
 // New creates a SoftwareConfig application service instance.

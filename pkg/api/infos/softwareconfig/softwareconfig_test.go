@@ -21,7 +21,7 @@ func TestList(t *testing.T) {
 		{
 			name: "success",
 			infos: mock.Infos{
-				ListNameFilesInDirectoryFn: func(string) []string {
+				VPNCountriesFn: func(string) []string {
 					return []string{"file1"}
 				},
 			},
@@ -31,16 +31,16 @@ func TestList(t *testing.T) {
 				) (rpi.SoftwareConfig, error) {
 					return rpi.SoftwareConfig{
 						NordVPN: rpi.NordVPN{
-							TCPFiles: []string{"file1"},
-							UDPFiles: []string{"file2"},
+							TCPCountries: []string{"file1"},
+							UDPCountries: []string{"file2"},
 						},
 					}, nil
 				},
 			},
 			wantedData: rpi.SoftwareConfig{
 				NordVPN: rpi.NordVPN{
-					TCPFiles: []string{"file1"},
-					UDPFiles: []string{"file2"},
+					TCPCountries: []string{"file1"},
+					UDPCountries: []string{"file2"},
 				},
 			},
 			wantedErr: nil,
