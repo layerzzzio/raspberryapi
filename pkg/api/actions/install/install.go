@@ -36,7 +36,7 @@ func (ins *Install) ExecuteWOV(
 ) (rpi.Action, error) {
 	var plan map[int](map[int]actions.Func)
 
-	etcDir := fmt.Sprintf("/etc/openvpn/%v", vpnName)
+	etcDir := fmt.Sprintf("/etc/openvpn/wov_%v", vpnName)
 
 	if action == "install" {
 		plan = map[int](map[int]actions.Func){

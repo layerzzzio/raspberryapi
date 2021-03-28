@@ -72,7 +72,7 @@ func TestList(t *testing.T) {
 			ts := httptest.NewServer(r)
 
 			defer ts.Close()
-			path := ts.URL + "/softwareconfigs"
+			path := ts.URL + "/softwareconfigs/vpnwithovpn"
 			res, err := http.Get(path)
 			if err != nil {
 				t.Fatal(err)
@@ -85,7 +85,7 @@ func TestList(t *testing.T) {
 				panic(err)
 			}
 
-			if tc.wantedResp.NordVPN.TCPCountries != nil {
+			if tc.wantedResp.VPNCountries != nil {
 				if err := json.Unmarshal(body, &response); err != nil {
 					t.Fatal(err)
 				}

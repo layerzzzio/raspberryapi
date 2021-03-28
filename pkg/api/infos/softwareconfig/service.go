@@ -18,13 +18,13 @@ type SoftwareConfig struct {
 // INTSYS represents an SoftwareConfig repository service.
 type SOCFSYS interface {
 	List(
-		NordVPN,
+		map[string][]string,
 	) (rpi.SoftwareConfig, error)
 }
 
 // Infos represents the infos interface
 type Infos interface {
-	VPNCountries(string) []string
+	VPNCountries(string) map[string][]string
 }
 
 // New creates a SoftwareConfig application service instance.

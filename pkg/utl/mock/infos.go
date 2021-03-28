@@ -21,7 +21,7 @@ type Infos struct {
 	IsWpaSupComFn              func() map[string]bool
 	ZoneInfoFn                 func(string) map[string]string
 	ListNameFilesInDirectoryFn func(string) []string
-	VPNCountriesFn             func(string) []string
+	VPNCountriesFn             func(string) map[string][]string
 }
 
 // ReadFile mock
@@ -100,6 +100,6 @@ func (i Infos) ListNameFilesInDirectory(directoryPath string) []string {
 }
 
 // VPNCountries mock
-func (i Infos) VPNCountries(directoryPath string) []string {
+func (i Infos) VPNCountries(directoryPath string) map[string][]string {
 	return i.VPNCountriesFn(directoryPath)
 }

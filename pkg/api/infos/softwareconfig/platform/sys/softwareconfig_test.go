@@ -12,35 +12,19 @@ import (
 
 func TestList(t *testing.T) {
 	cases := []struct {
-		name       string
-		nordVPN    softwareconfig.NordVPN
-		wantedData rpi.SoftwareConfig
-		wantedErr  error
+		name         string
+		VPNCountries map[string][]string
+		wantedData   rpi.SoftwareConfig
+		wantedErr    error
 	}{
 		{
 			name: "success: isNordVPN true",
-			nordVPN: softwareconfig.NordVPN{
-				TCPCountries: []string{"file1"},
-				UDPCountries: []string{"file2"},
+			VPNCountries: map[string][]string{
+				"nordvpn": {"France", "Germany"},
 			},
 			wantedData: rpi.SoftwareConfig{
-				NordVPN: rpi.NordVPN{
-					TCPCountries: []string{"file1"},
-					UDPCountries: []string{"file2"},
-				},
-			},
-			wantedErr: nil,
-		},
-		{
-			name: "success: isNordVPN false",
-			nordVPN: softwareconfig.NordVPN{
-				TCPCountries: []string{"file1"},
-				UDPCountries: []string{"file2"},
-			},
-			wantedData: rpi.SoftwareConfig{
-				NordVPN: rpi.NordVPN{
-					TCPCountries: []string{"file1"},
-					UDPCountries: []string{"file2"},
+				VPNCountries: map[string][]string{
+					"nordvpn": {"France", "Germany"},
 				},
 			},
 			wantedErr: nil,
@@ -51,7 +35,7 @@ func TestList(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			s := softwareconfig.SOCFSYS(sys.SoftwareConfig{})
 			intf, err := s.List(
-				tc.nordVPN,
+				tc.VPNCountries,
 			)
 			assert.Equal(t, tc.wantedData, intf)
 			assert.Equal(t, tc.wantedErr, err)

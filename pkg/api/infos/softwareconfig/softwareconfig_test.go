@@ -21,26 +21,26 @@ func TestList(t *testing.T) {
 		{
 			name: "success",
 			infos: mock.Infos{
-				VPNCountriesFn: func(string) []string {
-					return []string{"file1"}
+				VPNCountriesFn: func(string) map[string][]string {
+					return map[string][]string{
+						"nordvpn": {"France", "Germany"},
+					}
 				},
 			},
 			socfsys: mocksys.SoftwareConfig{
 				ListFn: func(
-					softwareconfig.NordVPN,
+					map[string][]string,
 				) (rpi.SoftwareConfig, error) {
 					return rpi.SoftwareConfig{
-						NordVPN: rpi.NordVPN{
-							TCPCountries: []string{"file1"},
-							UDPCountries: []string{"file2"},
+						VPNCountries: map[string][]string{
+							"nordvpn": {"France", "Germany"},
 						},
 					}, nil
 				},
 			},
 			wantedData: rpi.SoftwareConfig{
-				NordVPN: rpi.NordVPN{
-					TCPCountries: []string{"file1"},
-					UDPCountries: []string{"file2"},
+				VPNCountries: map[string][]string{
+					"nordvpn": {"France", "Germany"},
 				},
 			},
 			wantedErr: nil,

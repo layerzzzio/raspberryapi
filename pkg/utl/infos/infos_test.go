@@ -661,22 +661,23 @@ func TestVPNCountries(t *testing.T) {
 		name          string
 		isCreateFile  bool
 		directoryPath string
-		wantedData    []string
+		wantedData    map[string][]string
 	}{
 		{
 			name:          "success: the current file are not found in COUNTRYCODENAME",
 			isCreateFile:  false,
 			directoryPath: "./testdata",
-			wantedData: []string{
-				"Iceland", "Panama",
-			},
+			wantedData:    map[string][]string{},
 		},
 		{
 			name:          "success: the current file are found in COUNTRYCODENAME",
 			isCreateFile:  true,
 			directoryPath: "./testdata",
-			wantedData: []string{
-				"Albania", "France", "Iceland", "Panama",
+			wantedData: map[string][]string{
+				"nordvpn":   {"Germany"},
+				"vyprvpn":   {"Canada"},
+				"ipvanish":  {"France"},
+				"surfshark": {"Singapore"},
 			},
 		},
 	}
@@ -685,9 +686,49 @@ func TestVPNCountries(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			i := infos.New()
 			if tc.isCreateFile {
+				if err := os.MkdirAll("./testdata/wov_nordvpn/vpnconfigs", 0777); err != nil {
+					log.Fatal(err)
+				}
+
 				if err := actions.OverwriteToFile(
 					actions.WriteToFileArg{
-						File: "./testdata/frcul",
+						File: "./testdata/wov_nordvpn/vpnconfigs/de844.nordvpn.com.tcp.ovpn",
+					},
+				); err != nil {
+					log.Fatal(err)
+				}
+
+				if err := os.MkdirAll("./testdata/wov_vyprvpn/vpnconfigs", 0777); err != nil {
+					log.Fatal(err)
+				}
+
+				if err := actions.OverwriteToFile(
+					actions.WriteToFileArg{
+						File: "./testdata/wov_vyprvpn/vpnconfigs/Canada.ovpn",
+					},
+				); err != nil {
+					log.Fatal(err)
+				}
+
+				if err := os.MkdirAll("./testdata/wov_ipvanish/vpnconfigs", 0777); err != nil {
+					log.Fatal(err)
+				}
+
+				if err := actions.OverwriteToFile(
+					actions.WriteToFileArg{
+						File: "./testdata/wov_ipvanish/vpnconfigs/ipvanish-FR-Paris-par-a06.ovpn",
+					},
+				); err != nil {
+					log.Fatal(err)
+				}
+
+				if err := os.MkdirAll("./testdata/wov_surfshark/vpnconfigs", 0777); err != nil {
+					log.Fatal(err)
+				}
+
+				if err := actions.OverwriteToFile(
+					actions.WriteToFileArg{
+						File: "./testdata/wov_surfshark/vpnconfigs/sg-in.prod.surfshark.com_udp.ovpn",
 					},
 				); err != nil {
 					log.Fatal(err)
@@ -705,9 +746,13 @@ func TestVPNCountries(t *testing.T) {
 			interfaces := i.VPNCountries(tc.directoryPath)
 
 			if tc.isCreateFile {
-				os.RemoveAll("./testdata/frcul")
+				os.RemoveAll("./testdata/wov_nordvpn")
+				os.RemoveAll("./testdata/wov_ipvanish")
+				os.RemoveAll("./testdata/wov_vyprvpn")
+				os.RemoveAll("./testdata/wov_surfshark")
 				os.RemoveAll("./testdata/alcul")
 			}
+
 			assert.Equal(t, tc.wantedData, interfaces)
 		})
 	}

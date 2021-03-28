@@ -404,31 +404,72 @@ func (s Service) ListNameFilesInDirectory(directoryPath string) []string {
 }
 
 // VPNCountries lists countries available for vpn
-func (s Service) VPNCountries(directoryPath string) []string {
-	var result []string
-	var truncFileName []string
+func (s Service) VPNCountries(directoryPath string) map[string][]string {
+	var result = make(map[string][]string)
+	var countries []string
+	var fileName []string
+	var regexCountry string
 
-	err := godirwalk.Walk(directoryPath, &godirwalk.Options{
-		Callback: func(osPathname string, de *godirwalk.Dirent) error {
-
-			if !de.IsDir() && !StringItemExists(truncFileName, de.Name()[:2]) {
-				country := constants.COUNTRYCODENAME[strings.ToUpper(de.Name()[:2])]
-				if country != "" {
-					result = append(result, country)
-				}
-				truncFileName = append(truncFileName, de.Name()[:2])
-			}
-			return nil
-		},
-		// (optional) set true for faster yet non-deterministic enumeration (see godoc)
-		Unsorted: true,
-	})
-
+	wovDir, err := ioutil.ReadDir(directoryPath)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	sort.Strings(result)
+	for _, dir := range wovDir {
+		if dir.IsDir() && dir.Name()[:4] == "wov_" {
+			err = godirwalk.Walk(directoryPath+"/"+dir.Name()+"/vpnconfigs", &godirwalk.Options{
+				Callback: func(osPathname string, de *godirwalk.Dirent) error {
+					re := regexp.MustCompile(`^[a-zA-Z]*`)
+
+					if dir.Name() == "wov_ipvanish" {
+						rawFileName := strings.ReplaceAll(de.Name(), "ipvanish-", "")
+						regexCountry = strings.ReplaceAll(
+							string(re.Find([]byte(rawFileName))),
+							" ",
+							"",
+						)
+					} else {
+						regexCountry = strings.ReplaceAll(
+							string(re.Find([]byte(de.Name()))),
+							" ",
+							"",
+						)
+					}
+
+					if dir.Name() == "wov_vyprvpn" {
+						// countries are clearly spelled
+						if !de.IsDir() &&
+							strings.HasSuffix(de.Name(), ".ovpn") &&
+							!StringItemExists(fileName, regexCountry) {
+							countries = append(countries, regexCountry)
+							fileName = append(fileName, regexCountry)
+						}
+					} else if !de.IsDir() &&
+						strings.HasSuffix(de.Name(), ".ovpn") &&
+						!StringItemExists(fileName, regexCountry) {
+						if country := constants.COUNTRYCODENAME[strings.ToUpper(regexCountry)]; country != "" {
+							countries = append(countries, country)
+						}
+
+						fileName = append(fileName, regexCountry)
+					}
+					return nil
+				},
+				// (optional) set true for faster yet non-deterministic enumeration (see godoc)
+				Unsorted: true,
+			})
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			sort.Strings(countries)
+			result[strings.TrimPrefix(dir.Name(), "wov_")] = countries
+			countries = nil
+			fileName = nil
+			regexCountry = ""
+		}
+	}
 
 	return result
 }
