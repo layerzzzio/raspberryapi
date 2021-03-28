@@ -105,10 +105,12 @@ func TestExecuteAG(t *testing.T) {
 	}
 }
 
-func TestExecuteNV(t *testing.T) {
+func TestExecuteWOV(t *testing.T) {
 	cases := []struct {
 		name       string
 		action     string
+		vpnName    string
+		url        string
 		plan       map[int](map[int]actions.Func)
 		actions    *mock.Actions
 		inssys     *mocksys.Action
@@ -144,7 +146,7 @@ func TestExecuteNV(t *testing.T) {
 				},
 			},
 			inssys: &mocksys.Action{
-				ExecuteNVFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+				ExecuteWOVFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
 					return rpi.Action{}, echo.NewHTTPError(http.StatusInternalServerError, "bad action type: install or purge nordvpn failed")
 				},
 			},
@@ -180,7 +182,7 @@ func TestExecuteNV(t *testing.T) {
 				},
 			},
 			inssys: &mocksys.Action{
-				ExecuteNVFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+				ExecuteWOVFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
 					return rpi.Action{
 						Name:          "FuncA",
 						NumberOfSteps: 1,
@@ -246,7 +248,7 @@ func TestExecuteNV(t *testing.T) {
 				},
 			},
 			inssys: &mocksys.Action{
-				ExecuteNVFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+				ExecuteWOVFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
 					return rpi.Action{
 						Name:          "FuncA",
 						NumberOfSteps: 1,
@@ -288,7 +290,11 @@ func TestExecuteNV(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			s := install.New(tc.inssys, tc.actions)
-			deletefile, err := s.ExecuteNV(tc.action)
+			deletefile, err := s.ExecuteWOV(
+				tc.action,
+				tc.name,
+				tc.url,
+			)
 			assert.Equal(t, tc.wantedData, deletefile)
 			assert.Equal(t, tc.wantedErr, err)
 		})

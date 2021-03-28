@@ -29,7 +29,7 @@ type Action struct {
 	ExecuteUPDGFn func(map[int](map[int]actions.Func)) (rpi.Action, error)
 	ExecuteWCFn   func(map[int](map[int]actions.Func)) (rpi.Action, error)
 	ExecuteAGFn   func(map[int](map[int]actions.Func)) (rpi.Action, error)
-	ExecuteNVFn   func(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteWOVFn  func(map[int](map[int]actions.Func)) (rpi.Action, error)
 }
 
 // ExecuteDF mock
@@ -142,7 +142,7 @@ func (a *Action) ExecuteAG(plan map[int](map[int]actions.Func)) (rpi.Action, err
 	return a.ExecuteAGFn(plan)
 }
 
-// ExecuteNV mock
-func (a *Action) ExecuteNV(plan map[int](map[int]actions.Func)) (rpi.Action, error) {
-	return a.ExecuteNVFn(plan)
+// ExecuteWOV mock
+func (a *Action) ExecuteWOV(plan map[int](map[int]actions.Func)) (rpi.Action, error) {
+	return a.ExecuteWOVFn(plan)
 }

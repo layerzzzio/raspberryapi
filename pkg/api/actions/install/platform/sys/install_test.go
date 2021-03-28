@@ -57,7 +57,7 @@ func TestExecuteAG(t *testing.T) {
 	}
 }
 
-func TestExecuteNV(t *testing.T) {
+func TestExecuteWOV(t *testing.T) {
 	cases := []struct {
 		name                  string
 		plan                  map[int](map[int]actions.Func)
@@ -72,7 +72,7 @@ func TestExecuteNV(t *testing.T) {
 			plan: map[int](map[int]actions.Func){
 				1: {
 					1: {
-						Name:      actions.InstallNordVPN,
+						Name:      actions.InstallVPNWithOVPN,
 						Reference: test_utl.FuncA,
 						Argument: []interface{}{
 							test_utl.ArgFuncA{
@@ -83,7 +83,7 @@ func TestExecuteNV(t *testing.T) {
 					},
 				},
 			},
-			wantedDataName:        "install_nord_vpn",
+			wantedDataName:        "install_vpn_with_ovpn",
 			wantedDataNumSteps:    1,
 			wantedDataStdOutStep1: "string0-string1",
 			wantedDataExitStatus:  0,
@@ -94,7 +94,7 @@ func TestExecuteNV(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			s := install.INSSYS(Install{})
-			aptget, err := s.ExecuteNV(tc.plan)
+			aptget, err := s.ExecuteWOV(tc.plan)
 			assert.Equal(t, tc.wantedDataName, aptget.Name)
 			assert.Equal(t, tc.wantedDataNumSteps, aptget.NumberOfSteps)
 			assert.Equal(t, tc.wantedDataStdOutStep1, aptget.Progress["1<|>1"].Stdout)

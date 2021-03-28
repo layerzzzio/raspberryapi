@@ -40,17 +40,21 @@ func (ls *LogService) ExecuteAG(ctx echo.Context, action string, pkg string) (re
 	return ls.Service.ExecuteAG(action, pkg)
 }
 
-// ExecuteNV is the logging function attached to the execute install nordvpn service and responsible for logging it out.
-func (ls *LogService) ExecuteNV(ctx echo.Context, action string) (resp rpi.Action, err error) {
+// ExecuteWOV is the logging function attached to the execute install vpn with ovpn service and responsible for logging it out.
+func (ls *LogService) ExecuteWOV(
+	ctx echo.Context,
+	action string,
+	url string,
+) (resp rpi.Action, err error) {
 	defer func(begin time.Time) {
 		ls.logger.Log(
 			ctx,
-			name, fmt.Sprintf("request: execute %v", action), err,
+			name, fmt.Sprintf("request: execute %v for %v", action, name), err,
 			map[string]interface{}{
 				"resp": resp,
 				"took": time.Since(begin),
 			},
 		)
 	}(time.Now())
-	return ls.Service.ExecuteNV(action)
+	return ls.Service.ExecuteWOV(action, name, url)
 }

@@ -28,12 +28,15 @@ func (ins *Install) ExecuteAG(action string, pkg string) (rpi.Action, error) {
 	return ins.inssys.ExecuteAG(plan)
 }
 
-// ExecuteNV install NordVPN
-func (ins *Install) ExecuteNV(action string) (rpi.Action, error) {
+// ExecuteWOV install a vpn that works with OVPN
+func (ins *Install) ExecuteWOV(
+	action string,
+	vpnName string,
+	url string,
+) (rpi.Action, error) {
 	var plan map[int](map[int]actions.Func)
 
-	etcDir := "/etc/openvpn/nordvpn"
-	nordVPNURl := "https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip"
+	etcDir := fmt.Sprintf("/etc/openvpn/%v", vpnName)
 
 	if action == "install" {
 		plan = map[int](map[int]actions.Func){
@@ -54,7 +57,12 @@ func (ins *Install) ExecuteNV(action string) (rpi.Action, error) {
 					Reference: ins.a.ExecuteBashCommand,
 					Argument: []interface{}{
 						actions.EBC{
-							Command: fmt.Sprintf("if [ ! -f %v/ovpn.zip ] ; then wget %v -P %v ; fi", etcDir, nordVPNURl, etcDir),
+							Command: fmt.Sprintf(
+								"if [ ! -f %v/vpnconfigs.zip ] ; then wget -cO %v/vpnconfigs.zip %v ; fi",
+								etcDir,
+								etcDir,
+								url,
+							),
 						},
 					},
 				},
@@ -65,7 +73,11 @@ func (ins *Install) ExecuteNV(action string) (rpi.Action, error) {
 					Reference: ins.a.ExecuteBashCommand,
 					Argument: []interface{}{
 						actions.EBC{
-							Command: fmt.Sprintf("unzip -o %v/ovpn.zip -d %v", etcDir, etcDir),
+							Command: fmt.Sprintf(
+								"unzip -o %v/vpnconfigs.zip -d %v/vpnconfigs",
+								etcDir,
+								etcDir,
+							),
 						},
 					},
 				},
@@ -89,5 +101,5 @@ func (ins *Install) ExecuteNV(action string) (rpi.Action, error) {
 		return rpi.Action{}, echo.NewHTTPError(http.StatusInternalServerError, "bad action type: install or purge nordvpn failed")
 	}
 
-	return ins.inssys.ExecuteNV(plan)
+	return ins.inssys.ExecuteWOV(plan)
 }

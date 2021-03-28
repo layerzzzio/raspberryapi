@@ -112,7 +112,7 @@ func TestExecuteAG(t *testing.T) {
 	}
 }
 
-func TestExecuteNV(t *testing.T) {
+func TestExecuteWOV(t *testing.T) {
 	var response rpi.Action
 
 	cases := []struct {
@@ -138,10 +138,20 @@ func TestExecuteNV(t *testing.T) {
 			wantedStatus: http.StatusNotFound,
 		},
 		{
-			name: "error: ExecuteNV result is nil",
-			req:  "?action=install",
+			name:         "error: no vpnName",
+			req:          "?action=install&vpnName=",
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name:         "error: no url",
+			req:          "?action=install&vpnName=nordvpn&url",
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name: "error: ExecuteWOV result is nil",
+			req:  "?action=install&vpnName=nordvpn&url=https://dummy.com/nordvpn",
 			inssys: &mocksys.Action{
-				ExecuteNVFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+				ExecuteWOVFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
 					return rpi.Action{}, errors.New("test error")
 				},
 			},
@@ -150,11 +160,11 @@ func TestExecuteNV(t *testing.T) {
 		{
 			name:         "success",
 			wantedStatus: http.StatusOK,
-			req:          "?action=install",
+			req:          "?action=install&vpnName=nordvpn&url=https://dummy.com/nordvpn",
 			inssys: &mocksys.Action{
-				ExecuteNVFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+				ExecuteWOVFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
 					return rpi.Action{
-						Name:          actions.InstallNordVPN,
+						Name:          actions.InstallVPNWithOVPN,
 						NumberOfSteps: 1,
 						StartTime:     uint64(time.Now().Unix()),
 						EndTime:       uint64(time.Now().Unix()),
@@ -175,7 +185,7 @@ func TestExecuteNV(t *testing.T) {
 			ts := httptest.NewServer(r)
 
 			defer ts.Close()
-			path := ts.URL + "/install/nordvpn" + tc.req
+			path := ts.URL + "/install/vpnwithovpn" + tc.req
 
 			res, err := http.Post(path, "application/json", bytes.NewBufferString(tc.req))
 			if err != nil {

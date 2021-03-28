@@ -18,7 +18,7 @@ func NewHTTP(svc install.Service, r *echo.Group) {
 	h := HTTP{svc}
 	cr := r.Group("/install")
 	cr.POST("/aptget", h.aptget)
-	cr.POST("/nordvpn", h.nordvpn)
+	cr.POST("/vpnwithovpn", h.vpnwithopenvpn)
 }
 
 func (h *HTTP) aptget(ctx echo.Context) error {
@@ -39,13 +39,23 @@ func (h *HTTP) aptget(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, result)
 }
 
-func (h *HTTP) nordvpn(ctx echo.Context) error {
+func (h *HTTP) vpnwithopenvpn(ctx echo.Context) error {
 	action := ctx.QueryParam("action")
 	if err := transport.ActionCheck(action, `install|purge`); err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, "Not found - bad action type")
 	}
 
-	result, err := h.svc.ExecuteNV(action)
+	vpnName := ctx.QueryParam("vpnName")
+	if vpnName == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - vpnName is nil")
+	}
+
+	url := ctx.QueryParam("url")
+	if url == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - url is nil")
+	}
+
+	result, err := h.svc.ExecuteWOV(action, vpnName, url)
 	if err != nil {
 		return err
 	}

@@ -8,7 +8,7 @@ import (
 // Service represents all Install application services.
 type Service interface {
 	ExecuteAG(string, string) (rpi.Action, error)
-	ExecuteNV(string) (rpi.Action, error)
+	ExecuteWOV(string, string, string) (rpi.Action, error)
 }
 
 // Install represents a Install application service.
@@ -20,7 +20,7 @@ type Install struct {
 // INSSYS represents a Install repository service.
 type INSSYS interface {
 	ExecuteAG(map[int](map[int]actions.Func)) (rpi.Action, error)
-	ExecuteNV(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteWOV(map[int](map[int]actions.Func)) (rpi.Action, error)
 }
 
 // Actions represents the actions interface
