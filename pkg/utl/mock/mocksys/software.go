@@ -2,7 +2,6 @@ package mocksys
 
 import (
 	"github.com/raspibuddy/rpi"
-	"github.com/raspibuddy/rpi/pkg/api/infos/software"
 )
 
 // Software mock
@@ -11,7 +10,10 @@ type Software struct {
 		bool,
 		bool,
 		bool,
-		software.NordVPN,
+		bool,
+		bool,
+		bool,
+		bool,
 	) (rpi.Software, error)
 }
 
@@ -20,12 +22,18 @@ func (in Software) List(
 	isVNC bool,
 	isOpenVPN bool,
 	isUnzip bool,
-	nordVPN software.NordVPN,
+	isNordVPN bool,
+	isSurfSharkVPN bool,
+	isIpVanishVPN bool,
+	isVyprVpnVPN bool,
 ) (rpi.Software, error) {
 	return in.ListFn(
 		isVNC,
 		isOpenVPN,
 		isUnzip,
-		nordVPN,
+		isNordVPN,
+		isSurfSharkVPN,
+		isIpVanishVPN,
+		isVyprVpnVPN,
 	)
 }

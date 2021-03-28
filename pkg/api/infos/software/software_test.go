@@ -33,7 +33,10 @@ func TestList(t *testing.T) {
 					bool,
 					bool,
 					bool,
-					software.NordVPN,
+					bool,
+					bool,
+					bool,
+					bool,
 				) (rpi.Software, error) {
 					return rpi.Software{
 						IsVNC:     false,

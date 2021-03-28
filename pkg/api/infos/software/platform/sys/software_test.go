@@ -12,45 +12,54 @@ import (
 
 func TestList(t *testing.T) {
 	cases := []struct {
-		name       string
-		isVNC      bool
-		isOpenVPN  bool
-		isUnzip    bool
-		nordVPN    software.NordVPN
-		wantedData rpi.Software
-		wantedErr  error
+		name           string
+		isVNC          bool
+		isOpenVPN      bool
+		isUnzip        bool
+		isNordVPN      bool
+		isSurfSharkVPN bool
+		isIpVanishVPN  bool
+		isVyprVpnVPN   bool
+		wantedData     rpi.Software
+		wantedErr      error
 	}{
 		{
-			name:      "success: isNordVPN true",
-			isVNC:     true,
-			isOpenVPN: true,
-			isUnzip:   true,
-			nordVPN: software.NordVPN{
-				IsTCP: true,
-				IsUDP: true,
-			},
+			name:           "success: all VPNs true",
+			isVNC:          true,
+			isOpenVPN:      true,
+			isUnzip:        true,
+			isNordVPN:      true,
+			isSurfSharkVPN: true,
+			isIpVanishVPN:  true,
+			isVyprVpnVPN:   true,
 			wantedData: rpi.Software{
-				IsVNC:     true,
-				IsOpenVPN: true,
-				IsUnzip:   true,
-				IsNordVPN: true,
+				IsVNC:          true,
+				IsOpenVPN:      true,
+				IsUnzip:        true,
+				IsNordVPN:      true,
+				IsSurfSharkVPN: true,
+				IsIpVanishVPN:  true,
+				IsVyprVpnVPN:   true,
 			},
 			wantedErr: nil,
 		},
 		{
-			name:      "success: isNordVPN false",
-			isVNC:     true,
-			isOpenVPN: true,
-			isUnzip:   true,
-			nordVPN: software.NordVPN{
-				IsTCP: true,
-				IsUDP: false,
-			},
+			name:           "success: all VPNs false",
+			isVNC:          true,
+			isOpenVPN:      true,
+			isUnzip:        true,
+			isNordVPN:      false,
+			isSurfSharkVPN: false,
+			isIpVanishVPN:  false,
+			isVyprVpnVPN:   false,
 			wantedData: rpi.Software{
-				IsVNC:     true,
-				IsOpenVPN: true,
-				IsUnzip:   true,
-				IsNordVPN: false,
+				IsVNC:          true,
+				IsOpenVPN:      true,
+				IsUnzip:        true,
+				IsNordVPN:      false,
+				IsSurfSharkVPN: false,
+				IsIpVanishVPN:  false,
+				IsVyprVpnVPN:   false,
 			},
 			wantedErr: nil,
 		},
@@ -63,7 +72,10 @@ func TestList(t *testing.T) {
 				tc.isVNC,
 				tc.isOpenVPN,
 				tc.isUnzip,
-				tc.nordVPN,
+				tc.isNordVPN,
+				tc.isSurfSharkVPN,
+				tc.isIpVanishVPN,
+				tc.isVyprVpnVPN,
 			)
 			assert.Equal(t, tc.wantedData, intf)
 			assert.Equal(t, tc.wantedErr, err)

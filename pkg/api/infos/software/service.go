@@ -21,7 +21,10 @@ type SOFSYS interface {
 		bool,
 		bool,
 		bool,
-		NordVPN,
+		bool,
+		bool,
+		bool,
+		bool,
 	) (rpi.Software, error)
 }
 

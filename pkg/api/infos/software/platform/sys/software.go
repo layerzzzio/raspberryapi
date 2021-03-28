@@ -2,7 +2,6 @@ package sys
 
 import (
 	"github.com/raspibuddy/rpi"
-	"github.com/raspibuddy/rpi/pkg/api/infos/software"
 )
 
 // Software represents a Software entity on the current system.
@@ -13,17 +12,41 @@ func (int Software) List(
 	isVNC bool,
 	isOpenVPN bool,
 	isUnzip bool,
-	nordVPN software.NordVPN,
+	isNordVPN bool,
+	isSurfSharkVPN bool,
+	isIpVanishVPN bool,
+	isVyprVpnVPN bool,
 ) (rpi.Software, error) {
-	isNordVPN := false
-	if isOpenVPN && nordVPN.IsTCP && nordVPN.IsUDP {
-		isNordVPN = true
+	nordVPN := false
+	surfSharkVPN := false
+	ipVanishVPN := false
+	vyprVpnVPN := false
+
+	if isOpenVPN {
+		if isNordVPN {
+			nordVPN = true
+		}
+
+		if isIpVanishVPN {
+			ipVanishVPN = true
+		}
+
+		if isSurfSharkVPN {
+			surfSharkVPN = true
+		}
+
+		if isVyprVpnVPN {
+			vyprVpnVPN = true
+		}
 	}
 
 	return rpi.Software{
-		IsVNC:     isVNC,
-		IsOpenVPN: isOpenVPN,
-		IsUnzip:   isUnzip,
-		IsNordVPN: isNordVPN,
+		IsVNC:          isVNC,
+		IsOpenVPN:      isOpenVPN,
+		IsUnzip:        isUnzip,
+		IsNordVPN:      nordVPN,
+		IsSurfSharkVPN: surfSharkVPN,
+		IsIpVanishVPN:  ipVanishVPN,
+		IsVyprVpnVPN:   vyprVpnVPN,
 	}, nil
 }
