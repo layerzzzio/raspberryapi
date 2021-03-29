@@ -1,4 +1,4 @@
-package install
+package appaction
 
 import (
 	"fmt"
@@ -9,27 +9,8 @@ import (
 	"github.com/raspibuddy/rpi/pkg/utl/actions"
 )
 
-// ExecuteAG install a package with apt-get
-func (ins *Install) ExecuteAG(action string, pkg string) (rpi.Action, error) {
-	plan := map[int](map[int]actions.Func){
-		1: {
-			1: {
-				Name:      actions.ExecuteBashCommand,
-				Reference: ins.a.ExecuteBashCommand,
-				Argument: []interface{}{
-					actions.EBC{
-						Command: fmt.Sprintf("apt-get %v -y %v", action, pkg),
-					},
-				},
-			},
-		},
-	}
-
-	return ins.inssys.ExecuteAG(plan)
-}
-
-// ExecuteWOV install a vpn that works with OVPN
-func (ins *Install) ExecuteWOV(
+// ExecuteWOVA AppAction a vpn that works with OVPN
+func (aac *AppAction) ExecuteWOVA(
 	action string,
 	vpnName string,
 	url string,
@@ -43,7 +24,7 @@ func (ins *Install) ExecuteWOV(
 			1: {
 				1: {
 					Name:      actions.ExecuteBashCommand,
-					Reference: ins.a.ExecuteBashCommand,
+					Reference: aac.a.ExecuteBashCommand,
 					Argument: []interface{}{
 						actions.EBC{
 							Command: fmt.Sprintf("mkdir -p %v", etcDir),
@@ -54,7 +35,7 @@ func (ins *Install) ExecuteWOV(
 			2: {
 				1: {
 					Name:      actions.ExecuteBashCommand,
-					Reference: ins.a.ExecuteBashCommand,
+					Reference: aac.a.ExecuteBashCommand,
 					Argument: []interface{}{
 						actions.EBC{
 							Command: fmt.Sprintf(
@@ -70,7 +51,7 @@ func (ins *Install) ExecuteWOV(
 			3: {
 				1: {
 					Name:      actions.ExecuteBashCommand,
-					Reference: ins.a.ExecuteBashCommand,
+					Reference: aac.a.ExecuteBashCommand,
 					Argument: []interface{}{
 						actions.EBC{
 							Command: fmt.Sprintf(
@@ -88,7 +69,7 @@ func (ins *Install) ExecuteWOV(
 			1: {
 				1: {
 					Name:      actions.ExecuteBashCommand,
-					Reference: ins.a.ExecuteBashCommand,
+					Reference: aac.a.ExecuteBashCommand,
 					Argument: []interface{}{
 						actions.EBC{
 							Command: fmt.Sprintf("rm -rRf %v", etcDir),
@@ -101,5 +82,5 @@ func (ins *Install) ExecuteWOV(
 		return rpi.Action{}, echo.NewHTTPError(http.StatusInternalServerError, "bad action type: install or purge nordvpn failed")
 	}
 
-	return ins.inssys.ExecuteWOV(plan)
+	return aac.aacsys.ExecuteWOVA(plan)
 }

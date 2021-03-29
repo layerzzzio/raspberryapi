@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/raspibuddy/rpi"
-	"github.com/raspibuddy/rpi/pkg/api/actions/install"
-	"github.com/raspibuddy/rpi/pkg/api/actions/install/transport"
+	"github.com/raspibuddy/rpi/pkg/api/actions/appinstall"
+	"github.com/raspibuddy/rpi/pkg/api/actions/appinstall/transport"
 	"github.com/raspibuddy/rpi/pkg/utl/actions"
 	"github.com/raspibuddy/rpi/pkg/utl/mock/mocksys"
 	"github.com/raspibuddy/rpi/pkg/utl/server"
@@ -82,12 +82,12 @@ func TestExecuteAG(t *testing.T) {
 			r := server.New()
 			rg := r.Group("")
 			a := actions.New()
-			s := install.New(tc.inssys, a)
+			s := appinstall.New(tc.inssys, a)
 			transport.NewHTTP(s, rg)
 			ts := httptest.NewServer(r)
 
 			defer ts.Close()
-			path := ts.URL + "/install/aptget" + tc.req
+			path := ts.URL + "/appinstall/aptget" + tc.req
 
 			res, err := http.Post(path, "application/json", bytes.NewBufferString(tc.req))
 			if err != nil {
@@ -180,12 +180,12 @@ func TestExecuteWOV(t *testing.T) {
 			r := server.New()
 			rg := r.Group("")
 			a := actions.New()
-			s := install.New(tc.inssys, a)
+			s := appinstall.New(tc.inssys, a)
 			transport.NewHTTP(s, rg)
 			ts := httptest.NewServer(r)
 
 			defer ts.Close()
-			path := ts.URL + "/install/vpnwithovpn" + tc.req
+			path := ts.URL + "/appinstall/vpnwithovpn" + tc.req
 
 			res, err := http.Post(path, "application/json", bytes.NewBufferString(tc.req))
 			if err != nil {

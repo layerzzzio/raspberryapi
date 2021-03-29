@@ -4,19 +4,19 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/raspibuddy/rpi/pkg/api/actions/appinstall"
 	"github.com/raspibuddy/rpi/pkg/api/actions/configure/transport"
-	"github.com/raspibuddy/rpi/pkg/api/actions/install"
 )
 
 // HTTP is a struct implementing a core application service.
 type HTTP struct {
-	svc install.Service
+	svc appinstall.Service
 }
 
 // NewHTTP creates new user http service
-func NewHTTP(svc install.Service, r *echo.Group) {
+func NewHTTP(svc appinstall.Service, r *echo.Group) {
 	h := HTTP{svc}
-	cr := r.Group("/install")
+	cr := r.Group("/appinstall")
 	cr.POST("/aptget", h.aptget)
 	cr.POST("/vpnwithovpn", h.vpnwithopenvpn)
 }

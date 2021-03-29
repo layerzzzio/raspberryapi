@@ -1,4 +1,4 @@
-package install_test
+package appinstall_test
 
 import (
 	"net/http"
@@ -7,7 +7,7 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/raspibuddy/rpi"
-	"github.com/raspibuddy/rpi/pkg/api/actions/install"
+	"github.com/raspibuddy/rpi/pkg/api/actions/appinstall"
 	"github.com/raspibuddy/rpi/pkg/utl/actions"
 	"github.com/raspibuddy/rpi/pkg/utl/mock"
 	"github.com/raspibuddy/rpi/pkg/utl/mock/mocksys"
@@ -97,7 +97,7 @@ func TestExecuteAG(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			s := install.New(tc.inssys, tc.actions)
+			s := appinstall.New(tc.inssys, tc.actions)
 			deletefile, err := s.ExecuteAG(tc.action, tc.pkg)
 			assert.Equal(t, tc.wantedData, deletefile)
 			assert.Equal(t, tc.wantedErr, err)
@@ -289,7 +289,7 @@ func TestExecuteWOV(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			s := install.New(tc.inssys, tc.actions)
+			s := appinstall.New(tc.inssys, tc.actions)
 			deletefile, err := s.ExecuteWOV(
 				tc.action,
 				tc.name,

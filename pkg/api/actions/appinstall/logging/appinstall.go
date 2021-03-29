@@ -1,4 +1,4 @@
-package install
+package appinstall
 
 import (
 	"fmt"
@@ -6,11 +6,11 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/raspibuddy/rpi"
-	"github.com/raspibuddy/rpi/pkg/api/actions/install"
+	"github.com/raspibuddy/rpi/pkg/api/actions/appinstall"
 )
 
 // New creates a new Install logging service instance.
-func New(svc install.Service, logger rpi.Logger) *LogService {
+func New(svc appinstall.Service, logger rpi.Logger) *LogService {
 	return &LogService{
 		Service: svc,
 		logger:  logger,
@@ -19,7 +19,7 @@ func New(svc install.Service, logger rpi.Logger) *LogService {
 
 // LogService represents a Install logging service.
 type LogService struct {
-	install.Service
+	appinstall.Service
 	logger rpi.Logger
 }
 

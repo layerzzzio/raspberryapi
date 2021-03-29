@@ -28,28 +28,28 @@ Here are some of the sources for those configurations:
 ### 1) Open VPN
 #### 1.A) Install
 1. check isOpenVPN & isUnzip: GET /softwares
-2. install package: POST /install/aptget?action=**[install/uninstall]**&pkg=openvpn
+2. install package: POST /appinstall/aptget?action=**[install/uninstall]**&pkg=openvpn
 
 ### 2) Nord VPN
 #### 2.A) Install
 1. check isOpenVPN & isNordVPN & isUnzip: GET /softwares
-2. install NordVPN: POST /install/nordvpn?action=**[install/uninstall]**&name=**[name]**&url=**[url]**&configDirectory=**[configDirectory]**&configRegex=**[configRegex]**
+2. install NordVPN: POST /appinstall/nordvpn?action=**[install/uninstall]**&name=**[name]**&url=**[url]**&configDirectory=**[configDirectory]**&configRegex=**[configRegex]**
 #### 2.B) Connect/Disconnect NordVPN
 
 ### 3) Surfshark
 #### 3.A) Install
 1. check isOpenVPN & isSurfShark & isUnzip: GET /softwares
-2. install NordVPN: POST /install/surfshark?action=**[install/uninstall]**&name=**[name]**&url=**[url]**&configDirectory=**[configDirectory]**&configRegex=**[configRegex]**
+2. install NordVPN: POST /appinstall/surfshark?action=**[install/uninstall]**&name=**[name]**&url=**[url]**&configDirectory=**[configDirectory]**&configRegex=**[configRegex]**
 
 ### 4) IPVanish
 #### 4.A) Install
 1. check isOpenVPN & isIPVanish & isUnzip: GET /softwares
-2. install NordVPN: POST /install/ipvanish?action=**[install/uninstall]**&name=**[name]**&url=**[url]**&configDirectory=**[configDirectory]**&configRegex=**[configRegex]**
+2. install NordVPN: POST /appinstall/ipvanish?action=**[install/uninstall]**&name=**[name]**&url=**[url]**&configDirectory=**[configDirectory]**&configRegex=**[configRegex]**
 
 ### 5) VyprVPN
 #### 5.A) Install
 1. check isOpenVPN & isVyprVPN & isUnzip: GET /softwares
-2. install NordVPN: POST /install/vyprvpn?action=**[install/uninstall]**&name=**[name]**&url=**[url]**&configDirectory=**[configDirectory]**&configRegex=**[configRegex]**
+2. install NordVPN: POST /appinstall/vyprvpn?action=**[install/uninstall]**&name=**[name]**&url=**[url]**&configDirectory=**[configDirectory]**&configRegex=**[configRegex]**
 
 ---
 ## Web Browser

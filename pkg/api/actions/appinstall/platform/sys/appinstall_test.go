@@ -3,7 +3,7 @@ package sys
 import (
 	"testing"
 
-	"github.com/raspibuddy/rpi/pkg/api/actions/install"
+	"github.com/raspibuddy/rpi/pkg/api/actions/appinstall"
 	"github.com/raspibuddy/rpi/pkg/utl/actions"
 	"github.com/raspibuddy/rpi/pkg/utl/test_utl"
 
@@ -46,7 +46,7 @@ func TestExecuteAG(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			s := install.INSSYS(Install{})
+			s := appinstall.INSSYS(Install{})
 			aptget, err := s.ExecuteAG(tc.plan)
 			assert.Equal(t, tc.wantedDataName, aptget.Name)
 			assert.Equal(t, tc.wantedDataNumSteps, aptget.NumberOfSteps)
@@ -93,7 +93,7 @@ func TestExecuteWOV(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			s := install.INSSYS(Install{})
+			s := appinstall.INSSYS(Install{})
 			aptget, err := s.ExecuteWOV(tc.plan)
 			assert.Equal(t, tc.wantedDataName, aptget.Name)
 			assert.Equal(t, tc.wantedDataNumSteps, aptget.NumberOfSteps)
