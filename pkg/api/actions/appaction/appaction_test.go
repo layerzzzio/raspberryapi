@@ -7,27 +7,32 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/raspibuddy/rpi"
+	"github.com/raspibuddy/rpi/pkg/api/actions/appaction"
 	"github.com/raspibuddy/rpi/pkg/utl/actions"
 	"github.com/raspibuddy/rpi/pkg/utl/mock"
 	"github.com/raspibuddy/rpi/pkg/utl/mock/mocksys"
 	"github.com/raspibuddy/rpi/pkg/utl/test_utl"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestExecuteWOV(t *testing.T) {
+func TestExecuteWOVA(t *testing.T) {
 	cases := []struct {
 		name       string
 		action     string
 		vpnName    string
-		url        string
+		country    string
+		username   string
+		password   string
 		plan       map[int](map[int]actions.Func)
 		actions    *mock.Actions
+		infos      *mock.Infos
 		aacsys     *mocksys.Action
 		wantedData rpi.Action
 		wantedErr  error
 	}{
 		{
 			name:   "bad action type",
-			action: "installXXX",
+			action: "connectXXX",
 			plan: map[int](map[int]actions.Func){
 				1: {
 					1: {
@@ -52,18 +57,39 @@ func TestExecuteWOV(t *testing.T) {
 						Stdout:     "string0-string1",
 					}, nil
 				},
+				KillProcessFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       "FuncA",
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "string0-string1",
+					}, nil
+				},
+			},
+			infos: &mock.Infos{
+				VPNConfigFileFn: func(string, string, string) []string {
+					return nil
+				},
+				ProcessesPidsFn: func(string) []string {
+					return nil
+				},
 			},
 			aacsys: &mocksys.Action{
-				ExecuteWOVFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
-					return rpi.Action{}, echo.NewHTTPError(http.StatusInternalServerError, "bad action type: install or purge nordvpn failed")
+				ExecuteWOVAFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{}, echo.NewHTTPError(http.StatusInternalServerError, "bad action type: connect or disconnect vpn with openvpn failed")
 				},
 			},
 			wantedData: rpi.Action{},
-			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "bad action type: install or purge nordvpn failed"),
+			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "bad action type: connect or disconnect vpn with openvpn failed"),
 		},
 		{
-			name:   "success install",
-			action: "install",
+			name:     "success connect",
+			action:   "connect",
+			vpnName:  "surfshark",
+			country:  "France",
+			username: "loic",
+			password: "pass",
 			plan: map[int](map[int]actions.Func){
 				1: {
 					1: {
@@ -88,9 +114,26 @@ func TestExecuteWOV(t *testing.T) {
 						Stdout:     "string0-string1",
 					}, nil
 				},
+				KillProcessFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       "FuncA",
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "string0-string1",
+					}, nil
+				},
+			},
+			infos: &mock.Infos{
+				VPNConfigFileFn: func(string, string, string) []string {
+					return []string{"france.opvn", "england.opvn"}
+				},
+				ProcessesPidsFn: func(string) []string {
+					return nil
+				},
 			},
 			aacsys: &mocksys.Action{
-				ExecuteWOVFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+				ExecuteWOVAFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
 					return rpi.Action{
 						Name:          "FuncA",
 						NumberOfSteps: 1,
@@ -128,8 +171,12 @@ func TestExecuteWOV(t *testing.T) {
 			wantedErr: nil,
 		},
 		{
-			name:   "success purge",
-			action: "purge",
+			name:     "success disconnect",
+			action:   "disconnect",
+			vpnName:  "",
+			country:  "",
+			username: "",
+			password: "",
 			plan: map[int](map[int]actions.Func){
 				1: {
 					1: {
@@ -154,9 +201,26 @@ func TestExecuteWOV(t *testing.T) {
 						Stdout:     "string0-string1",
 					}, nil
 				},
+				KillProcessFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       "FuncA",
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "string0-string1",
+					}, nil
+				},
+			},
+			infos: &mock.Infos{
+				VPNConfigFileFn: func(string, string, string) []string {
+					return nil
+				},
+				ProcessesPidsFn: func(string) []string {
+					return []string{"122", "222"}
+				},
 			},
 			aacsys: &mocksys.Action{
-				ExecuteWOVFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+				ExecuteWOVAFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
 					return rpi.Action{
 						Name:          "FuncA",
 						NumberOfSteps: 1,
@@ -197,14 +261,16 @@ func TestExecuteWOV(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			// s := appaction.New(tc.aacsys, tc.actions)
-			// deletefile, err := s.ExecuteWOVA(
-			// 	tc.action,
-			// 	tc.name,
-			// 	tc.url,
-			// )
-			// assert.Equal(t, tc.wantedData, deletefile)
-			// assert.Equal(t, tc.wantedErr, err)
+			s := appaction.New(tc.aacsys, tc.actions, tc.infos)
+			vpnAction, err := s.ExecuteWOVA(
+				tc.action,
+				tc.vpnName,
+				tc.username,
+				tc.password,
+				tc.country,
+			)
+			assert.Equal(t, tc.wantedData, vpnAction)
+			assert.Equal(t, tc.wantedErr, err)
 		})
 	}
 }

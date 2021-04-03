@@ -187,6 +187,9 @@ const (
 
 	// InstallVPNWithOVPN is the name of the install install vpn with opvn method
 	InstallVPNWithOVPN = "install_vpn_with_ovpn"
+
+	// ActionVPNWithOVPN is the name of the actions vpn with opvn method
+	ActionVPNWithOVPN = "action_vpn_with_ovpn"
 )
 
 var (

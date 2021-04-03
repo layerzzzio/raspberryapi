@@ -22,6 +22,8 @@ type Infos struct {
 	ZoneInfoFn                 func(string) map[string]string
 	ListNameFilesInDirectoryFn func(string) []string
 	VPNCountriesFn             func(string) map[string][]string
+	VPNConfigFileFn            func(string, string, string) []string
+	ProcessesPidsFn            func(string) []string
 }
 
 // ReadFile mock
@@ -102,4 +104,14 @@ func (i Infos) ListNameFilesInDirectory(directoryPath string) []string {
 // VPNCountries mock
 func (i Infos) VPNCountries(directoryPath string) map[string][]string {
 	return i.VPNCountriesFn(directoryPath)
+}
+
+// VPNConfigFiles mock
+func (i Infos) VPNConfigFiles(vpnName string, vpnPath string, country string) []string {
+	return i.VPNConfigFileFn(vpnName, vpnPath, country)
+}
+
+// VPNConfigFiles mock
+func (i Infos) ProcessesPids(regex string) []string {
+	return i.ProcessesPidsFn(regex)
 }

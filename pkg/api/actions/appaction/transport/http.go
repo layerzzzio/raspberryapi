@@ -30,24 +30,29 @@ func (h *HTTP) vpnwithopenvpn(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "Not found - bad action type")
 	}
 
-	if action == "connect" {
-		country = ctx.QueryParam("country")
-		if country == "" {
-			return echo.NewHTTPError(http.StatusNotFound, "Not found - country is nil")
-		}
-
-		username = ctx.QueryParam("username")
-		if username == "" {
-			return echo.NewHTTPError(http.StatusNotFound, "Not found - username is nil")
-		}
-
-		password := ctx.QueryParam("password")
-		if password == "" {
-			return echo.NewHTTPError(http.StatusNotFound, "Not found - password is nil")
-		}
+	vpnName := ctx.QueryParam("vpnName")
+	if vpnName == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - vpnName is nil")
 	}
 
-	result, err := h.svc.ExecuteWOVA(action, country, username, password)
+	if action == "connect" {
+		country = ctx.QueryParam("country")
+		// if country == "" {
+		// 	return echo.NewHTTPError(http.StatusNotFound, "Not found - country is nil")
+		// }
+
+		username = ctx.QueryParam("username")
+		// if username == "" {
+		// 	return echo.NewHTTPError(http.StatusNotFound, "Not found - username is nil")
+		// }
+
+		password = ctx.QueryParam("password")
+		// if password == "" {
+		// 	return echo.NewHTTPError(http.StatusNotFound, "Not found - password is nil")
+		// }
+	}
+
+	result, err := h.svc.ExecuteWOVA(action, vpnName, country, username, password)
 	if err != nil {
 		return err
 	}

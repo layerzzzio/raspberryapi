@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -482,4 +483,91 @@ func StringItemExists(array []string, item string) bool {
 	}
 
 	return false
+}
+
+// VPNConfigFiles returns a list of vpn files
+func (s Service) VPNConfigFiles(
+	vpnName string,
+	vpnPath string,
+	country string,
+) []string {
+	var countrycode string
+	var result []string
+	// vpnPath = /etc/openvpn/wov_ipvanish/vpnconfigs
+	dir, err := ioutil.ReadDir(vpnPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for k, v := range constants.COUNTRYCODENAME {
+		if strings.EqualFold(v, country) {
+			countrycode = k
+		}
+	}
+
+	for _, dir := range dir {
+		if vpnName == "vyprvpn" {
+			if strings.Contains(dir.Name(), country) {
+				return []string{vpnPath + "/" + dir.Name()}
+			}
+		} else {
+			fileName := ""
+			if vpnName == "ipvanish" {
+				fileName = strings.ReplaceAll(dir.Name(), "ipvanish-", "")
+			}
+
+			if strings.HasPrefix(strings.ToUpper(fileName), countrycode) &&
+				!strings.HasSuffix(fileName, "udp.ovpn") {
+				result = append(result, vpnPath+"/"+dir.Name())
+			}
+		}
+
+	}
+
+	if result == nil {
+		randomIndex := rand.Intn(len(dir))
+		randomFileInfo := dir[randomIndex]
+		result = []string{vpnPath + "/" + randomFileInfo.Name()}
+	}
+
+	return result
+}
+
+// ProcessesPids returns a list of pids
+func (s Service) ProcessesPids(
+	regex string,
+) []string {
+	psGrep := "ps -ef | grep"
+	awk := "awk '{pid = $2 ; s = \"\"; for (i = 8; i <= NF; i++) s = s $i \" \"; print s \"<sep>\" pid}'"
+	pidSearch := fmt.Sprintf(
+		"%v \"%v\" | %v",
+		psGrep,
+		regex,
+		awk,
+	)
+
+	out, err := exec.Command("sh", "-c", pidSearch).Output()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	stdOut := strings.Split(string(out), "\n")
+	var pids []string
+	// matched, err := regexp.MatchString(regex, "aaxbb")
+	re, _ := regexp.Compile(regex)
+
+	for _, ps := range stdOut {
+		if strings.ReplaceAll(ps, " ", "") != "" &&
+			!strings.Contains(ps, awk) &&
+			!strings.HasPrefix(ps, "grep ") {
+			split := strings.Split(ps, "<sep>")
+			matched := re.MatchString(split[0])
+			if matched {
+				pids = append(pids, split[1])
+			}
+		}
+	}
+
+	return pids
 }

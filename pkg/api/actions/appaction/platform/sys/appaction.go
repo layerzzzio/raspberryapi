@@ -17,7 +17,7 @@ func (ins AppAction) ExecuteWOVA(plan map[int](map[int]actions.Func)) (rpi.Actio
 	progress, exitStatus := actions.ExecutePlan(plan, progressInit)
 
 	return rpi.Action{
-		Name:          actions.InstallVPNWithOVPN,
+		Name:          actions.ActionVPNWithOVPN,
 		NumberOfSteps: uint16(len(progressInit)),
 		Progress:      progress,
 		ExitStatus:    exitStatus,

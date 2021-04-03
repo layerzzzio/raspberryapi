@@ -36,7 +36,7 @@ func TestExecuteWOVA(t *testing.T) {
 					},
 				},
 			},
-			wantedDataName:        "install_vpn_with_ovpn",
+			wantedDataName:        "action_vpn_with_ovpn",
 			wantedDataNumSteps:    1,
 			wantedDataStdOutStep1: "string0-string1",
 			wantedDataExitStatus:  0,

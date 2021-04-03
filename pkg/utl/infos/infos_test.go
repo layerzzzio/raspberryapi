@@ -613,7 +613,12 @@ func TestListNameFilesInDirectory(t *testing.T) {
 			name:          "success: found wireless file",
 			directoryPath: "./testdata",
 			wantedData: []string{
-				"iso3166.tab", "passwd",
+				"Ireland.ovpn", "Netherlands.ovpn", "Slovakia.ovpn", "USA - New York.ovpn",
+				"hk-hkg.prod.surfshark.com_udp.ovpn", "ipvanish-AT-Vienna-vie-c05.ovpn",
+				"ipvanish-FR-Bordeaux-bod-c02.ovpn", "ipvanish-KR-Seoul-sel-a01.ovpn",
+				"ipvanish-LV-Riga-rix-c04.ovpn", "ipvanish-UK-Manchester-man-c13.ovpn",
+				"ipvanish-US-Atlanta-atl-a51.ovpn", "iso3166.tab", "nz-akl.prod.surfshark.com_tcp.ovpn",
+				"nz-akl.prod.surfshark.com_udp.ovpn", "passwd", "us-nyc-st001.prod.surfshark.com_udp.ovpn",
 			},
 		},
 	}
@@ -757,3 +762,73 @@ func TestVPNCountries(t *testing.T) {
 		})
 	}
 }
+
+func TestVPNConfigFile(t *testing.T) {
+	cases := []struct {
+		name       string
+		vpnName    string
+		country    string
+		vpnPath    string
+		wantedData []string
+	}{
+		{
+			name:       "success: VyprVPN USA",
+			vpnName:    "vyprvpn",
+			country:    "USA",
+			vpnPath:    "./testdata/vyprvpn",
+			wantedData: []string{"./testdata/vyprvpn/USA - New York.ovpn"},
+		},
+		{
+			name:       "success: IPVanishVPN France",
+			vpnName:    "ipvanish",
+			country:    "France",
+			vpnPath:    "./testdata/ipvanish",
+			wantedData: []string{"./testdata/ipvanish/ipvanish-FR-Bordeaux-bod-c02.ovpn"},
+		},
+		{
+			name:       "success: SurfShark New Zealand",
+			vpnName:    "surfshark",
+			country:    "New Zealand",
+			vpnPath:    "./testdata/surfshark",
+			wantedData: []string{"./testdata/surfshark/nz-akl.prod.surfshark.com_tcp.ovpn"},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			i := infos.New()
+			vpnFiles := i.VPNConfigFiles(tc.vpnName, tc.vpnPath, tc.country)
+			assert.Equal(t, tc.wantedData, vpnFiles)
+		})
+	}
+}
+
+// func TestProcessesPids(t *testing.T) {
+// 	cases := []struct {
+// 		name             string
+// 		command          string
+// 		regex            string
+// 		wantedNumberOfPs int
+// 	}{
+// 		{
+// 			name:    "success: VyprVPN USA",
+// 			command: "nohup sleep 5 > /tmp/nohup.log 2>&1 &",
+// 			regex:   "^sleep 5.*",
+// 		},
+// 	}
+
+// 	for _, tc := range cases {
+// 		t.Run(tc.name, func(t *testing.T) {
+// 			i := infos.New()
+
+// 			cmd1 := exec.Command("sh", "-c", tc.command)
+// 			err := cmd1.Run()
+// 			if err != nil {
+// 				t.Fatalf("Failed to start test process: %v", err)
+// 			}
+// 			pids := i.ProcessesPids(tc.command, tc.regex)
+// 			out, _ := exec.Command("sh", "-c", "ps -ef | grep -i \"^sleep 5\" | awk '{print $2}'").Output()
+// 			assert.Equal(t, []string{string(out)}, pids)
+// 		})
+// 	}
+// }

@@ -29,6 +29,7 @@ const name = "appaction"
 func (ls *LogService) ExecuteWOVA(
 	ctx echo.Context,
 	action string,
+	vpnName string,
 	country string,
 	username string,
 	password string,
@@ -36,12 +37,12 @@ func (ls *LogService) ExecuteWOVA(
 	defer func(begin time.Time) {
 		ls.logger.Log(
 			ctx,
-			name, fmt.Sprintf("request: execute %v for %v", action, name), err,
+			name, fmt.Sprintf("request: execute %v for %v", action, vpnName), err,
 			map[string]interface{}{
 				"resp": resp,
 				"took": time.Since(begin),
 			},
 		)
 	}(time.Now())
-	return ls.Service.ExecuteWOVA(action, country, username, password)
+	return ls.Service.ExecuteWOVA(action, vpnName, country, username, password)
 }
