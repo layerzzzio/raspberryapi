@@ -5,6 +5,12 @@ import (
 	ail "github.com/raspibuddy/rpi/pkg/api/actions/appinstall/logging"
 	ais "github.com/raspibuddy/rpi/pkg/api/actions/appinstall/platform/sys"
 	ait "github.com/raspibuddy/rpi/pkg/api/actions/appinstall/transport"
+
+	"github.com/raspibuddy/rpi/pkg/api/actions/appaction"
+	aal "github.com/raspibuddy/rpi/pkg/api/actions/appaction/logging"
+	aas "github.com/raspibuddy/rpi/pkg/api/actions/appaction/platform/sys"
+	aat "github.com/raspibuddy/rpi/pkg/api/actions/appaction/transport"
+
 	"github.com/raspibuddy/rpi/pkg/api/actions/configure"
 	acl "github.com/raspibuddy/rpi/pkg/api/actions/configure/logging"
 	acs "github.com/raspibuddy/rpi/pkg/api/actions/configure/platform/sys"
@@ -114,6 +120,7 @@ func Start(cfg *config.Configuration) error {
 	adt.NewHTTP(adl.New(destroy.New(ads.Destroy{}, a), log).Service, v1)
 	act.NewHTTP(acl.New(configure.New(acs.Configure{}, a, i), log).Service, v1)
 	ait.NewHTTP(ail.New(appinstall.New(ais.Install{}, a), log).Service, v1)
+	aat.NewHTTP(aal.New(appaction.New(aas.AppAction{}, a, i), log).Service, v1)
 
 	// infos
 	ihut.NewHTTP(ihul.New(humanuser.New(ihus.HumanUser{}, i), log).Service, v1)

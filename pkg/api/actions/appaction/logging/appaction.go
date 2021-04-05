@@ -30,6 +30,7 @@ func (ls *LogService) ExecuteWOVA(
 	ctx echo.Context,
 	action string,
 	vpnName string,
+	relativeConfigPath string,
 	country string,
 	username string,
 	password string,
@@ -44,5 +45,5 @@ func (ls *LogService) ExecuteWOVA(
 			},
 		)
 	}(time.Now())
-	return ls.Service.ExecuteWOVA(action, vpnName, country, username, password)
+	return ls.Service.ExecuteWOVA(action, vpnName, relativeConfigPath, country, username, password)
 }

@@ -21,6 +21,7 @@ func NewHTTP(svc appaction.Service, r *echo.Group) {
 }
 
 func (h *HTTP) vpnwithopenvpn(ctx echo.Context) error {
+	relativeConfigPath := ""
 	username := ""
 	password := ""
 	country := ""
@@ -37,22 +38,27 @@ func (h *HTTP) vpnwithopenvpn(ctx echo.Context) error {
 
 	if action == "connect" {
 		country = ctx.QueryParam("country")
-		// if country == "" {
-		// 	return echo.NewHTTPError(http.StatusNotFound, "Not found - country is nil")
-		// }
+		if country == "" {
+			return echo.NewHTTPError(http.StatusNotFound, "Not found - country is nil")
+		}
+
+		relativeConfigPath = ctx.QueryParam("relativeConfigPath")
+		if relativeConfigPath == "" {
+			return echo.NewHTTPError(http.StatusNotFound, "Not found - courelativeConfigPathntry is nil")
+		}
 
 		username = ctx.QueryParam("username")
-		// if username == "" {
-		// 	return echo.NewHTTPError(http.StatusNotFound, "Not found - username is nil")
-		// }
+		if username == "" {
+			return echo.NewHTTPError(http.StatusNotFound, "Not found - username is nil")
+		}
 
 		password = ctx.QueryParam("password")
-		// if password == "" {
-		// 	return echo.NewHTTPError(http.StatusNotFound, "Not found - password is nil")
-		// }
+		if password == "" {
+			return echo.NewHTTPError(http.StatusNotFound, "Not found - password is nil")
+		}
 	}
 
-	result, err := h.svc.ExecuteWOVA(action, vpnName, country, username, password)
+	result, err := h.svc.ExecuteWOVA(action, vpnName, relativeConfigPath, country, username, password)
 	if err != nil {
 		return err
 	}

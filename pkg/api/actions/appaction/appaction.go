@@ -14,6 +14,7 @@ import (
 func (aac *AppAction) ExecuteWOVA(
 	action string,
 	vpnName string,
+	relativeConfigPath string,
 	country string,
 	username string,
 	password string,
@@ -23,13 +24,13 @@ func (aac *AppAction) ExecuteWOVA(
 	if action == "connect" {
 		configFiles := aac.i.VPNConfigFiles(
 			vpnName,
-			"/etc/openvpn/wov_"+vpnName+"/vpnconfigs",
+			"/etc/openvpn/wov_"+vpnName+"/vpnconfigs/"+relativeConfigPath,
 			country,
 		)
 		randomIndex := rand.Intn(len(configFiles))
 		configFile := configFiles[randomIndex]
 		connectCommand := fmt.Sprintf(
-			"openvpn --config %v --auth-user-pass <(echo -e \"%v\n%v\")",
+			"bash -c 'openvpn --config %v --auth-user-pass <(echo -e \"%v\n%v\")'",
 			configFile,
 			username,
 			password)

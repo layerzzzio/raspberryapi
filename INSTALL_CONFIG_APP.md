@@ -33,23 +33,39 @@ Here are some of the sources for those configurations:
 ### 2) Nord VPN
 #### 2.A) Install
 1. check isOpenVPN & isNordVPN & isUnzip: GET /softwares
-2. install NordVPN: POST /appinstall/nordvpn?action=**[install/uninstall]**&name=**[name]**&url=**[url]**&configDirectory=**[configDirectory]**&configRegex=**[configRegex]**
+2. install NordVPN: POST /appinstall/vpnwithovpn?action=**[install/uninstall]**&vpnName=**[vpnName]**&url=**[url]
+
 #### 2.B) Connect/Disconnect NordVPN
+1. check isVyprVPN : GET /softwares
+2. connect/disconnect NordVPN: POST /appaction/vpnwithovpn?action=**[connect/disconnect]**&vpnName=nordvpn&relativeConfigPath=**[relativeConfigPath]**&country=**[country]**&username**=**[username]**&password=**[password]**
 
 ### 3) Surfshark
 #### 3.A) Install
 1. check isOpenVPN & isSurfShark & isUnzip: GET /softwares
-2. install NordVPN: POST /appinstall/surfshark?action=**[install/uninstall]**&name=**[name]**&url=**[url]**&configDirectory=**[configDirectory]**&configRegex=**[configRegex]**
+2. install Surfshark: POST /appinstall/vpnwithovpn?action=**[install/uninstall]**&vpnName=**[vpnName]**&url=**[url]
+
+#### 3.B) Connect/Disconnect Surfshark
+cf. 2.B or 5.B
 
 ### 4) IPVanish
 #### 4.A) Install
 1. check isOpenVPN & isIPVanish & isUnzip: GET /softwares
-2. install NordVPN: POST /appinstall/ipvanish?action=**[install/uninstall]**&name=**[name]**&url=**[url]**&configDirectory=**[configDirectory]**&configRegex=**[configRegex]**
+2. install IPVanish: POST /appinstall/vpnwithovpn?action=**[install/uninstall]**&vpnName=**[vpnName]**&url=**[url]
+
+#### 4.B) Connect/Disconnect IPVanish
+cf. 2.B or 5.B
 
 ### 5) VyprVPN
 #### 5.A) Install
 1. check isOpenVPN & isVyprVPN & isUnzip: GET /softwares
-2. install NordVPN: POST /appinstall/vyprvpn?action=**[install/uninstall]**&name=**[name]**&url=**[url]**&configDirectory=**[configDirectory]**&configRegex=**[configRegex]**
+2. install VyprVPN: POST /appinstall/vpnwithovpn?action=**[install/uninstall]**&vpnName=**[vpnName]**&url=**[url]
+
+#### 5.B) Connect/Disconnect VyprVPN
+1. check isVyprVPN : GET /softwares
+2. connect/disconnect VyprVPN: POST /appaction/vpnwithovpn?action=**[connect/disconnect]**&vpnName=**[vpnName]**&relativeConfigPath=**[relativeConfigPath]**&country=**[country]**&username**=**[username]**&password=**[password]**
+
+Example: 
+POST http://10.0.0.143:3333/v1/appaction/vpnwithovpn?action=connect&vpnName=vyprvpn&relativeConfigPath=GF_OpenVPN_20200320/OpenVPN256&country=France&username=josharchibal@gmail.com&password=H?j6ft4J9NJCq?JS
 
 ---
 ## Web Browser

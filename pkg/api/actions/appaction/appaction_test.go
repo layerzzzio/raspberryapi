@@ -17,18 +17,19 @@ import (
 
 func TestExecuteWOVA(t *testing.T) {
 	cases := []struct {
-		name       string
-		action     string
-		vpnName    string
-		country    string
-		username   string
-		password   string
-		plan       map[int](map[int]actions.Func)
-		actions    *mock.Actions
-		infos      *mock.Infos
-		aacsys     *mocksys.Action
-		wantedData rpi.Action
-		wantedErr  error
+		name               string
+		action             string
+		vpnName            string
+		relativeConfigPath string
+		country            string
+		username           string
+		password           string
+		plan               map[int](map[int]actions.Func)
+		actions            *mock.Actions
+		infos              *mock.Infos
+		aacsys             *mocksys.Action
+		wantedData         rpi.Action
+		wantedErr          error
 	}{
 		{
 			name:   "bad action type",
@@ -84,12 +85,13 @@ func TestExecuteWOVA(t *testing.T) {
 			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "bad action type: connect or disconnect vpn with openvpn failed"),
 		},
 		{
-			name:     "success connect",
-			action:   "connect",
-			vpnName:  "surfshark",
-			country:  "France",
-			username: "loic",
-			password: "pass",
+			name:               "success connect",
+			action:             "connect",
+			vpnName:            "surfshark",
+			relativeConfigPath: "",
+			country:            "France",
+			username:           "loic",
+			password:           "pass",
 			plan: map[int](map[int]actions.Func){
 				1: {
 					1: {
@@ -265,6 +267,7 @@ func TestExecuteWOVA(t *testing.T) {
 			vpnAction, err := s.ExecuteWOVA(
 				tc.action,
 				tc.vpnName,
+				tc.relativeConfigPath,
 				tc.username,
 				tc.password,
 				tc.country,

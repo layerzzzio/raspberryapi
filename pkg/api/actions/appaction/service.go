@@ -7,7 +7,7 @@ import (
 
 // Service represents all AppAction application services.
 type Service interface {
-	ExecuteWOVA(string, string, string, string, string) (rpi.Action, error)
+	ExecuteWOVA(string, string, string, string, string, string) (rpi.Action, error)
 }
 
 // AppAction represents a AppAction application service.
