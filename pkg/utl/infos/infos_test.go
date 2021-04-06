@@ -832,3 +832,27 @@ func TestVPNConfigFile(t *testing.T) {
 // 		})
 // 	}
 // }
+
+func TestStatusVPNWithOpenVPN(t *testing.T) {
+	cases := []struct {
+		name       string
+		regexPs    string
+		regexName  string
+		wantedData map[string]bool
+	}{
+		{
+			name:       "success: VyprVPN USA",
+			regexPs:    `openvpn --config\s*.*--auth-user-pass`,
+			regexName:  `wov_[a-zA-Z]+`,
+			wantedData: nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			i := infos.New()
+			status := i.StatusVPNWithOpenVPN(tc.regexPs, tc.regexName)
+			assert.Equal(t, tc.wantedData, status)
+		})
+	}
+}

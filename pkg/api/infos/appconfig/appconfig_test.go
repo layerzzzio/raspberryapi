@@ -1,10 +1,10 @@
-package softwareconfig_test
+package appconfig_test
 
 import (
 	"testing"
 
 	"github.com/raspibuddy/rpi"
-	"github.com/raspibuddy/rpi/pkg/api/infos/softwareconfig"
+	"github.com/raspibuddy/rpi/pkg/api/infos/appconfig"
 	"github.com/raspibuddy/rpi/pkg/utl/mock"
 	"github.com/raspibuddy/rpi/pkg/utl/mock/mocksys"
 	"github.com/stretchr/testify/assert"
@@ -14,8 +14,8 @@ func TestList(t *testing.T) {
 	cases := []struct {
 		name       string
 		infos      mock.Infos
-		socfsys    mocksys.SoftwareConfig
-		wantedData rpi.SoftwareConfig
+		apcfsys    mocksys.AppConfig
+		wantedData rpi.AppConfig
 		wantedErr  error
 	}{
 		{
@@ -27,18 +27,18 @@ func TestList(t *testing.T) {
 					}
 				},
 			},
-			socfsys: mocksys.SoftwareConfig{
+			apcfsys: mocksys.AppConfig{
 				ListFn: func(
 					map[string][]string,
-				) (rpi.SoftwareConfig, error) {
-					return rpi.SoftwareConfig{
+				) (rpi.AppConfig, error) {
+					return rpi.AppConfig{
 						VPNCountries: map[string][]string{
 							"nordvpn": {"France", "Germany"},
 						},
 					}, nil
 				},
 			},
-			wantedData: rpi.SoftwareConfig{
+			wantedData: rpi.AppConfig{
 				VPNCountries: map[string][]string{
 					"nordvpn": {"France", "Germany"},
 				},
@@ -49,7 +49,7 @@ func TestList(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			s := softwareconfig.New(&tc.socfsys, tc.infos)
+			s := appconfig.New(&tc.apcfsys, tc.infos)
 			intf, err := s.List()
 			assert.Equal(t, tc.wantedData, intf)
 			assert.Equal(t, tc.wantedErr, err)

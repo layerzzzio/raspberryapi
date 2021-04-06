@@ -4,17 +4,17 @@ import (
 	"github.com/raspibuddy/rpi"
 )
 
-// SoftwareConfig mock
-type SoftwareConfig struct {
+// AppConfig mock
+type AppConfig struct {
 	ListFn func(
 		map[string][]string,
-	) (rpi.SoftwareConfig, error)
+	) (rpi.AppConfig, error)
 }
 
 // List mock
-func (in SoftwareConfig) List(
+func (in AppConfig) List(
 	vpnCountries map[string][]string,
-) (rpi.SoftwareConfig, error) {
+) (rpi.AppConfig, error) {
 	return in.ListFn(
 		vpnCountries,
 	)

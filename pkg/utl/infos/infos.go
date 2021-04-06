@@ -571,3 +571,50 @@ func (s Service) ProcessesPids(
 
 	return pids
 }
+
+// StatusVPNWithOpenVPN returns the status of the VPN with OpenVPN apps
+func (s Service) StatusVPNWithOpenVPN(
+	regexVPNPs string,
+	regexVPNName string,
+) map[string]bool {
+	psGrep := "ps -ef | grep"
+	awk := "awk '{pid = $2 ; s = \"\"; for (i = 8; i <= NF; i++) s = s $i \" \"; print s \"<sep>\" pid}'"
+	pidSearch := fmt.Sprintf(
+		"%v \"%v\" | %v",
+		psGrep,
+		regexVPNPs,
+		awk,
+	)
+
+	out, err := exec.Command("sh", "-c", pidSearch).Output()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	stdOut := strings.Split(string(out), "\n")
+	var result = make(map[string]bool)
+
+	rePs, _ := regexp.Compile(regexVPNPs)
+	reName, _ := regexp.Compile(regexVPNName)
+
+	for _, ps := range stdOut {
+		if strings.ReplaceAll(ps, " ", "") != "" &&
+			!strings.Contains(ps, awk) &&
+			!strings.HasPrefix(ps, "grep ") {
+			split := strings.Split(ps, "<sep>")
+			matched := rePs.MatchString(split[0])
+			if matched {
+				vpnNameRaw := string(reName.FindAllString(split[0], 1)[0])
+				vpnNameClean := strings.ReplaceAll(vpnNameRaw, "wov_", "")
+				result[vpnNameClean] = true
+			}
+		}
+	}
+
+	if len(result) == 0 {
+		result = nil
+	}
+
+	return result
+}

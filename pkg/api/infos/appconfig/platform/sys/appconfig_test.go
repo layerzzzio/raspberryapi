@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/raspibuddy/rpi"
-	"github.com/raspibuddy/rpi/pkg/api/infos/softwareconfig"
-	"github.com/raspibuddy/rpi/pkg/api/infos/softwareconfig/platform/sys"
+	"github.com/raspibuddy/rpi/pkg/api/infos/appconfig"
+	"github.com/raspibuddy/rpi/pkg/api/infos/appconfig/platform/sys"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -14,7 +14,7 @@ func TestList(t *testing.T) {
 	cases := []struct {
 		name         string
 		VPNCountries map[string][]string
-		wantedData   rpi.SoftwareConfig
+		wantedData   rpi.AppConfig
 		wantedErr    error
 	}{
 		{
@@ -22,7 +22,7 @@ func TestList(t *testing.T) {
 			VPNCountries: map[string][]string{
 				"nordvpn": {"France", "Germany"},
 			},
-			wantedData: rpi.SoftwareConfig{
+			wantedData: rpi.AppConfig{
 				VPNCountries: map[string][]string{
 					"nordvpn": {"France", "Germany"},
 				},
@@ -33,7 +33,7 @@ func TestList(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			s := softwareconfig.SOCFSYS(sys.SoftwareConfig{})
+			s := appconfig.APCFSYS(sys.AppConfig{})
 			intf, err := s.List(
 				tc.VPNCountries,
 			)

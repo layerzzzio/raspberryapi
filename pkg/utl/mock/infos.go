@@ -24,6 +24,7 @@ type Infos struct {
 	VPNCountriesFn             func(string) map[string][]string
 	VPNConfigFileFn            func(string, string, string) []string
 	ProcessesPidsFn            func(string) []string
+	StatusVPNWithOpenVPNFn     func(string, string) map[string]bool
 }
 
 // ReadFile mock
@@ -114,4 +115,9 @@ func (i Infos) VPNConfigFiles(vpnName string, vpnPath string, country string) []
 // VPNConfigFiles mock
 func (i Infos) ProcessesPids(regex string) []string {
 	return i.ProcessesPidsFn(regex)
+}
+
+// StatusVPNWithOpenVPN mock
+func (i Infos) StatusVPNWithOpenVPN(regexPs string, regexName string) map[string]bool {
+	return i.StatusVPNWithOpenVPNFn(regexPs, regexName)
 }

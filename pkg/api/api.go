@@ -1,15 +1,14 @@
 package api
 
 import (
-	"github.com/raspibuddy/rpi/pkg/api/actions/appinstall"
-	ail "github.com/raspibuddy/rpi/pkg/api/actions/appinstall/logging"
-	ais "github.com/raspibuddy/rpi/pkg/api/actions/appinstall/platform/sys"
-	ait "github.com/raspibuddy/rpi/pkg/api/actions/appinstall/transport"
-
 	"github.com/raspibuddy/rpi/pkg/api/actions/appaction"
 	aal "github.com/raspibuddy/rpi/pkg/api/actions/appaction/logging"
 	aas "github.com/raspibuddy/rpi/pkg/api/actions/appaction/platform/sys"
 	aat "github.com/raspibuddy/rpi/pkg/api/actions/appaction/transport"
+	"github.com/raspibuddy/rpi/pkg/api/actions/appinstall"
+	ail "github.com/raspibuddy/rpi/pkg/api/actions/appinstall/logging"
+	ais "github.com/raspibuddy/rpi/pkg/api/actions/appinstall/platform/sys"
+	ait "github.com/raspibuddy/rpi/pkg/api/actions/appinstall/transport"
 
 	"github.com/raspibuddy/rpi/pkg/api/actions/configure"
 	acl "github.com/raspibuddy/rpi/pkg/api/actions/configure/logging"
@@ -19,6 +18,14 @@ import (
 	adl "github.com/raspibuddy/rpi/pkg/api/actions/destroy/logging"
 	ads "github.com/raspibuddy/rpi/pkg/api/actions/destroy/platform/sys"
 	adt "github.com/raspibuddy/rpi/pkg/api/actions/destroy/transport"
+	"github.com/raspibuddy/rpi/pkg/api/infos/appconfig"
+	iacl "github.com/raspibuddy/rpi/pkg/api/infos/appconfig/logging"
+	iacs "github.com/raspibuddy/rpi/pkg/api/infos/appconfig/platform/sys"
+	iact "github.com/raspibuddy/rpi/pkg/api/infos/appconfig/transport"
+	"github.com/raspibuddy/rpi/pkg/api/infos/appstatus"
+	iasl "github.com/raspibuddy/rpi/pkg/api/infos/appstatus/logging"
+	iass "github.com/raspibuddy/rpi/pkg/api/infos/appstatus/platform/sys"
+	iast "github.com/raspibuddy/rpi/pkg/api/infos/appstatus/transport"
 	"github.com/raspibuddy/rpi/pkg/api/infos/boot"
 	ibol "github.com/raspibuddy/rpi/pkg/api/infos/boot/logging"
 	ibos "github.com/raspibuddy/rpi/pkg/api/infos/boot/platform/sys"
@@ -43,10 +50,6 @@ import (
 	isol "github.com/raspibuddy/rpi/pkg/api/infos/software/logging"
 	isos "github.com/raspibuddy/rpi/pkg/api/infos/software/platform/sys"
 	isot "github.com/raspibuddy/rpi/pkg/api/infos/software/transport"
-	"github.com/raspibuddy/rpi/pkg/api/infos/softwareconfig"
-	isocl "github.com/raspibuddy/rpi/pkg/api/infos/softwareconfig/logging"
-	isocs "github.com/raspibuddy/rpi/pkg/api/infos/softwareconfig/platform/sys"
-	isoct "github.com/raspibuddy/rpi/pkg/api/infos/softwareconfig/transport"
 	"github.com/raspibuddy/rpi/pkg/api/metrics/cpu"
 	cl "github.com/raspibuddy/rpi/pkg/api/metrics/cpu/logging"
 	cs "github.com/raspibuddy/rpi/pkg/api/metrics/cpu/platform/sys"
@@ -129,7 +132,8 @@ func Start(cfg *config.Configuration) error {
 	icot.NewHTTP(icol.New(configfile.New(icos.ConfigFile{}, i), log).Service, v1)
 	iint.NewHTTP(iinl.New(rpinterface.New(iins.RpInterface{}, i), log).Service, v1)
 	isot.NewHTTP(isol.New(software.New(isos.Software{}, i), log).Service, v1)
-	isoct.NewHTTP(isocl.New(softwareconfig.New(isocs.SoftwareConfig{}, i), log).Service, v1)
+	iact.NewHTTP(iacl.New(appconfig.New(iacs.AppConfig{}, i), log).Service, v1)
+	iast.NewHTTP(iasl.New(appstatus.New(iass.AppStatus{}, i), log).Service, v1)
 
 	server.Start(e, &server.Config{
 		Port:                cfg.Server.Port,
