@@ -151,6 +151,11 @@ func TestGetConfigFiles(t *testing.T) {
 					IsCritical:  false,
 					Description: "is the daemon file for the remote GPIO service.",
 				},
+				"iso3166": {
+					Path:        "/usr/share/zoneinfo/iso3166.tab",
+					IsCritical:  false,
+					Description: "is a file containing the standards published by the International Organization for Standardization (ISO) that defines codes for the names of countries, dependent territories, special areas of geographical interest, and their principal subdivisions (e.g., provinces or states).",
+				},
 			},
 		},
 	}
@@ -519,6 +524,335 @@ func TestIsVariableSet(t *testing.T) {
 			i := infos.New()
 			isMatch := i.IsVariableSet(tc.rawLines, tc.key, tc.value)
 			assert.Equal(t, tc.wantedData, isMatch)
+		})
+	}
+}
+
+func TestListWifiInterfaces(t *testing.T) {
+	currentDir, _ := os.Getwd()
+
+	cases := []struct {
+		name          string
+		isCreateFile  bool
+		directoryPath string
+		wantedData    []string
+	}{
+		{
+			name:          "success: cannot find the wireless file",
+			isCreateFile:  false,
+			directoryPath: currentDir,
+			wantedData:    nil,
+		},
+		{
+			name:          "success: found wireless file",
+			isCreateFile:  true,
+			directoryPath: currentDir,
+			wantedData:    []string{"directory"},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			i := infos.New()
+
+			if tc.isCreateFile {
+				if err := os.MkdirAll(currentDir+"/directory", 0755); err != nil {
+					log.Print(err)
+				}
+
+				if err := os.Mkdir(currentDir+"/directory/wireless", 0755); err != nil {
+					log.Fatal(err)
+				}
+			}
+
+			interfaces := i.ListWifiInterfaces(tc.directoryPath)
+
+			if tc.isCreateFile {
+				os.RemoveAll(currentDir + "/directory")
+			}
+
+			assert.Equal(t, tc.wantedData, interfaces)
+		})
+	}
+}
+
+func TestZoneInfo(t *testing.T) {
+	cases := []struct {
+		name       string
+		filePath   string
+		wantedData map[string]string
+	}{
+		{
+			name:     "success: found wireless file",
+			filePath: "./testdata/iso3166.tab",
+			wantedData: map[string]string{
+				"AD": "Andorra",
+				"AE": "United Arab Emirates",
+				"AF": "Afghanistan",
+				"AG": "Antigua & Barbuda",
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			i := infos.New()
+			interfaces := i.ZoneInfo(tc.filePath)
+			assert.Equal(t, tc.wantedData, interfaces)
+		})
+	}
+}
+
+func TestListNameFilesInDirectory(t *testing.T) {
+	cases := []struct {
+		name          string
+		directoryPath string
+		wantedData    []string
+	}{
+		{
+			name:          "success: found wireless file",
+			directoryPath: "./testdata",
+			wantedData: []string{
+				"Ireland.ovpn", "Netherlands.ovpn", "Slovakia.ovpn", "USA - New York.ovpn",
+				"hk-hkg.prod.surfshark.com_udp.ovpn", "ipvanish-AT-Vienna-vie-c05.ovpn",
+				"ipvanish-FR-Bordeaux-bod-c02.ovpn", "ipvanish-KR-Seoul-sel-a01.ovpn",
+				"ipvanish-LV-Riga-rix-c04.ovpn", "ipvanish-UK-Manchester-man-c13.ovpn",
+				"ipvanish-US-Atlanta-atl-a51.ovpn", "iso3166.tab", "nz-akl.prod.surfshark.com_tcp.ovpn",
+				"nz-akl.prod.surfshark.com_udp.ovpn", "passwd", "us-nyc-st001.prod.surfshark.com_udp.ovpn",
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			i := infos.New()
+			interfaces := i.ListNameFilesInDirectory(tc.directoryPath)
+			assert.Equal(t, tc.wantedData, interfaces)
+		})
+	}
+}
+
+func TestStringItemExists(t *testing.T) {
+	cases := []struct {
+		name       string
+		item       string
+		array      []string
+		wantedData bool
+	}{
+		{
+			name:       "success: array of strings",
+			item:       "France",
+			array:      []string{"India", "Canada", "Japan", "Germany", "France"},
+			wantedData: true,
+		},
+		{
+			name:       "failure: array of strings",
+			item:       "Francexxx",
+			array:      []string{"India", "Canada", "Japan", "Germany", "Italy"},
+			wantedData: false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			interfaces := infos.StringItemExists(tc.array, tc.item)
+			assert.Equal(t, tc.wantedData, interfaces)
+		})
+	}
+}
+
+func TestVPNCountries(t *testing.T) {
+	cases := []struct {
+		name          string
+		isCreateFile  bool
+		directoryPath string
+		wantedData    map[string][]string
+	}{
+		{
+			name:          "success: the current file are not found in COUNTRYCODENAME",
+			isCreateFile:  false,
+			directoryPath: "./testdata",
+			wantedData:    map[string][]string{},
+		},
+		{
+			name:          "success: the current file are found in COUNTRYCODENAME",
+			isCreateFile:  true,
+			directoryPath: "./testdata",
+			wantedData: map[string][]string{
+				"nordvpn":   {"Germany"},
+				"vyprvpn":   {"Canada"},
+				"ipvanish":  {"France"},
+				"surfshark": {"Singapore"},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			i := infos.New()
+			if tc.isCreateFile {
+				if err := os.MkdirAll("./testdata/wov_nordvpn/vpnconfigs", 0777); err != nil {
+					log.Fatal(err)
+				}
+
+				if err := actions.OverwriteToFile(
+					actions.WriteToFileArg{
+						File: "./testdata/wov_nordvpn/vpnconfigs/de844.nordvpn.com.tcp.ovpn",
+					},
+				); err != nil {
+					log.Fatal(err)
+				}
+
+				if err := os.MkdirAll("./testdata/wov_vyprvpn/vpnconfigs", 0777); err != nil {
+					log.Fatal(err)
+				}
+
+				if err := actions.OverwriteToFile(
+					actions.WriteToFileArg{
+						File: "./testdata/wov_vyprvpn/vpnconfigs/Canada.ovpn",
+					},
+				); err != nil {
+					log.Fatal(err)
+				}
+
+				if err := os.MkdirAll("./testdata/wov_ipvanish/vpnconfigs", 0777); err != nil {
+					log.Fatal(err)
+				}
+
+				if err := actions.OverwriteToFile(
+					actions.WriteToFileArg{
+						File: "./testdata/wov_ipvanish/vpnconfigs/ipvanish-FR-Paris-par-a06.ovpn",
+					},
+				); err != nil {
+					log.Fatal(err)
+				}
+
+				if err := os.MkdirAll("./testdata/wov_surfshark/vpnconfigs", 0777); err != nil {
+					log.Fatal(err)
+				}
+
+				if err := actions.OverwriteToFile(
+					actions.WriteToFileArg{
+						File: "./testdata/wov_surfshark/vpnconfigs/sg-in.prod.surfshark.com_udp.ovpn",
+					},
+				); err != nil {
+					log.Fatal(err)
+				}
+
+				if err := actions.OverwriteToFile(
+					actions.WriteToFileArg{
+						File: "./testdata/alcul",
+					},
+				); err != nil {
+					log.Fatal(err)
+				}
+			}
+
+			interfaces := i.VPNCountries(tc.directoryPath)
+
+			if tc.isCreateFile {
+				os.RemoveAll("./testdata/wov_nordvpn")
+				os.RemoveAll("./testdata/wov_ipvanish")
+				os.RemoveAll("./testdata/wov_vyprvpn")
+				os.RemoveAll("./testdata/wov_surfshark")
+				os.RemoveAll("./testdata/alcul")
+			}
+
+			assert.Equal(t, tc.wantedData, interfaces)
+		})
+	}
+}
+
+func TestVPNConfigFile(t *testing.T) {
+	cases := []struct {
+		name       string
+		vpnName    string
+		country    string
+		vpnPath    string
+		wantedData []string
+	}{
+		{
+			name:       "success: VyprVPN USA",
+			vpnName:    "vyprvpn",
+			country:    "USA",
+			vpnPath:    "./testdata/vyprvpn",
+			wantedData: []string{"./testdata/vyprvpn/USA - New York.ovpn"},
+		},
+		{
+			name:       "success: IPVanishVPN France",
+			vpnName:    "ipvanish",
+			country:    "France",
+			vpnPath:    "./testdata/ipvanish",
+			wantedData: []string{"./testdata/ipvanish/ipvanish-FR-Bordeaux-bod-c02.ovpn"},
+		},
+		{
+			name:       "success: SurfShark New Zealand",
+			vpnName:    "surfshark",
+			country:    "New Zealand",
+			vpnPath:    "./testdata/surfshark",
+			wantedData: []string{"./testdata/surfshark/nz-akl.prod.surfshark.com_tcp.ovpn"},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			i := infos.New()
+			vpnFiles := i.VPNConfigFiles(tc.vpnName, tc.vpnPath, tc.country)
+			assert.Equal(t, tc.wantedData, vpnFiles)
+		})
+	}
+}
+
+// func TestProcessesPids(t *testing.T) {
+// 	cases := []struct {
+// 		name             string
+// 		command          string
+// 		regex            string
+// 		wantedNumberOfPs int
+// 	}{
+// 		{
+// 			name:    "success: VyprVPN USA",
+// 			command: "nohup sleep 5 > /tmp/nohup.log 2>&1 &",
+// 			regex:   "^sleep 5.*",
+// 		},
+// 	}
+
+// 	for _, tc := range cases {
+// 		t.Run(tc.name, func(t *testing.T) {
+// 			i := infos.New()
+
+// 			cmd1 := exec.Command("sh", "-c", tc.command)
+// 			err := cmd1.Run()
+// 			if err != nil {
+// 				t.Fatalf("Failed to start test process: %v", err)
+// 			}
+// 			pids := i.ProcessesPids(tc.command, tc.regex)
+// 			out, _ := exec.Command("sh", "-c", "ps -ef | grep -i \"^sleep 5\" | awk '{print $2}'").Output()
+// 			assert.Equal(t, []string{string(out)}, pids)
+// 		})
+// 	}
+// }
+
+func TestStatusVPNWithOpenVPN(t *testing.T) {
+	cases := []struct {
+		name       string
+		regexPs    string
+		regexName  string
+		wantedData map[string]bool
+	}{
+		{
+			name:       "success: VyprVPN USA",
+			regexPs:    `openvpn --config\s*.*--auth-user-pass`,
+			regexName:  `wov_[a-zA-Z]+`,
+			wantedData: nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			i := infos.New()
+			status := i.StatusVPNWithOpenVPN(tc.regexPs, tc.regexName)
+			assert.Equal(t, tc.wantedData, status)
 		})
 	}
 }

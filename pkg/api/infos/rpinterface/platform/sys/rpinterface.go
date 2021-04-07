@@ -21,6 +21,9 @@ func (int RpInterface) List(
 	isI2C bool,
 	isOneWire bool,
 	isRemoteGpio bool,
+	wifiInterfaces []string,
+	isWpaSupCom map[string]bool,
+	zoneInfo map[string]string,
 ) (rpi.RpInterface, error) {
 	isCamera := false
 	// I use a regex here to cover the below cases:
@@ -35,6 +38,11 @@ func (int RpInterface) List(
 		}
 	}
 
+	isWifiInterfaces := false
+	if len(wifiInterfaces) > 0 {
+		isWifiInterfaces = true
+	}
+
 	return rpi.RpInterface{
 		IsStartXElf:        isStartXElf,
 		IsCamera:           isCamera,
@@ -46,5 +54,8 @@ func (int RpInterface) List(
 		IsI2C:              isI2C,
 		IsOneWire:          isOneWire,
 		IsRemoteGpio:       isRemoteGpio,
+		IsWifiInterfaces:   isWifiInterfaces,
+		IsWpaSupCom:        isWpaSupCom,
+		ZoneInfo:           zoneInfo,
 	}, nil
 }

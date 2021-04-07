@@ -676,3 +676,123 @@ func (con *Configure) ExecuteRG(action string) (rpi.Action, error) {
 
 	return con.consys.ExecuteRG(plan)
 }
+
+// ExecuteUPD update the system
+func (con *Configure) ExecuteUPD() (rpi.Action, error) {
+	plan := map[int](map[int]actions.Func){
+		1: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: "apt-get update -y",
+					},
+				},
+			},
+		},
+	}
+
+	return con.consys.ExecuteUPD(plan)
+}
+
+// ExecuteUPG upgrade the system
+func (con *Configure) ExecuteUPG() (rpi.Action, error) {
+	plan := map[int](map[int]actions.Func){
+		1: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: "apt-get upgrade -y",
+					},
+				},
+			},
+		},
+	}
+
+	return con.consys.ExecuteUPG(plan)
+}
+
+// ExecuteUPDG update & upgrade the system
+func (con *Configure) ExecuteUPDG() (rpi.Action, error) {
+	plan := map[int](map[int]actions.Func){
+		1: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: "apt-get update -y",
+					},
+				},
+			},
+		},
+		2: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: "apt-get upgrade -y",
+					},
+				},
+			},
+		},
+	}
+
+	return con.consys.ExecuteUPDG(plan)
+}
+
+// ExecuteWC changes the wifi country of the system
+func (con *Configure) ExecuteWC(iface string, country string) (rpi.Action, error) {
+	plan := map[int](map[int]actions.Func){
+		1: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: fmt.Sprintf("wpa_cli -i %v set country %v", iface, country),
+					},
+				},
+			},
+		},
+		2: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: fmt.Sprintf("wpa_cli -i %v save_config > /dev/null 2>&1", iface),
+					},
+				},
+			},
+		},
+		3: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: fmt.Sprintf("iw reg set %v 2> /dev/null", country),
+					},
+				},
+			},
+		},
+		4: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: "if hash rfkill 2> /dev/null ; then rfkill unblock wifi ; for filename in /var/lib/systemd/rfkill/*:wlan ; do echo 0 > $filename ; done ; fi",
+					},
+				},
+			},
+		},
+	}
+
+	return con.consys.ExecuteWC(plan)
+}

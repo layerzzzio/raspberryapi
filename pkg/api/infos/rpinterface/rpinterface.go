@@ -5,6 +5,7 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/raspibuddy/rpi"
+	"github.com/raspibuddy/rpi/pkg/utl/constants"
 )
 
 // List populates and returns an array of RpInterface model.
@@ -28,6 +29,11 @@ func (in *RpInterface) List() (rpi.RpInterface, error) {
 	isSPI := in.i.IsSPI(bootConfigPath)
 	isI2C := in.i.IsI2C(bootConfigPath)
 	isOneWire := in.i.IsVariableSet(bootConfig, "dtoverlay", "w1-gpio")
+	wifiInterfaces := in.i.ListWifiInterfaces(constants.NETWORKINTERFACES)
+
+	isWpaSupCom := in.i.IsWpaSupCom()
+	zoneInfoFile := in.i.GetConfigFiles()["iso3166"].Path
+	zoneInfo := in.i.ZoneInfo(zoneInfoFile)
 
 	if errB != nil {
 		return rpi.RpInterface{}, echo.NewHTTPError(http.StatusInternalServerError, "could not retrieve the rpinterface details")
@@ -44,5 +50,8 @@ func (in *RpInterface) List() (rpi.RpInterface, error) {
 		isI2C,
 		isOneWire,
 		isRemoteGpio,
+		wifiInterfaces,
+		isWpaSupCom,
+		zoneInfo,
 	)
 }

@@ -169,6 +169,27 @@ const (
 
 	// RGPIO is the name of the remote gpio user method
 	RGPIO = "remote_gpio"
+
+	// Update is the name of the update method
+	Update = "update"
+
+	// Upgrade is the name of the upgrade method
+	Upgrade = "upgrade"
+
+	// UpDateGrade is the name of the update & upgrade method
+	UpDateGrade = "update_upgrade"
+
+	// WifiCountry is the name of the wifi country method
+	WifiCountry = "wifi_country"
+
+	// InstallAptGet is the name of the install with apt-get method
+	InstallAptGet = "install_apt_get"
+
+	// InstallVPNWithOVPN is the name of the install install vpn with opvn method
+	InstallVPNWithOVPN = "install_vpn_with_ovpn"
+
+	// ActionVPNWithOVPN is the name of the actions vpn with opvn method
+	ActionVPNWithOVPN = "action_vpn_with_ovpn"
 )
 
 var (

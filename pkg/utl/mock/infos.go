@@ -6,17 +6,25 @@ import (
 
 // Infos mock
 type Infos struct {
-	ReadFileFn                func(path string) ([]string, error)
-	IsFileExistsFn            func(path string) bool
-	GetConfigFilesFn          func() map[string]rpi.ConfigFileDetails
-	GetEnrichedConfigFilesFn  func(configFiles map[string]rpi.ConfigFileDetails) map[string]rpi.ConfigFileDetails
-	IsXscreenSaverInstalledFn func() (bool, error)
-	IsQuietGrepFn             func(string, string, string) bool
-	IsSSHKeyGeneratingFn      func(string) bool
-	IsDPKGInstalledFn         func(string) bool
-	IsSPIFn                   func(string) bool
-	IsI2CFn                   func(string) bool
-	IsVariableSetFn           func([]string, string, string) bool
+	ReadFileFn                 func(path string) ([]string, error)
+	IsFileExistsFn             func(path string) bool
+	GetConfigFilesFn           func() map[string]rpi.ConfigFileDetails
+	GetEnrichedConfigFilesFn   func(configFiles map[string]rpi.ConfigFileDetails) map[string]rpi.ConfigFileDetails
+	IsXscreenSaverInstalledFn  func() (bool, error)
+	IsQuietGrepFn              func(string, string, string) bool
+	IsSSHKeyGeneratingFn       func(string) bool
+	IsDPKGInstalledFn          func(string) bool
+	IsSPIFn                    func(string) bool
+	IsI2CFn                    func(string) bool
+	IsVariableSetFn            func([]string, string, string) bool
+	ListWifiInterfacesFn       func(string) []string
+	IsWpaSupComFn              func() map[string]bool
+	ZoneInfoFn                 func(string) map[string]string
+	ListNameFilesInDirectoryFn func(string) []string
+	VPNCountriesFn             func(string) map[string][]string
+	VPNConfigFileFn            func(string, string, string) []string
+	ProcessesPidsFn            func(string) []string
+	StatusVPNWithOpenVPNFn     func(string, string) map[string]bool
 }
 
 // ReadFile mock
@@ -69,7 +77,47 @@ func (i Infos) IsI2C(path string) bool {
 	return i.IsI2CFn(path)
 }
 
-// IsVariableSetFn mock
+// IsVariableSet mock
 func (i Infos) IsVariableSet(rawLines []string, key string, value string) bool {
 	return i.IsVariableSetFn(rawLines, key, value)
+}
+
+// ListWifiInterfaces mock
+func (i Infos) ListWifiInterfaces(directoryPath string) []string {
+	return i.ListWifiInterfacesFn(directoryPath)
+}
+
+// IsWpaSupCom mock
+func (i Infos) IsWpaSupCom() map[string]bool {
+	return i.IsWpaSupComFn()
+}
+
+// ZoneInfo mock
+func (i Infos) ZoneInfo(filePath string) map[string]string {
+	return i.ZoneInfoFn(filePath)
+}
+
+// ListNameFilesInDirectory mock
+func (i Infos) ListNameFilesInDirectory(directoryPath string) []string {
+	return i.ListNameFilesInDirectoryFn(directoryPath)
+}
+
+// VPNCountries mock
+func (i Infos) VPNCountries(directoryPath string) map[string][]string {
+	return i.VPNCountriesFn(directoryPath)
+}
+
+// VPNConfigFiles mock
+func (i Infos) VPNConfigFiles(vpnName string, vpnPath string, country string) []string {
+	return i.VPNConfigFileFn(vpnName, vpnPath, country)
+}
+
+// VPNConfigFiles mock
+func (i Infos) ProcessesPids(regex string) []string {
+	return i.ProcessesPidsFn(regex)
+}
+
+// StatusVPNWithOpenVPN mock
+func (i Infos) StatusVPNWithOpenVPN(regexPs string, regexName string) map[string]bool {
+	return i.StatusVPNWithOpenVPNFn(regexPs, regexName)
 }

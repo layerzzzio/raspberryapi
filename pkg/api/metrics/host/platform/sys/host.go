@@ -23,7 +23,8 @@ import (
 type Host struct{}
 
 // List returns a list of Host info
-func (h Host) List(info host.InfoStat,
+func (h Host) List(
+	info host.InfoStat,
 	users []host.UserStat,
 	cpus []cpu.InfoStat,
 	vcores []float64,

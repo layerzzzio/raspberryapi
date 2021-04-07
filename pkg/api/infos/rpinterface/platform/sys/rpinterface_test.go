@@ -23,6 +23,9 @@ func TestList(t *testing.T) {
 		isI2C               bool
 		isOneWire           bool
 		isRemoteGpio        bool
+		wifiInterfaces      []string
+		isWpaSupCom         map[string]bool
+		zoneInfo            map[string]string
 		wantedData          rpi.RpInterface
 		wantedErr           error
 	}{
@@ -43,6 +46,9 @@ func TestList(t *testing.T) {
 			isI2C:               true,
 			isOneWire:           true,
 			isRemoteGpio:        true,
+			wifiInterfaces:      []string{"dummy"},
+			isWpaSupCom:         map[string]bool{"wlan0": true},
+			zoneInfo:            map[string]string{"FR": "France"},
 			wantedData: rpi.RpInterface{
 				IsStartXElf:        false,
 				IsCamera:           true,
@@ -54,6 +60,9 @@ func TestList(t *testing.T) {
 				IsI2C:              true,
 				IsOneWire:          true,
 				IsRemoteGpio:       true,
+				IsWifiInterfaces:   true,
+				IsWpaSupCom:        map[string]bool{"wlan0": true},
+				ZoneInfo:           map[string]string{"FR": "France"},
 			},
 			wantedErr: nil,
 		},
@@ -73,6 +82,9 @@ func TestList(t *testing.T) {
 				tc.isI2C,
 				tc.isOneWire,
 				tc.isRemoteGpio,
+				tc.wifiInterfaces,
+				tc.isWpaSupCom,
+				tc.zoneInfo,
 			)
 			assert.Equal(t, tc.wantedData, intf)
 			assert.Equal(t, tc.wantedErr, err)

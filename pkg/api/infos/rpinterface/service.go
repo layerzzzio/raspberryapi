@@ -17,7 +17,21 @@ type RpInterface struct {
 
 // INTSYS represents an RpInterface repository service.
 type INTSYS interface {
-	List([]string, bool, bool, bool, bool, bool, bool, bool, bool, bool) (rpi.RpInterface, error)
+	List(
+		[]string,
+		bool,
+		bool,
+		bool,
+		bool,
+		bool,
+		bool,
+		bool,
+		bool,
+		bool,
+		[]string,
+		map[string]bool,
+		map[string]string,
+	) (rpi.RpInterface, error)
 }
 
 // Infos represents the infos interface
@@ -31,6 +45,9 @@ type Infos interface {
 	IsSPI(string) bool
 	IsI2C(string) bool
 	IsVariableSet([]string, string, string) bool
+	ListWifiInterfaces(string) []string
+	IsWpaSupCom() map[string]bool
+	ZoneInfo(string) map[string]string
 }
 
 // New creates a RpInterface application service instance.

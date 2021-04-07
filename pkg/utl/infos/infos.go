@@ -4,15 +4,20 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
+	"math/rand"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
+	"github.com/karrick/godirwalk"
 	"github.com/raspibuddy/rpi"
+	"github.com/raspibuddy/rpi/pkg/utl/constants"
 )
 
 // Service represents several system scripts.
@@ -118,6 +123,11 @@ func (s Service) GetConfigFiles() map[string]rpi.ConfigFileDetails {
 			Path:        "/etc/systemd/system/pigpiod.service.d/public.conf",
 			IsCritical:  false,
 			Description: "is the daemon file for the remote GPIO service.",
+		},
+		"iso3166": {
+			Path:        "/usr/share/zoneinfo/iso3166.tab",
+			IsCritical:  false,
+			Description: "is a file containing the standards published by the International Organization for Standardization (ISO) that defines codes for the names of countries, dependent territories, special areas of geographical interest, and their principal subdivisions (e.g., provinces or states).",
 		},
 	}
 }
@@ -301,4 +311,310 @@ func (s Service) IsVariableSet(rawLines []string, key string, value string) bool
 	}
 
 	return isMatch
+}
+
+// ListWifiInterfaces returns a list of wifi interfaces
+func (s Service) ListWifiInterfaces(directoryPath string) []string {
+	var wifiInterfaces []string
+
+	files, err := ioutil.ReadDir(directoryPath)
+	if err != nil {
+		log.Fatal()
+	}
+
+	for _, f := range files {
+		wirelessPath := fmt.Sprintf("%v/%v/wireless", directoryPath, f.Name())
+		fmt.Println(wirelessPath)
+		if s.IsFileExists(wirelessPath) {
+			wifiInterfaces = append(wifiInterfaces, f.Name())
+		}
+	}
+
+	return wifiInterfaces
+}
+
+func (s Service) IsWpaSupCom() map[string]bool {
+	ifaces := s.ListWifiInterfaces(constants.NETWORKINTERFACES)
+	result := map[string]bool{}
+
+	for _, i := range ifaces {
+		command := fmt.Sprintf(
+			"wpa_cli -i %v status > /dev/null 2>&1 ; echo $?",
+			i,
+		)
+		res, err := exec.Command("sh", "-c", command).Output()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		resNum, err := strconv.Atoi(strings.TrimSpace(string(res)))
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if resNum == 1 {
+			result[i] = false
+		} else {
+			result[i] = true
+		}
+	}
+	return result
+}
+
+func (s Service) ZoneInfo(filePath string) map[string]string {
+	result := make(map[string]string)
+	zi, err := s.ReadFile(filePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, v := range zi {
+		if !strings.HasPrefix(v, "#") {
+			split := strings.SplitAfter(v, "\t")
+			countryCode := strings.ReplaceAll(split[0], "\t", "")
+			countryName := split[1]
+			result[countryCode] = countryName
+		}
+	}
+
+	return result
+}
+
+// ListNameFilesInDirectory lists all files in directory
+func (s Service) ListNameFilesInDirectory(directoryPath string) []string {
+	var result []string
+
+	err := godirwalk.Walk(directoryPath, &godirwalk.Options{
+		Callback: func(osPathname string, de *godirwalk.Dirent) error {
+			if !de.IsDir() {
+				result = append(result, de.Name())
+			}
+			return nil
+		},
+		// (optional) set true for faster yet non-deterministic enumeration (see godoc)
+		Unsorted: true,
+	})
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	sort.Strings(result)
+
+	return result
+}
+
+// VPNCountries lists countries available for vpn
+func (s Service) VPNCountries(directoryPath string) map[string][]string {
+	var result = make(map[string][]string)
+	var countries []string
+	var fileName []string
+	var regexCountry string
+
+	wovDir, err := ioutil.ReadDir(directoryPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, dir := range wovDir {
+		if dir.IsDir() && dir.Name()[:4] == "wov_" {
+			err = godirwalk.Walk(directoryPath+"/"+dir.Name()+"/vpnconfigs", &godirwalk.Options{
+				Callback: func(osPathname string, de *godirwalk.Dirent) error {
+					re := regexp.MustCompile(`^[a-zA-Z]*`)
+
+					if dir.Name() == "wov_ipvanish" {
+						rawFileName := strings.ReplaceAll(de.Name(), "ipvanish-", "")
+						regexCountry = strings.ReplaceAll(
+							string(re.Find([]byte(rawFileName))),
+							" ",
+							"",
+						)
+					} else {
+						regexCountry = strings.ReplaceAll(
+							string(re.Find([]byte(de.Name()))),
+							" ",
+							"",
+						)
+					}
+
+					if dir.Name() == "wov_vyprvpn" {
+						// countries are clearly spelled
+						if !de.IsDir() &&
+							strings.HasSuffix(de.Name(), ".ovpn") &&
+							!StringItemExists(fileName, regexCountry) {
+							countries = append(countries, regexCountry)
+							fileName = append(fileName, regexCountry)
+						}
+					} else if !de.IsDir() &&
+						strings.HasSuffix(de.Name(), ".ovpn") &&
+						!StringItemExists(fileName, regexCountry) {
+						if country := constants.COUNTRYCODENAME[strings.ToUpper(regexCountry)]; country != "" {
+							countries = append(countries, country)
+						}
+
+						fileName = append(fileName, regexCountry)
+					}
+					return nil
+				},
+				// (optional) set true for faster yet non-deterministic enumeration (see godoc)
+				Unsorted: true,
+			})
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			sort.Strings(countries)
+			result[strings.TrimPrefix(dir.Name(), "wov_")] = countries
+			countries = nil
+			fileName = nil
+			regexCountry = ""
+		}
+	}
+
+	return result
+}
+
+func StringItemExists(array []string, item string) bool {
+	for i := 0; i < len(array); i++ {
+		if array[i] == item {
+			return true
+		}
+	}
+
+	return false
+}
+
+// VPNConfigFiles returns a list of vpn files
+func (s Service) VPNConfigFiles(
+	vpnName string,
+	vpnPath string,
+	country string,
+) []string {
+	var countrycode string
+	var result []string
+	// vpnPath = /etc/openvpn/wov_ipvanish/vpnconfigs
+	dir, err := ioutil.ReadDir(vpnPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for k, v := range constants.COUNTRYCODENAME {
+		if strings.EqualFold(v, country) {
+			countrycode = k
+		}
+	}
+
+	for _, dir := range dir {
+		if vpnName == "vyprvpn" {
+			if strings.Contains(dir.Name(), country) {
+				return []string{vpnPath + "/" + dir.Name()}
+			}
+		} else {
+			fileName := ""
+			if vpnName == "ipvanish" {
+				fileName = strings.ReplaceAll(dir.Name(), "ipvanish-", "")
+			}
+
+			if strings.HasPrefix(strings.ToUpper(fileName), countrycode) &&
+				!strings.HasSuffix(fileName, "udp.ovpn") {
+				result = append(result, vpnPath+"/"+dir.Name())
+			}
+		}
+
+	}
+
+	if result == nil {
+		randomIndex := rand.Intn(len(dir))
+		randomFileInfo := dir[randomIndex]
+		result = []string{vpnPath + "/" + randomFileInfo.Name()}
+	}
+
+	return result
+}
+
+// ProcessesPids returns a list of pids
+func (s Service) ProcessesPids(
+	regex string,
+) []string {
+	psGrep := "ps -ef | grep"
+	awk := "awk '{pid = $2 ; s = \"\"; for (i = 8; i <= NF; i++) s = s $i \" \"; print s \"<sep>\" pid}'"
+	pidSearch := fmt.Sprintf(
+		"%v \"%v\" | %v",
+		psGrep,
+		regex,
+		awk,
+	)
+
+	out, err := exec.Command("sh", "-c", pidSearch).Output()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	stdOut := strings.Split(string(out), "\n")
+	var pids []string
+	// matched, err := regexp.MatchString(regex, "aaxbb")
+	re, _ := regexp.Compile(regex)
+
+	for _, ps := range stdOut {
+		if strings.ReplaceAll(ps, " ", "") != "" &&
+			!strings.Contains(ps, awk) &&
+			!strings.HasPrefix(ps, "grep ") {
+			split := strings.Split(ps, "<sep>")
+			matched := re.MatchString(split[0])
+			if matched {
+				pids = append(pids, split[1])
+			}
+		}
+	}
+
+	return pids
+}
+
+// StatusVPNWithOpenVPN returns the status of the VPN with OpenVPN apps
+func (s Service) StatusVPNWithOpenVPN(
+	regexVPNPs string,
+	regexVPNName string,
+) map[string]bool {
+	psGrep := "ps -ef | grep"
+	awk := "awk '{pid = $2 ; s = \"\"; for (i = 8; i <= NF; i++) s = s $i \" \"; print s \"<sep>\" pid}'"
+	pidSearch := fmt.Sprintf(
+		"%v \"%v\" | %v",
+		psGrep,
+		regexVPNPs,
+		awk,
+	)
+
+	out, err := exec.Command("sh", "-c", pidSearch).Output()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	stdOut := strings.Split(string(out), "\n")
+	var result = make(map[string]bool)
+
+	rePs, _ := regexp.Compile(regexVPNPs)
+	reName, _ := regexp.Compile(regexVPNName)
+
+	for _, ps := range stdOut {
+		if strings.ReplaceAll(ps, " ", "") != "" &&
+			!strings.Contains(ps, awk) &&
+			!strings.HasPrefix(ps, "grep ") {
+			split := strings.Split(ps, "<sep>")
+			matched := rePs.MatchString(split[0])
+			if matched {
+				vpnNameRaw := string(reName.FindAllString(split[0], 1)[0])
+				vpnNameClean := strings.ReplaceAll(vpnNameRaw, "wov_", "")
+				result[vpnNameClean] = true
+			}
+		}
+	}
+
+	if len(result) == 0 {
+		result = nil
+	}
+
+	return result
 }
