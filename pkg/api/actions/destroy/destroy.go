@@ -15,8 +15,8 @@ func (des *Destroy) ExecuteDF(path string) (rpi.Action, error) {
 				Name:      actions.DeleteFile,
 				Reference: des.a.DeleteFile,
 				Argument: []interface{}{
-					actions.KP{
-						Pid: path,
+					actions.FileOrDirectory{
+						Path: path,
 					},
 				},
 			},
