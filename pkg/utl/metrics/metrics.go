@@ -498,13 +498,17 @@ func Path(f *rpi.File) string {
 }
 
 // FlattenFile goes through subfiles and subfolders and update a map composed of file size & name
-func FlattenFiles(f *rpi.File, flattenFiles map[int64]string) {
+func FlattenFiles(
+	f *rpi.File,
+	flattenFiles map[string]int64,
+) {
 	for _, child := range f.Files {
 		if child.IsDir {
 			FlattenFiles(child, flattenFiles)
 		} else {
-			flattenFiles[child.Size] = Path(child)
+			flattenFiles[Path(child)] = child.Size
 		}
+		// fmt.Println("=====> name/isDir/flattenFiles", child.Name, child.IsDir, flattenFiles)
 	}
 }
 
@@ -571,8 +575,8 @@ func (s Service) WalkFolder(
 	fileLimit float32,
 	ignoreFunction ShouldIgnoreFolder,
 	progress chan (int),
-) (*rpi.File, map[int64]string) {
-	var flattenFiles = make(map[int64]string)
+) (*rpi.File, map[string]int64) {
+	var flattenFiles = make(map[string]int64)
 	var wg sync.WaitGroup
 	c := make(chan bool, 2*runtime.NumCPU())
 	root := walkSubFolderConcurrently(
