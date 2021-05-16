@@ -49,7 +49,7 @@ type Metrics struct {
 		float32,
 		metrics.ShouldIgnoreFolder,
 		chan int,
-	) (*rpi.File, map[int64]string)
+	) (*rpi.File, map[string]int64)
 }
 
 // CPUInfo mock
@@ -198,6 +198,6 @@ func (m Metrics) WalkFolder(
 	fileLimit float32,
 	ignoreFunction metrics.ShouldIgnoreFolder,
 	progress chan int,
-) (*rpi.File, map[int64]string) {
+) (*rpi.File, map[string]int64) {
 	return m.WalkFolderFn(path, readDir, pathSize, fileLimit, ignoreFunction, progress)
 }

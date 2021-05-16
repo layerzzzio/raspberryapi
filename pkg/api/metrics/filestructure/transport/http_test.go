@@ -36,7 +36,7 @@ func TestViewLF(t *testing.T) {
 			name: "error: ViewLF directorypath not found",
 			req:  "?directorypath=/dummy",
 			fssys: &mocksys.FileStructure{
-				ViewLFFn: func(*rpi.File, map[int64]string) (rpi.FileStructure, error) {
+				ViewLFFn: func(*rpi.File, map[string]int64) (rpi.FileStructure, error) {
 					return rpi.FileStructure{}, errors.New("test error")
 				},
 			},
@@ -46,7 +46,7 @@ func TestViewLF(t *testing.T) {
 			name: "error: ViewLF directorypath found",
 			req:  "?directorypath=../transport",
 			fssys: &mocksys.FileStructure{
-				ViewLFFn: func(*rpi.File, map[int64]string) (rpi.FileStructure, error) {
+				ViewLFFn: func(*rpi.File, map[string]int64) (rpi.FileStructure, error) {
 					return rpi.FileStructure{}, errors.New("test error")
 				},
 			},
@@ -56,7 +56,7 @@ func TestViewLF(t *testing.T) {
 			name: "error: ViewLF directorypath found & filelimit not float",
 			req:  "?directorypath=../transport&filelimit=0.1X",
 			fssys: &mocksys.FileStructure{
-				ViewLFFn: func(*rpi.File, map[int64]string) (rpi.FileStructure, error) {
+				ViewLFFn: func(*rpi.File, map[string]int64) (rpi.FileStructure, error) {
 					return rpi.FileStructure{}, errors.New("test error")
 				},
 			},
@@ -66,7 +66,7 @@ func TestViewLF(t *testing.T) {
 			name: "error: ViewLF directorypath, filelimit found & pathsize not int ",
 			req:  "?directorypath=../transport&filelimit=1&pathsize=ABC",
 			fssys: &mocksys.FileStructure{
-				ViewLFFn: func(*rpi.File, map[int64]string) (rpi.FileStructure, error) {
+				ViewLFFn: func(*rpi.File, map[string]int64) (rpi.FileStructure, error) {
 					return rpi.FileStructure{}, errors.New("test error")
 				},
 			},
@@ -76,7 +76,7 @@ func TestViewLF(t *testing.T) {
 			name: "error: ViewLF return nil",
 			req:  "?directorypath=../transport&filelimit=1&pathsize=1000",
 			fssys: &mocksys.FileStructure{
-				ViewLFFn: func(*rpi.File, map[int64]string) (rpi.FileStructure, error) {
+				ViewLFFn: func(*rpi.File, map[string]int64) (rpi.FileStructure, error) {
 					return rpi.FileStructure{}, errors.New("test error")
 				},
 			},
@@ -86,7 +86,7 @@ func TestViewLF(t *testing.T) {
 			name: "success: ViewLF directorypath, filelimit & pathsize found",
 			req:  "?directorypath=../transport&filelimit=1&pathsize=1000",
 			fssys: &mocksys.FileStructure{
-				ViewLFFn: func(*rpi.File, map[int64]string) (rpi.FileStructure, error) {
+				ViewLFFn: func(*rpi.File, map[string]int64) (rpi.FileStructure, error) {
 					return rpi.FileStructure{
 						DirectoryPath: "../transport",
 						LargestFiles: []*rpi.File{
