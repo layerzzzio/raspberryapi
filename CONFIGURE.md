@@ -1,4 +1,4 @@
-## Operating System
+# Operating System
 
 |#|category|config|source|
 |---|---|---|---|
@@ -42,6 +42,8 @@
 1. check lastUpgrade in Firestore: GET <TBD>.
 2. update & upgrade depending on the result: POST /configure/updateupgrade
 
+# Network
+
 |#|category|config|source|
 |---|---|---|---|
 |1|network|SSH|https://github.com/RPi-Distro/raspi-config|
@@ -74,6 +76,8 @@ Here I verified with the one option only.
 3. check isVNC: GET /rpinterfaces
 4. depending on the result: POST /configure/vnc?action=**[enable/disable]**
 
+# Screen
+
 |#|category|config|source|
 |---|---|---|---|
 |1|screen|overscan|https://github.com/RPi-Distro/raspi-config|
@@ -93,6 +97,8 @@ Here I verified with the one option only.
 5. enable or disable depending on isBlanking: POST /configure/blanking?action=**[enable/disable]**
 PS: it will fail it try to enable while it is already enabled - same with disable status & disable
 6. reboot
+
+# Interface
 
 |#|category|config|source|
 |---|---|---|---|
