@@ -6,9 +6,6 @@
 |2|operating_system|add user|https://www.digitalocean.com/community/tutorials/how-to-add-and-delete-users-on-ubuntu-18-04|
 |3|operating_system|delete user|https://www.digitalocean.com/community/tutorials/how-to-add-and-delete-users-on-ubuntu-18-04|
 |4|operating_system|change password|https://github.com/RPi-Distro/raspi-config|
-|5|operating_system|update|https://www.cyberciti.biz/faq/how-do-i-update-ubuntu-linux-softwares/|
-|6|operating_system|upgrade|https://www.cyberciti.biz/faq/how-do-i-update-ubuntu-linux-softwares/|
-|7|operating_system|update & upgrade|https://www.cyberciti.biz/faq/how-do-i-update-ubuntu-linux-softwares/|
 
 ### 1) Change hostname
 1. regex on the front-end to have a well formatted hostname
@@ -20,6 +17,9 @@
 
 ### 2) Add User
 1. check if user exists: GET /humanusers
+
+    > The user name should follow the following regex: ^[a-z-_][a-z0-9-_]{1,31}$
+
 2. add or delete depending on the result: POST /configure/adduser?username=**username**&password=**password**
 
 ### 3) Delete User
@@ -27,18 +27,27 @@
 2. add or delete depending on the result: POST /configure/deleteuser?username=**username**
 
 ### 4) Change password
-1. change password : POST /configure/changepassword?password=**password**&username=**username**
-2. no reboot needed
+1. check if user exists: GET /humanusers
+2. change password : POST /configure/changepassword?password=**password**&username=**username**
+3. no reboot needed
 
-### 5) Update
+# Package Management
+
+|#|category|config|source|
+|---|---|---|---|
+|1|package_management|update|https://www.cyberciti.biz/faq/how-do-i-update-ubuntu-linux-softwares/|
+|2|package_management|upgrade|https://www.cyberciti.biz/faq/how-do-i-update-ubuntu-linux-softwares/|
+|3|package_management|update & upgrade|https://www.cyberciti.biz/faq/how-do-i-update-ubuntu-linux-softwares/|
+
+### 1) Update
 1. check lastUpdate in Firestore: GET <TBD>.
 2. update depending on the result: POST /configure/update
 
-### 6) Upgrade
+### 2) Upgrade
 1. check lastUpgrade in Firestore: GET <TBD>.
 2. upgrade depending on the result: POST /configure/upgrade
 
-### 7) Update & Upgrade
+### 3) Update & Upgrade
 1. check lastUpgrade in Firestore: GET <TBD>.
 2. update & upgrade depending on the result: POST /configure/updateupgrade
 
