@@ -9,7 +9,6 @@ import (
 	ail "github.com/raspibuddy/rpi/pkg/api/actions/appinstall/logging"
 	ais "github.com/raspibuddy/rpi/pkg/api/actions/appinstall/platform/sys"
 	ait "github.com/raspibuddy/rpi/pkg/api/actions/appinstall/transport"
-
 	"github.com/raspibuddy/rpi/pkg/api/actions/configure"
 	acl "github.com/raspibuddy/rpi/pkg/api/actions/configure/logging"
 	acs "github.com/raspibuddy/rpi/pkg/api/actions/configure/platform/sys"
@@ -18,6 +17,11 @@ import (
 	adl "github.com/raspibuddy/rpi/pkg/api/actions/destroy/logging"
 	ads "github.com/raspibuddy/rpi/pkg/api/actions/destroy/platform/sys"
 	adt "github.com/raspibuddy/rpi/pkg/api/actions/destroy/transport"
+	"github.com/raspibuddy/rpi/pkg/api/actions/general"
+	agl "github.com/raspibuddy/rpi/pkg/api/actions/general/logging"
+	ags "github.com/raspibuddy/rpi/pkg/api/actions/general/platform/sys"
+	agt "github.com/raspibuddy/rpi/pkg/api/actions/general/transport"
+
 	"github.com/raspibuddy/rpi/pkg/api/infos/appconfig"
 	iacl "github.com/raspibuddy/rpi/pkg/api/infos/appconfig/logging"
 	iacs "github.com/raspibuddy/rpi/pkg/api/infos/appconfig/platform/sys"
@@ -121,6 +125,7 @@ func Start(cfg *config.Configuration) error {
 
 	// actions
 	adt.NewHTTP(adl.New(destroy.New(ads.Destroy{}, a), log).Service, v1)
+	agt.NewHTTP(agl.New(general.New(ags.General{}, a), log).Service, v1)
 	act.NewHTTP(acl.New(configure.New(acs.Configure{}, a, i), log).Service, v1)
 	ait.NewHTTP(ail.New(appinstall.New(ais.Install{}, a), log).Service, v1)
 	aat.NewHTTP(aal.New(appaction.New(aas.AppAction{}, a, i), log).Service, v1)
