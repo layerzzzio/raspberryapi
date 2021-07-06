@@ -14,7 +14,7 @@ import (
 	"github.com/raspibuddy/rpi/pkg/utl/infos"
 	"github.com/raspibuddy/rpi/pkg/utl/mock/mocksys"
 	"github.com/raspibuddy/rpi/pkg/utl/server"
-	"gotest.tools/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestList(t *testing.T) {
