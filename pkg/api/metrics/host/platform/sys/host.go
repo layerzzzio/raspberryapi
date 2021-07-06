@@ -159,7 +159,7 @@ func extractTemp(s string) float32 {
 	num := r.FindAllString(s, -1)
 	temp := strings.Join(num[:], ".")
 
-	res, err := strconv.ParseFloat(temp, 16)
+	res, err := strconv.ParseFloat(temp, 64)
 	if err != nil {
 		return -100
 	}

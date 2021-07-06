@@ -5,7 +5,6 @@ go 1.15
 require (
 	github.com/StackExchange/wmi v0.0.0-20210224194228-fe8f1750fd46 // indirect
 	github.com/go-ole/go-ole v1.2.5 // indirect
-	github.com/google/go-cmp v0.5.5 // indirect
 	github.com/gorilla/websocket v1.4.2
 	github.com/karrick/godirwalk v1.16.1
 	github.com/kr/text v0.2.0 // indirect
@@ -22,8 +21,6 @@ require (
 	golang.org/x/sys v0.0.0-20210227040730-b0d1d43c014d // indirect
 	golang.org/x/text v0.3.5 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
-	gopkg.in/go-playground/assert.v1 v1.2.1
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
-	gotest.tools v2.2.0+incompatible
 )

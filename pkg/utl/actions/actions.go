@@ -89,6 +89,15 @@ const (
 	// DeleteFile is the name of the delete file exec
 	DeleteFile = "delete_file"
 
+	// Reboot is the name of the reboot exec
+	Reboot = "reboot"
+
+	// Shutdown is the name of the shutdown exec
+	Shutdown = "shutdown"
+
+	// RebootShutdown is the name of the reboot or shutdown exec
+	RebootShutdown = "RebootShutdown"
+
 	// KillProcess is the name of the kill process exec
 	KillProcess = "kill_process"
 

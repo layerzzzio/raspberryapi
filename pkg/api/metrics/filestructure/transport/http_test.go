@@ -14,7 +14,7 @@ import (
 	"github.com/raspibuddy/rpi/pkg/utl/metrics"
 	"github.com/raspibuddy/rpi/pkg/utl/mock/mocksys"
 	"github.com/raspibuddy/rpi/pkg/utl/server"
-	"gopkg.in/go-playground/assert.v1"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestViewLF(t *testing.T) {

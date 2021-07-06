@@ -8,7 +8,7 @@ import (
 	"github.com/raspibuddy/rpi/pkg/utl/metrics"
 	"github.com/raspibuddy/rpi/pkg/utl/mock"
 	"github.com/raspibuddy/rpi/pkg/utl/mock/mocksys"
-	"gopkg.in/go-playground/assert.v1"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestViewLF(t *testing.T) {

@@ -5,7 +5,7 @@ import (
 
 	"github.com/raspibuddy/rpi"
 	"github.com/raspibuddy/rpi/pkg/api/metrics/filestructure"
-	"gopkg.in/go-playground/assert.v1"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestViewFL(t *testing.T) {
