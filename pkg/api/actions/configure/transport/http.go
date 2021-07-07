@@ -49,7 +49,7 @@ func ActionCheck(action string, regex string) error {
 func (h *HTTP) changehostname(ctx echo.Context) error {
 	hostname := ctx.QueryParam("hostname")
 
-	re := regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9\-]+[a-zA-Z0-9]$`)
+	re := regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]$`)
 	if !re.MatchString(hostname) || hostname == "" {
 		return echo.NewHTTPError(http.StatusNotFound, "Not found - hostname badly formatted or null")
 	}
