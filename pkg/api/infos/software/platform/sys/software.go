@@ -9,44 +9,44 @@ type Software struct{}
 
 // List returns a list of Software info
 func (int Software) List(
-	isVNC bool,
-	isOpenVPN bool,
-	isUnzip bool,
-	isNordVPN bool,
-	isSurfSharkVPN bool,
-	isIpVanishVPN bool,
-	isVyprVpnVPN bool,
+	isVNCInstalled bool,
+	isOpenVPNInstalled bool,
+	isUnzipInstalled bool,
+	isNordVPNInstalled bool,
+	isSurfSharkVPNInstalled bool,
+	isIpVanishVPNInstalled bool,
+	isVyprVpnVPNInstalled bool,
 ) (rpi.Software, error) {
-	nordVPN := false
-	surfSharkVPN := false
-	ipVanishVPN := false
-	vyprVpnVPN := false
+	nordVPNInstalled := false
+	surfSharkVPNInstalled := false
+	ipVanishVPNInstalled := false
+	vyprVpnVPNInstalled := false
 
-	if isOpenVPN {
-		if isNordVPN {
-			nordVPN = true
+	if isOpenVPNInstalled {
+		if isNordVPNInstalled {
+			nordVPNInstalled = true
 		}
 
-		if isIpVanishVPN {
-			ipVanishVPN = true
+		if isIpVanishVPNInstalled {
+			ipVanishVPNInstalled = true
 		}
 
-		if isSurfSharkVPN {
-			surfSharkVPN = true
+		if isSurfSharkVPNInstalled {
+			surfSharkVPNInstalled = true
 		}
 
-		if isVyprVpnVPN {
-			vyprVpnVPN = true
+		if isVyprVpnVPNInstalled {
+			vyprVpnVPNInstalled = true
 		}
 	}
 
 	return rpi.Software{
-		IsVNC:          isVNC,
-		IsOpenVPN:      isOpenVPN,
-		IsUnzip:        isUnzip,
-		IsNordVPN:      nordVPN,
-		IsSurfSharkVPN: surfSharkVPN,
-		IsIpVanishVPN:  ipVanishVPN,
-		IsVyprVpnVPN:   vyprVpnVPN,
+		IsVNCInstalled:          isVNCInstalled,
+		IsOpenVPNInstalled:      isOpenVPNInstalled,
+		IsUnzipInstalled:        isUnzipInstalled,
+		IsNordVPNInstalled:      nordVPNInstalled,
+		IsSurfSharkVPNInstalled: surfSharkVPNInstalled,
+		IsIpVanishVPNInstalled:  ipVanishVPNInstalled,
+		IsVyprVpnVPNInstalled:   vyprVpnVPNInstalled,
 	}, nil
 }

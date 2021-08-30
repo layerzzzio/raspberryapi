@@ -6,23 +6,23 @@ import (
 
 // List populates and returns an array of Software model.
 func (so *Software) List() (rpi.Software, error) {
-	isVNC := so.i.IsDPKGInstalled("realvnc-vnc-server")
-	isOpenVPN := so.i.IsDPKGInstalled("openvpn")
-	isUnzip := so.i.IsDPKGInstalled("unzip")
+	isVNCInstalled := so.i.IsDPKGInstalled("realvnc-vnc-server")
+	isOpenVPNInstalled := so.i.IsDPKGInstalled("openvpn")
+	isUnzipInstalled := so.i.IsDPKGInstalled("unzip")
 
 	openVpnEtcDir := "/etc/openvpn/wov_"
-	isNordVPN := so.i.IsFileExists(openVpnEtcDir + "nordvpn/")
-	isSurfSharkVPN := so.i.IsFileExists(openVpnEtcDir + "surfshark/")
-	isIpVanishVPN := so.i.IsFileExists(openVpnEtcDir + "ipvanish/")
-	isVyprVpnVPN := so.i.IsFileExists(openVpnEtcDir + "vyprvpn/")
+	isNordVPNInstalled := so.i.IsFileExists(openVpnEtcDir + "nordvpn/")
+	isSurfSharkVPNInstalled := so.i.IsFileExists(openVpnEtcDir + "surfshark/")
+	isIpVanishVPNInstalled := so.i.IsFileExists(openVpnEtcDir + "ipvanish/")
+	isVyprVpnVPNInstalled := so.i.IsFileExists(openVpnEtcDir + "vyprvpn/")
 
 	return so.sofsys.List(
-		isVNC,
-		isOpenVPN,
-		isUnzip,
-		isNordVPN,
-		isSurfSharkVPN,
-		isIpVanishVPN,
-		isVyprVpnVPN,
+		isVNCInstalled,
+		isOpenVPNInstalled,
+		isUnzipInstalled,
+		isNordVPNInstalled,
+		isSurfSharkVPNInstalled,
+		isIpVanishVPNInstalled,
+		isVyprVpnVPNInstalled,
 	)
 }

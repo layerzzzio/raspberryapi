@@ -39,18 +39,18 @@ func TestList(t *testing.T) {
 					bool,
 				) (rpi.Software, error) {
 					return rpi.Software{
-						IsVNC:     false,
-						IsOpenVPN: false,
-						IsUnzip:   true,
-						IsNordVPN: true,
+						IsVNCInstalled:     false,
+						IsOpenVPNInstalled: false,
+						IsUnzipInstalled:   true,
+						IsNordVPNInstalled: true,
 					}, nil
 				},
 			},
 			wantedData: rpi.Software{
-				IsVNC:     false,
-				IsOpenVPN: false,
-				IsUnzip:   true,
-				IsNordVPN: true,
+				IsVNCInstalled:     false,
+				IsOpenVPNInstalled: false,
+				IsUnzipInstalled:   true,
+				IsNordVPNInstalled: true,
 			},
 			wantedErr: nil,
 		},
