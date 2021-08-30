@@ -60,17 +60,17 @@ func TestList(t *testing.T) {
 					bool,
 				) (rpi.Software, error) {
 					return rpi.Software{
-						IsVNC:     true,
-						IsOpenVPN: true,
-						IsUnzip:   true,
+						IsVNCInstalled:     true,
+						IsOpenVPNInstalled: true,
+						IsUnzipInstalled:   true,
 					}, nil
 				},
 			},
 			wantedStatus: http.StatusOK,
 			wantedResp: rpi.Software{
-				IsVNC:     true,
-				IsOpenVPN: true,
-				IsUnzip:   true,
+				IsVNCInstalled:     true,
+				IsOpenVPNInstalled: true,
+				IsUnzipInstalled:   true,
 			},
 		},
 	}
@@ -98,7 +98,7 @@ func TestList(t *testing.T) {
 				panic(err)
 			}
 
-			if tc.wantedResp.IsVNC == true || tc.wantedResp.IsVNC == false {
+			if tc.wantedResp.IsVNCInstalled == true || tc.wantedResp.IsVNCInstalled == false {
 				if err := json.Unmarshal(body, &response); err != nil {
 					t.Fatal(err)
 				}
