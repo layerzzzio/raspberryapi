@@ -22,22 +22,20 @@ func (int Software) List(
 	ipVanishVPNInstalled := false
 	vyprVpnVPNInstalled := false
 
-	if isOpenVPNInstalled {
-		if isNordVPNInstalled {
-			nordVPNInstalled = true
-		}
+	if isNordVPNInstalled {
+		nordVPNInstalled = true
+	}
 
-		if isIpVanishVPNInstalled {
-			ipVanishVPNInstalled = true
-		}
+	if isIpVanishVPNInstalled {
+		ipVanishVPNInstalled = true
+	}
 
-		if isSurfSharkVPNInstalled {
-			surfSharkVPNInstalled = true
-		}
+	if isSurfSharkVPNInstalled {
+		surfSharkVPNInstalled = true
+	}
 
-		if isVyprVpnVPNInstalled {
-			vyprVpnVPNInstalled = true
-		}
+	if isVyprVpnVPNInstalled {
+		vyprVpnVPNInstalled = true
 	}
 
 	return rpi.Software{
