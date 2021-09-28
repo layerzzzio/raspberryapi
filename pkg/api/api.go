@@ -137,7 +137,7 @@ func Start(cfg *config.Configuration) error {
 	icot.NewHTTP(icol.New(configfile.New(icos.ConfigFile{}, i), log).Service, v1)
 	iint.NewHTTP(iinl.New(rpinterface.New(iins.RpInterface{}, i), log).Service, v1)
 	isot.NewHTTP(isol.New(software.New(isos.Software{}, i), log).Service, v1)
-	iact.NewHTTP(iacl.New(appconfig.New(iacs.AppConfig{}, i), log).Service, v1)
+	iact.NewHTTP(iacl.New(appconfig.New(iacs.AppConfigVPNWithOvpn{}, i), log).Service, v1)
 	iast.NewHTTP(iasl.New(appstatus.New(iass.AppStatus{}, i), log).Service, v1)
 
 	server.Start(e, &server.Config{

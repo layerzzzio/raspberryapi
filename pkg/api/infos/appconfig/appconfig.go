@@ -4,10 +4,10 @@ import (
 	"github.com/raspibuddy/rpi"
 )
 
-// List populates and returns an array of AppConfig model.
-func (apc *AppConfig) List() (rpi.AppConfig, error) {
+// ListVPN populates and returns an array of VPN AppConfig model.
+func (apc *AppConfigVPNWithOvpn) ListVPN() (rpi.AppConfigVPNWithOvpn, error) {
 	vpnCountries := apc.i.VPNCountries("/etc/openvpn")
-	return apc.apcfsys.List(
+	return apc.apcfsys.ListVPN(
 		vpnCountries,
 	)
 }

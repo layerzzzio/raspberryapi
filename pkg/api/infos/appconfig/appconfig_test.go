@@ -10,12 +10,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestList(t *testing.T) {
+func TestListVPN(t *testing.T) {
 	cases := []struct {
 		name       string
 		infos      mock.Infos
-		apcfsys    mocksys.AppConfig
-		wantedData rpi.AppConfig
+		apcfsys    mocksys.AppConfigVPNWithOvpn
+		wantedData rpi.AppConfigVPNWithOvpn
 		wantedErr  error
 	}{
 		{
@@ -27,18 +27,18 @@ func TestList(t *testing.T) {
 					}
 				},
 			},
-			apcfsys: mocksys.AppConfig{
-				ListFn: func(
+			apcfsys: mocksys.AppConfigVPNWithOvpn{
+				ListVPNFn: func(
 					map[string](map[string]string),
-				) (rpi.AppConfig, error) {
-					return rpi.AppConfig{
+				) (rpi.AppConfigVPNWithOvpn, error) {
+					return rpi.AppConfigVPNWithOvpn{
 						VPNCountries: map[string]map[string]string{
 							"nordvpn": {"France": "file1", "Germany": "file2"},
 						},
 					}, nil
 				},
 			},
-			wantedData: rpi.AppConfig{
+			wantedData: rpi.AppConfigVPNWithOvpn{
 				VPNCountries: map[string]map[string]string{
 					"nordvpn": {"France": "file1", "Germany": "file2"},
 				},
@@ -50,7 +50,7 @@ func TestList(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			s := appconfig.New(&tc.apcfsys, tc.infos)
-			intf, err := s.List()
+			intf, err := s.ListVPN()
 			assert.Equal(t, tc.wantedData, intf)
 			assert.Equal(t, tc.wantedErr, err)
 		})

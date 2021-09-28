@@ -4,14 +4,14 @@ import (
 	"github.com/raspibuddy/rpi"
 )
 
-// AppConfig represents a AppConfig entity on the current system.
-type AppConfig struct{}
+// AppConfigVPNWithOvpn represents a VPN AppConfig entity on the current system.
+type AppConfigVPNWithOvpn struct{}
 
-// List returns a list of AppConfig info
-func (int AppConfig) List(
+// ListVPN returns a list of VPN AppConfig info
+func (int AppConfigVPNWithOvpn) ListVPN(
 	VPNCountries map[string]map[string]string,
-) (rpi.AppConfig, error) {
-	return rpi.AppConfig{
+) (rpi.AppConfigVPNWithOvpn, error) {
+	return rpi.AppConfigVPNWithOvpn{
 		VPNCountries: VPNCountries,
 	}, nil
 }
