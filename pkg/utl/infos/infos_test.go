@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/raspibuddy/rpi"
@@ -663,27 +664,28 @@ func TestStringItemExists(t *testing.T) {
 
 func TestVPNCountries(t *testing.T) {
 	cases := []struct {
-		name          string
-		isCreateFile  bool
-		directoryPath string
-		wantedData    map[string][]string
+		name                     string
+		isCreateFile             bool
+		directoryPath            string
+		wantedDataExceptIpVanish map[string]map[string]string
+		wantedDataIpVanish       bool
 	}{
 		{
-			name:          "success: the current file are not found in COUNTRYCODENAME",
-			isCreateFile:  false,
-			directoryPath: "./testdata",
-			wantedData:    map[string][]string{},
+			name:                     "success: the current file are not found in COUNTRYCODENAME",
+			isCreateFile:             false,
+			directoryPath:            "./testdata",
+			wantedDataExceptIpVanish: map[string]map[string]string{},
 		},
 		{
 			name:          "success: the current file are found in COUNTRYCODENAME",
 			isCreateFile:  true,
 			directoryPath: "./testdata",
-			wantedData: map[string][]string{
-				"nordvpn":   {"Germany"},
-				"vyprvpn":   {"Canada"},
-				"ipvanish":  {"France"},
-				"surfshark": {"Singapore"},
+			wantedDataExceptIpVanish: map[string]map[string]string{
+				"nordvpn":   {"Germany": "testdata/wov_nordvpn/vpnconfigs/de844.nordvpn.com.tcp.ovpn"},
+				"vyprvpn":   {"Canada": "testdata/wov_vyprvpn/vpnconfigs/Canada.ovpn"},
+				"surfshark": {"Singapore": "testdata/wov_surfshark/vpnconfigs/sg-in.prod.surfshark.com_udp.ovpn"},
 			},
+			wantedDataIpVanish: true,
 		},
 	}
 
@@ -727,6 +729,30 @@ func TestVPNCountries(t *testing.T) {
 					log.Fatal(err)
 				}
 
+				if err := actions.OverwriteToFile(
+					actions.WriteToFileArg{
+						File: "./testdata/wov_ipvanish/vpnconfigs/ipvanish-FR-Paris-par-a07.ovpn",
+					},
+				); err != nil {
+					log.Fatal(err)
+				}
+
+				if err := actions.OverwriteToFile(
+					actions.WriteToFileArg{
+						File: "./testdata/wov_ipvanish/vpnconfigs/ipvanish-FR-Paris-par-a08.ovpn",
+					},
+				); err != nil {
+					log.Fatal(err)
+				}
+
+				if err := actions.OverwriteToFile(
+					actions.WriteToFileArg{
+						File: "./testdata/wov_ipvanish/vpnconfigs/ipvanish-FR-Paris-par-a09.ovpn",
+					},
+				); err != nil {
+					log.Fatal(err)
+				}
+
 				if err := os.MkdirAll("./testdata/wov_surfshark/vpnconfigs", 0777); err != nil {
 					log.Fatal(err)
 				}
@@ -758,7 +784,26 @@ func TestVPNCountries(t *testing.T) {
 				os.RemoveAll("./testdata/alcul")
 			}
 
-			assert.Equal(t, tc.wantedData, interfaces)
+			isContain := false
+
+			// this test is carried out because osPathname is picked up randomly by the GoWalk
+			for k := range interfaces {
+				if k == "ipvanish" {
+					if strings.Contains(interfaces[k]["France"], "ipvanish-FR-Paris-par-") {
+						isContain = true
+					}
+				}
+			}
+
+			for k := range interfaces {
+				fmt.Println(k)
+				if k == "ipvanish" {
+					delete(interfaces, k)
+				}
+			}
+
+			assert.Equal(t, tc.wantedDataExceptIpVanish, interfaces)
+			assert.Equal(t, tc.wantedDataIpVanish, isContain)
 		})
 	}
 }

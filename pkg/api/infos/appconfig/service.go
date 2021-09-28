@@ -18,13 +18,13 @@ type AppConfig struct {
 // APCFSYS represents an AppConfig repository service.
 type APCFSYS interface {
 	List(
-		map[string][]string,
+		map[string](map[string]string),
 	) (rpi.AppConfig, error)
 }
 
 // Infos represents the infos interface
 type Infos interface {
-	VPNCountries(string) map[string][]string
+	VPNCountries(string) map[string](map[string]string)
 }
 
 // New creates a AppConfig application service instance.
