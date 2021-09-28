@@ -17,13 +17,13 @@ import (
 )
 
 func TestList(t *testing.T) {
-	var response rpi.AppConfig
+	var response rpi.AppConfigVPNWithOvpn
 
 	cases := []struct {
 		name         string
-		apcsys       *mocksys.AppConfig
+		apcsys       *mocksys.AppConfigVPNWithOvpn
 		wantedStatus int
-		wantedResp   rpi.AppConfig
+		wantedResp   rpi.AppConfigVPNWithOvpn
 	}{}
 
 	for _, tc := range cases {

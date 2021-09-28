@@ -10,11 +10,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestList(t *testing.T) {
+func TestListVPN(t *testing.T) {
 	cases := []struct {
 		name         string
 		VPNCountries map[string]map[string]string
-		wantedData   rpi.AppConfig
+		wantedData   rpi.AppConfigVPNWithOvpn
 		wantedErr    error
 	}{
 		{
@@ -22,7 +22,7 @@ func TestList(t *testing.T) {
 			VPNCountries: map[string]map[string]string{
 				"nordvpn": {"France": "file1", "Germany": "file2"},
 			},
-			wantedData: rpi.AppConfig{
+			wantedData: rpi.AppConfigVPNWithOvpn{
 				VPNCountries: map[string]map[string]string{
 					"nordvpn": {"France": "file1", "Germany": "file2"},
 				},
@@ -33,8 +33,8 @@ func TestList(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			s := appconfig.APCFSYS(sys.AppConfig{})
-			intf, err := s.List(
+			s := appconfig.APCFVPNSYS(sys.AppConfigVPNWithOvpn{})
+			intf, err := s.ListVPN(
 				tc.VPNCountries,
 			)
 			assert.Equal(t, tc.wantedData, intf)

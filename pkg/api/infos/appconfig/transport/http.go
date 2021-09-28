@@ -20,7 +20,7 @@ func NewHTTP(svc appconfig.Service, r *echo.Group) {
 }
 
 func (h *HTTP) list(ctx echo.Context) error {
-	result, err := h.svc.List()
+	result, err := h.svc.ListVPN()
 	if err != nil {
 		return err
 	}

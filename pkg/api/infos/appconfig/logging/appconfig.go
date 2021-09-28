@@ -24,13 +24,13 @@ type LogService struct {
 
 const name = "appconfig"
 
-// List is the logging function attached to the List appconfig services and responsible for logging it out.
-func (ls *LogService) List(ctx echo.Context) (resp rpi.AppConfig, err error) {
+// ListVPN is the logging function attached to the ListVPN appconfig services and responsible for logging it out.
+func (ls *LogService) ListVPN(ctx echo.Context) (resp rpi.AppConfigVPNWithOvpn, err error) {
 	defer func(begin time.Time) {
 		ls.logger.Log(
 			ctx,
 			name,
-			"request: listing appconfig configuration",
+			"request: listing VPN appconfig configuration",
 			err,
 			map[string]interface{}{
 				"resp": resp,
@@ -38,5 +38,5 @@ func (ls *LogService) List(ctx echo.Context) (resp rpi.AppConfig, err error) {
 			},
 		)
 	}(time.Now())
-	return ls.Service.List()
+	return ls.Service.ListVPN()
 }

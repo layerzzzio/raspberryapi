@@ -5,17 +5,17 @@ import (
 )
 
 // AppConfig mock
-type AppConfig struct {
-	ListFn func(
+type AppConfigVPNWithOvpn struct {
+	ListVPNFn func(
 		map[string](map[string]string),
-	) (rpi.AppConfig, error)
+	) (rpi.AppConfigVPNWithOvpn, error)
 }
 
 // List mock
-func (in AppConfig) List(
+func (in AppConfigVPNWithOvpn) ListVPN(
 	vpnCountries map[string](map[string]string),
-) (rpi.AppConfig, error) {
-	return in.ListFn(
+) (rpi.AppConfigVPNWithOvpn, error) {
+	return in.ListVPNFn(
 		vpnCountries,
 	)
 }
