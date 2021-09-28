@@ -443,8 +443,8 @@ func (s Service) VPNCountries(directoryPath string) map[string](map[string]strin
 						if !de.IsDir() &&
 							strings.HasSuffix(de.Name(), ".ovpn") &&
 							!StringItemExists(fileName, regexCountry) {
-							// countries = append(countries, regexCountry)
 							fileName = append(fileName, regexCountry)
+							// osPathname is picked up randomly by the GoWalk
 							countryFiles[regexCountry] = osPathname
 						}
 					} else if !de.IsDir() &&
@@ -452,7 +452,7 @@ func (s Service) VPNCountries(directoryPath string) map[string](map[string]strin
 						strings.HasSuffix(de.Name(), ".ovpn") &&
 						!StringItemExists(fileName, regexCountry) {
 						if country := constants.COUNTRYCODENAME[strings.ToUpper(regexCountry)]; country != "" {
-							// countries = append(countries, country)
+							// osPathname is picked up randomly by the GoWalk
 							countryFiles[country] = osPathname
 						}
 						fileName = append(fileName, regexCountry)
