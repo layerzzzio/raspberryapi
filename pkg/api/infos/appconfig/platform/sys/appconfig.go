@@ -9,7 +9,7 @@ type AppConfig struct{}
 
 // List returns a list of AppConfig info
 func (int AppConfig) List(
-	VPNCountries map[string][]string,
+	VPNCountries map[string]map[string]string,
 ) (rpi.AppConfig, error) {
 	return rpi.AppConfig{
 		VPNCountries: VPNCountries,

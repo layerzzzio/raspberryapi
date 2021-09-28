@@ -666,23 +666,23 @@ func TestVPNCountries(t *testing.T) {
 		name          string
 		isCreateFile  bool
 		directoryPath string
-		wantedData    map[string][]string
+		wantedData    map[string]map[string]string
 	}{
 		{
 			name:          "success: the current file are not found in COUNTRYCODENAME",
 			isCreateFile:  false,
 			directoryPath: "./testdata",
-			wantedData:    map[string][]string{},
+			wantedData:    map[string]map[string]string{},
 		},
 		{
 			name:          "success: the current file are found in COUNTRYCODENAME",
 			isCreateFile:  true,
 			directoryPath: "./testdata",
-			wantedData: map[string][]string{
-				"nordvpn":   {"Germany"},
-				"vyprvpn":   {"Canada"},
-				"ipvanish":  {"France"},
-				"surfshark": {"Singapore"},
+			wantedData: map[string]map[string]string{
+				"nordvpn":   {"Germany": "testdata/wov_nordvpn/vpnconfigs/de844.nordvpn.com.tcp.ovpn"},
+				"vyprvpn":   {"Canada": "testdata/wov_vyprvpn/vpnconfigs/Canada.ovpn"},
+				"ipvanish":  {"France": "testdata/wov_ipvanish/vpnconfigs/ipvanish-FR-Paris-par-a06.ovpn"},
+				"surfshark": {"Singapore": "testdata/wov_surfshark/vpnconfigs/sg-in.prod.surfshark.com_udp.ovpn"},
 			},
 		},
 	}
@@ -722,6 +722,30 @@ func TestVPNCountries(t *testing.T) {
 				if err := actions.OverwriteToFile(
 					actions.WriteToFileArg{
 						File: "./testdata/wov_ipvanish/vpnconfigs/ipvanish-FR-Paris-par-a06.ovpn",
+					},
+				); err != nil {
+					log.Fatal(err)
+				}
+
+				if err := actions.OverwriteToFile(
+					actions.WriteToFileArg{
+						File: "./testdata/wov_ipvanish/vpnconfigs/ipvanish-FR-Paris-par-a07.ovpn",
+					},
+				); err != nil {
+					log.Fatal(err)
+				}
+
+				if err := actions.OverwriteToFile(
+					actions.WriteToFileArg{
+						File: "./testdata/wov_ipvanish/vpnconfigs/ipvanish-FR-Paris-par-a08.ovpn",
+					},
+				); err != nil {
+					log.Fatal(err)
+				}
+
+				if err := actions.OverwriteToFile(
+					actions.WriteToFileArg{
+						File: "./testdata/wov_ipvanish/vpnconfigs/ipvanish-FR-Paris-par-a09.ovpn",
 					},
 				); err != nil {
 					log.Fatal(err)

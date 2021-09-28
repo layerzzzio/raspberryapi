@@ -405,10 +405,11 @@ func (s Service) ListNameFilesInDirectory(directoryPath string) []string {
 }
 
 // VPNCountries lists countries available for vpn
-func (s Service) VPNCountries(directoryPath string) map[string][]string {
-	var result = make(map[string][]string)
-	var countries []string
+func (s Service) VPNCountries(directoryPath string) map[string](map[string]string) {
+	var result = make(map[string](map[string]string))
+	// var countries []string
 	var fileName []string
+	var countryFiles = make(map[string](string))
 	var regexCountry string
 
 	wovDir, err := ioutil.ReadDir(directoryPath)
@@ -442,16 +443,18 @@ func (s Service) VPNCountries(directoryPath string) map[string][]string {
 						if !de.IsDir() &&
 							strings.HasSuffix(de.Name(), ".ovpn") &&
 							!StringItemExists(fileName, regexCountry) {
-							countries = append(countries, regexCountry)
+							// countries = append(countries, regexCountry)
 							fileName = append(fileName, regexCountry)
+							countryFiles[regexCountry] = osPathname
 						}
 					} else if !de.IsDir() &&
+						// countries are not spelled
 						strings.HasSuffix(de.Name(), ".ovpn") &&
 						!StringItemExists(fileName, regexCountry) {
 						if country := constants.COUNTRYCODENAME[strings.ToUpper(regexCountry)]; country != "" {
-							countries = append(countries, country)
+							// countries = append(countries, country)
+							countryFiles[country] = osPathname
 						}
-
 						fileName = append(fileName, regexCountry)
 					}
 					return nil
@@ -464,9 +467,10 @@ func (s Service) VPNCountries(directoryPath string) map[string][]string {
 				log.Fatal(err)
 			}
 
-			sort.Strings(countries)
-			result[strings.TrimPrefix(dir.Name(), "wov_")] = countries
-			countries = nil
+			// sort.Strings(countries)
+			result[strings.TrimPrefix(dir.Name(), "wov_")] = countryFiles
+			countryFiles = make(map[string](string))
+			// countries = nil
 			fileName = nil
 			regexCountry = ""
 		}

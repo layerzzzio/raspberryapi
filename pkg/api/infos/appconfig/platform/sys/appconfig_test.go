@@ -13,18 +13,18 @@ import (
 func TestList(t *testing.T) {
 	cases := []struct {
 		name         string
-		VPNCountries map[string][]string
+		VPNCountries map[string]map[string]string
 		wantedData   rpi.AppConfig
 		wantedErr    error
 	}{
 		{
 			name: "success: isNordVPN true",
-			VPNCountries: map[string][]string{
-				"nordvpn": {"France", "Germany"},
+			VPNCountries: map[string]map[string]string{
+				"nordvpn": {"France": "file1", "Germany": "file2"},
 			},
 			wantedData: rpi.AppConfig{
-				VPNCountries: map[string][]string{
-					"nordvpn": {"France", "Germany"},
+				VPNCountries: map[string]map[string]string{
+					"nordvpn": {"France": "file1", "Germany": "file2"},
 				},
 			},
 			wantedErr: nil,
