@@ -69,7 +69,7 @@ func TestList(t *testing.T) {
 			ts := httptest.NewServer(r)
 
 			defer ts.Close()
-			path := ts.URL + "/appstatuses"
+			path := ts.URL + "/appstatuses/vpnwithovpn"
 			res, err := http.Get(path)
 			if err != nil {
 				t.Fatal(err)
