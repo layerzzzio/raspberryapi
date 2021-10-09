@@ -16,7 +16,7 @@ type HTTP struct {
 func NewHTTP(svc appstatus.Service, r *echo.Group) {
 	h := HTTP{svc}
 	cr := r.Group("/appstatuses")
-	cr.GET("", h.list)
+	cr.GET("/vpnwithovpn", h.list)
 }
 
 func (h *HTTP) list(ctx echo.Context) error {
