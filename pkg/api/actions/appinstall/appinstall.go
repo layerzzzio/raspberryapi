@@ -18,7 +18,7 @@ func (ins *AppInstall) ExecuteAG(action string, pkg string) (rpi.Action, error) 
 				Reference: ins.a.ExecuteBashCommand,
 				Argument: []interface{}{
 					actions.EBC{
-						Command: fmt.Sprintf("dpkg --configure -a"),
+						Command: "dpkg --configure -a",
 					},
 				},
 			},
