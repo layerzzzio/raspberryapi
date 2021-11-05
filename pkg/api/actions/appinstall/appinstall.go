@@ -48,6 +48,8 @@ func (ins *AppInstall) ExecuteWOV(
 	etcDir := fmt.Sprintf("/etc/openvpn/wov_%v", vpnName)
 
 	if action == "install" {
+		isOpenVPNInstalled := ins.i.IsDPKGInstalled("openvpn")
+
 		plan = map[int](map[int]actions.Func){
 			1: {
 				1: {
@@ -91,6 +93,30 @@ func (ins *AppInstall) ExecuteWOV(
 					},
 				},
 			},
+		}
+
+		// if openvpn is not installed, install it
+		if isOpenVPNInstalled == false {
+			plan[4] = map[int]actions.Func{
+				1: {
+					Name:      actions.ExecuteBashCommand,
+					Reference: ins.a.ExecuteBashCommand,
+					Argument: []interface{}{
+						actions.EBC{
+							Command: "dpkg --configure -a",
+						},
+					},
+				},
+				2: {
+					Name:      actions.ExecuteBashCommand,
+					Reference: ins.a.ExecuteBashCommand,
+					Argument: []interface{}{
+						actions.EBC{
+							Command: "apt-get install -y openvpn",
+						},
+					},
+				},
+			}
 		}
 	} else if action == "purge" {
 		plan = map[int](map[int]actions.Func){

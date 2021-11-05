@@ -127,7 +127,7 @@ func Start(cfg *config.Configuration) error {
 	adt.NewHTTP(adl.New(destroy.New(ads.Destroy{}, a), log).Service, v1)
 	agt.NewHTTP(agl.New(general.New(ags.General{}, a), log).Service, v1)
 	act.NewHTTP(acl.New(configure.New(acs.Configure{}, a, i), log).Service, v1)
-	ait.NewHTTP(ail.New(appinstall.New(ais.Install{}, a), log).Service, v1)
+	ait.NewHTTP(ail.New(appinstall.New(ais.Install{}, a, i), log).Service, v1)
 	aat.NewHTTP(aal.New(appaction.New(aas.AppAction{}, a, i), log).Service, v1)
 
 	// infos

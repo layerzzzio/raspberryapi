@@ -14,6 +14,7 @@ import (
 	"github.com/raspibuddy/rpi/pkg/api/actions/appinstall"
 	"github.com/raspibuddy/rpi/pkg/api/actions/appinstall/transport"
 	"github.com/raspibuddy/rpi/pkg/utl/actions"
+	"github.com/raspibuddy/rpi/pkg/utl/infos"
 	"github.com/raspibuddy/rpi/pkg/utl/mock/mocksys"
 	"github.com/raspibuddy/rpi/pkg/utl/server"
 	"github.com/stretchr/testify/assert"
@@ -82,7 +83,8 @@ func TestExecuteAG(t *testing.T) {
 			r := server.New()
 			rg := r.Group("")
 			a := actions.New()
-			s := appinstall.New(tc.inssys, a)
+			i := infos.New()
+			s := appinstall.New(tc.inssys, a, i)
 			transport.NewHTTP(s, rg)
 			ts := httptest.NewServer(r)
 
@@ -180,7 +182,8 @@ func TestExecuteWOV(t *testing.T) {
 			r := server.New()
 			rg := r.Group("")
 			a := actions.New()
-			s := appinstall.New(tc.inssys, a)
+			i := infos.New()
+			s := appinstall.New(tc.inssys, a, i)
 			transport.NewHTTP(s, rg)
 			ts := httptest.NewServer(r)
 
