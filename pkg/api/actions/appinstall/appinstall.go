@@ -96,7 +96,7 @@ func (ins *AppInstall) ExecuteWOV(
 		}
 
 		// if openvpn is not installed, install it
-		if isOpenVPNInstalled == false {
+		if !isOpenVPNInstalled {
 			plan[4] = map[int]actions.Func{
 				1: {
 					Name:      actions.ExecuteBashCommand,
