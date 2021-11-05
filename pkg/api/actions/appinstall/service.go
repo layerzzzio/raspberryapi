@@ -15,6 +15,7 @@ type Service interface {
 type AppInstall struct {
 	inssys INSSYS
 	a      Actions
+	i      Infos
 }
 
 // INSSYS represents a AppInstall repository service.
@@ -28,7 +29,12 @@ type Actions interface {
 	ExecuteBashCommand(interface{}) (rpi.Exec, error)
 }
 
+// Infos represents the infos interface
+type Infos interface {
+	IsDPKGInstalled(string) bool
+}
+
 // New creates a INSSYS application service instance.
-func New(inssys INSSYS, a Actions) *AppInstall {
-	return &AppInstall{inssys: inssys, a: a}
+func New(inssys INSSYS, a Actions, i Infos) *AppInstall {
+	return &AppInstall{inssys: inssys, a: a, i: i}
 }
