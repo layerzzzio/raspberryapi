@@ -22,7 +22,9 @@ func (ins *AppInstall) ExecuteAG(action string, pkg string) (rpi.Action, error) 
 					},
 				},
 			},
-			2: {
+		},
+		2: {
+			1: {
 				Name:      actions.ExecuteBashCommand,
 				Reference: ins.a.ExecuteBashCommand,
 				Argument: []interface{}{
@@ -107,7 +109,10 @@ func (ins *AppInstall) ExecuteWOV(
 						},
 					},
 				},
-				2: {
+			}
+
+			plan[5] = map[int]actions.Func{
+				1: {
 					Name:      actions.ExecuteBashCommand,
 					Reference: ins.a.ExecuteBashCommand,
 					Argument: []interface{}{
