@@ -80,6 +80,34 @@ func (s Service) IsFileExists(filePath string) bool {
 	}
 }
 
+// HasDeepestDirectoryFiles check if a parent directory contains at least one file in its child directories
+func (s Service) HasDirectoryAtLeastOneFile(directoryPath string) bool {
+	result := false
+
+	err := godirwalk.Walk(directoryPath, &godirwalk.Options{
+		Callback: func(osPathname string, de *godirwalk.Dirent) error {
+			if de.IsRegular() {
+				result = true
+			}
+
+			if result == true {
+				fmt.Println(result)
+				return fmt.Errorf("found a file")
+			}
+
+			return nil
+		},
+		// (optional) set true for faster yet non-deterministic enumeration (see godoc)
+		Unsorted: true,
+	})
+
+	if err.Error() != "found a file" {
+		log.Fatal(err)
+	}
+
+	return result
+}
+
 // GetConfigFiles returns a map of the unix config file used in the Raspberry Pi
 // source: https://qvault.io/2019/10/21/golang-constant-maps-slices/
 func (s Service) GetConfigFiles() map[string]rpi.ConfigFileDetails {

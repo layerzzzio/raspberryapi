@@ -6,25 +6,26 @@ import (
 
 // Infos mock
 type Infos struct {
-	ReadFileFn                 func(path string) ([]string, error)
-	IsFileExistsFn             func(path string) bool
-	GetConfigFilesFn           func() map[string]rpi.ConfigFileDetails
-	GetEnrichedConfigFilesFn   func(configFiles map[string]rpi.ConfigFileDetails) map[string]rpi.ConfigFileDetails
-	IsXscreenSaverInstalledFn  func() (bool, error)
-	IsQuietGrepFn              func(string, string, string) bool
-	IsSSHKeyGeneratingFn       func(string) bool
-	IsDPKGInstalledFn          func(string) bool
-	IsSPIFn                    func(string) bool
-	IsI2CFn                    func(string) bool
-	IsVariableSetFn            func([]string, string, string) bool
-	ListWifiInterfacesFn       func(string) []string
-	IsWpaSupComFn              func() map[string]bool
-	ZoneInfoFn                 func(string) map[string]string
-	ListNameFilesInDirectoryFn func(string) []string
-	VPNCountriesFn             func(string) map[string](map[string]string)
-	VPNConfigFileFn            func(string, string, string) []string
-	ProcessesPidsFn            func(string) []string
-	StatusVPNWithOpenVPNFn     func(string, string) map[string]bool
+	ReadFileFn                   func(path string) ([]string, error)
+	IsFileExistsFn               func(path string) bool
+	GetConfigFilesFn             func() map[string]rpi.ConfigFileDetails
+	GetEnrichedConfigFilesFn     func(configFiles map[string]rpi.ConfigFileDetails) map[string]rpi.ConfigFileDetails
+	IsXscreenSaverInstalledFn    func() (bool, error)
+	IsQuietGrepFn                func(string, string, string) bool
+	IsSSHKeyGeneratingFn         func(string) bool
+	IsDPKGInstalledFn            func(string) bool
+	IsSPIFn                      func(string) bool
+	IsI2CFn                      func(string) bool
+	IsVariableSetFn              func([]string, string, string) bool
+	ListWifiInterfacesFn         func(string) []string
+	IsWpaSupComFn                func() map[string]bool
+	ZoneInfoFn                   func(string) map[string]string
+	ListNameFilesInDirectoryFn   func(string) []string
+	VPNCountriesFn               func(string) map[string](map[string]string)
+	VPNConfigFileFn              func(string, string, string) []string
+	ProcessesPidsFn              func(string) []string
+	StatusVPNWithOpenVPNFn       func(string, string) map[string]bool
+	HasDirectoryAtLeastOneFileFn func(string) bool
 }
 
 // ReadFile mock
@@ -120,4 +121,9 @@ func (i Infos) ProcessesPids(regex string) []string {
 // StatusVPNWithOpenVPN mock
 func (i Infos) StatusVPNWithOpenVPN(regexPs string, regexName string) map[string]bool {
 	return i.StatusVPNWithOpenVPNFn(regexPs, regexName)
+}
+
+// HasDirectoryAtLeastOneFile mock
+func (i Infos) HasDirectoryAtLeastOneFile(path string) bool {
+	return i.HasDirectoryAtLeastOneFileFn(path)
 }

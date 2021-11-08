@@ -104,6 +104,28 @@ func TestIsFileExists(t *testing.T) {
 	}
 }
 
+func TestHasDirectoryAtLeastOneFile(t *testing.T) {
+	cases := []struct {
+		name          string
+		directoryPath string
+		wantedData    bool
+	}{
+		{
+			name:          "success: found file",
+			directoryPath: "./testdata/vyprvpn",
+			wantedData:    true,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			i := infos.New()
+			hasFile := i.HasDirectoryAtLeastOneFile(tc.directoryPath)
+			assert.Equal(t, tc.wantedData, hasFile)
+		})
+	}
+}
+
 func TestGetConfigFiles(t *testing.T) {
 	cases := []struct {
 		name     string
