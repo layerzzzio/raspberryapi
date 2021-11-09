@@ -103,7 +103,7 @@ func (s Service) HasDirectoryAtLeastOneFile(directoryPath string) bool {
 					result = true
 				}
 
-				if result == true {
+				if result {
 					return fmt.Errorf("found a file")
 				}
 
