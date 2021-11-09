@@ -93,6 +93,11 @@ func TestIsFileExists(t *testing.T) {
 			filepath:   "./testdata/passwd-xxxxxxxx",
 			wantedData: false,
 		},
+		{
+			name:       "success: file does not exist",
+			filepath:   "./testdata-xxxxxxxx",
+			wantedData: false,
+		},
 	}
 
 	for _, tc := range cases {
@@ -103,6 +108,43 @@ func TestIsFileExists(t *testing.T) {
 		})
 	}
 }
+
+// func TestIsDirectory(t *testing.T) {
+// 	cases := []struct {
+// 		name       string
+// 		filepath   string
+// 		wantedData bool
+// 		wantedErr  error
+// 	}{
+// 		{
+// 			name:       "success: file",
+// 			filepath:   "./testdata/passwd",
+// 			wantedData: false,
+// 			wantedErr:  nil,
+// 		},
+// 		{
+// 			name:       "success: directory",
+// 			filepath:   "./testdata",
+// 			wantedData: true,
+// 			wantedErr:  nil,
+// 		},
+// 		{
+// 			name:       "error",
+// 			filepath:   "./testdataxxx",
+// 			wantedData: false,
+// 			wantedErr:  &os.PathError{Op: "stat", Path: "./testdataxxx", Err: os.ErrNotExist},
+// 		},
+// 	}
+
+// 	for _, tc := range cases {
+// 		t.Run(tc.name, func(t *testing.T) {
+// 			i := infos.New()
+// 			isDir, err := i.IsDirectory(tc.filepath)
+// 			assert.Equal(t, tc.wantedData, isDir)
+// 			assert.Equal(t, tc.wantedErr, err)
+// 		})
+// 	}
+// }
 
 func TestHasDirectoryAtLeastOneFile(t *testing.T) {
 	cases := []struct {
@@ -703,11 +745,17 @@ func TestVPNCountries(t *testing.T) {
 			isCreateFile:  true,
 			directoryPath: "./testdata",
 			wantedDataExceptIpVanish: map[string]map[string]string{
-				"nordvpn":   {"Germany": "testdata/wov_nordvpn/vpnconfigs/de844.nordvpn.com.tcp.ovpn"},
-				"vyprvpn":   {"Canada": "testdata/wov_vyprvpn/vpnconfigs/Canada.ovpn"},
-				"surfshark": {"Singapore": "testdata/wov_surfshark/vpnconfigs/sg-in.prod.surfshark.com_udp.ovpn"},
+				"nordvpn":      {"Germany": "testdata/wov_nordvpn/vpnconfigs/de844.nordvpn.com.tcp.ovpn"},
+				"vyprvpn":      {"Canada": "testdata/wov_vyprvpn/vpnconfigs/Canada.ovpn"},
+				"surfshark":    {"Singapore": "testdata/wov_surfshark/vpnconfigs/sg-in.prod.surfshark.com_udp.ovpn"},
+				"testemptydir": {},
 			},
 			wantedDataIpVanish: true,
+		},
+		{
+			name:                     "success: directory does not exist",
+			directoryPath:            "./testdata-xxx",
+			wantedDataExceptIpVanish: map[string]map[string]string{},
 		},
 	}
 
@@ -715,6 +763,14 @@ func TestVPNCountries(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			i := infos.New()
 			if tc.isCreateFile {
+				if err := os.MkdirAll("./testdata/wov_testemptydir", 0777); err != nil {
+					log.Fatal(err)
+				}
+
+				if err := os.MkdirAll("./testdata/wov_nordvpn", 0777); err != nil {
+					log.Fatal(err)
+				}
+
 				if err := os.MkdirAll("./testdata/wov_nordvpn/vpnconfigs", 0777); err != nil {
 					log.Fatal(err)
 				}
@@ -804,6 +860,7 @@ func TestVPNCountries(t *testing.T) {
 				os.RemoveAll("./testdata/wov_vyprvpn")
 				os.RemoveAll("./testdata/wov_surfshark")
 				os.RemoveAll("./testdata/alcul")
+				os.RemoveAll("./testdata/wov_testemptydir")
 			}
 
 			isContain := false

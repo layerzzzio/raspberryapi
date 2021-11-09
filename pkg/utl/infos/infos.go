@@ -80,29 +80,45 @@ func (s Service) IsFileExists(filePath string) bool {
 	}
 }
 
+// IsDirectory determines if a file represented
+// by `path` is a directory or not
+// func (s Service) IsDirectory(path string) (bool, error) {
+// 	fileInfo, err := os.Stat(path)
+// 	if err != nil {
+// 		fmt.Println(err)
+// 		return false, err
+// 	}
+
+// 	return fileInfo.IsDir(), err
+// }
+
 // HasDeepestDirectoryFiles check if a parent directory contains at least one file in its child directories
 func (s Service) HasDirectoryAtLeastOneFile(directoryPath string) bool {
 	result := false
 
-	err := godirwalk.Walk(directoryPath, &godirwalk.Options{
-		Callback: func(osPathname string, de *godirwalk.Dirent) error {
-			if de.IsRegular() {
-				result = true
+	if s.IsFileExists(directoryPath) {
+		err := godirwalk.Walk(directoryPath, &godirwalk.Options{
+			Callback: func(osPathname string, de *godirwalk.Dirent) error {
+				if de.IsRegular() {
+					result = true
+				}
+
+				if result == true {
+					return fmt.Errorf("found a file")
+				}
+
+				return nil
+			},
+			// (optional) set true for faster yet non-deterministic enumeration (see godoc)
+			Unsorted: true,
+		})
+
+		if err != nil {
+			if err.Error() != "found a file" {
+				log.Fatal(err)
 			}
+		}
 
-			if result == true {
-				fmt.Println(result)
-				return fmt.Errorf("found a file")
-			}
-
-			return nil
-		},
-		// (optional) set true for faster yet non-deterministic enumeration (see godoc)
-		Unsorted: true,
-	})
-
-	if err.Error() != "found a file" {
-		log.Fatal(err)
 	}
 
 	return result
@@ -352,7 +368,6 @@ func (s Service) ListWifiInterfaces(directoryPath string) []string {
 
 	for _, f := range files {
 		wirelessPath := fmt.Sprintf("%v/%v/wireless", directoryPath, f.Name())
-		fmt.Println(wirelessPath)
 		if s.IsFileExists(wirelessPath) {
 			wifiInterfaces = append(wifiInterfaces, f.Name())
 		}
@@ -440,67 +455,72 @@ func (s Service) VPNCountries(directoryPath string) map[string](map[string]strin
 	var countryFiles = make(map[string](string))
 	var regexCountry string
 
-	wovDir, err := ioutil.ReadDir(directoryPath)
-	if err != nil {
-		log.Fatal(err)
-	}
+	if s.IsFileExists(directoryPath) {
+		wovDir, err := ioutil.ReadDir(directoryPath)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	for _, dir := range wovDir {
-		if dir.IsDir() && dir.Name()[:4] == "wov_" {
-			err = godirwalk.Walk(directoryPath+"/"+dir.Name()+"/vpnconfigs", &godirwalk.Options{
-				Callback: func(osPathname string, de *godirwalk.Dirent) error {
-					re := regexp.MustCompile(`^[a-zA-Z]*`)
+		for _, dir := range wovDir {
+			if dir.IsDir() && dir.Name()[:4] == "wov_" {
+				isValidDirectory := s.HasDirectoryAtLeastOneFile(directoryPath + "/" + dir.Name())
+				if isValidDirectory {
+					err = godirwalk.Walk(directoryPath+"/"+dir.Name()+"/vpnconfigs", &godirwalk.Options{
+						Callback: func(osPathname string, de *godirwalk.Dirent) error {
+							re := regexp.MustCompile(`^[a-zA-Z]*`)
 
-					if dir.Name() == "wov_ipvanish" {
-						rawFileName := strings.ReplaceAll(de.Name(), "ipvanish-", "")
-						regexCountry = strings.ReplaceAll(
-							string(re.Find([]byte(rawFileName))),
-							" ",
-							"",
-						)
-					} else {
-						regexCountry = strings.ReplaceAll(
-							string(re.Find([]byte(de.Name()))),
-							" ",
-							"",
-						)
-					}
+							if dir.Name() == "wov_ipvanish" {
+								rawFileName := strings.ReplaceAll(de.Name(), "ipvanish-", "")
+								regexCountry = strings.ReplaceAll(
+									string(re.Find([]byte(rawFileName))),
+									" ",
+									"",
+								)
+							} else {
+								regexCountry = strings.ReplaceAll(
+									string(re.Find([]byte(de.Name()))),
+									" ",
+									"",
+								)
+							}
 
-					if dir.Name() == "wov_vyprvpn" {
-						// countries are clearly spelled
-						if !de.IsDir() &&
-							strings.HasSuffix(de.Name(), ".ovpn") &&
-							!StringItemExists(fileName, regexCountry) {
-							fileName = append(fileName, regexCountry)
-							// osPathname is picked up randomly by the GoWalk
-							countryFiles[regexCountry] = osPathname
-						}
-					} else if !de.IsDir() &&
-						// countries are not spelled
-						strings.HasSuffix(de.Name(), ".ovpn") &&
-						!StringItemExists(fileName, regexCountry) {
-						if country := constants.COUNTRYCODENAME[strings.ToUpper(regexCountry)]; country != "" {
-							// osPathname is picked up randomly by the GoWalk
-							countryFiles[country] = osPathname
-						}
-						fileName = append(fileName, regexCountry)
-					}
-					return nil
-				},
-				// (optional) set true for faster yet non-deterministic enumeration (see godoc)
-				Unsorted: true,
-			})
+							if dir.Name() == "wov_vyprvpn" {
+								// countries are clearly spelled
+								if !de.IsDir() &&
+									strings.HasSuffix(de.Name(), ".ovpn") &&
+									!StringItemExists(fileName, regexCountry) {
+									fileName = append(fileName, regexCountry)
+									// osPathname is picked up randomly by the GoWalk
+									countryFiles[regexCountry] = osPathname
+								}
+							} else if !de.IsDir() &&
+								// countries are not spelled
+								strings.HasSuffix(de.Name(), ".ovpn") &&
+								!StringItemExists(fileName, regexCountry) {
+								if country := constants.COUNTRYCODENAME[strings.ToUpper(regexCountry)]; country != "" {
+									// osPathname is picked up randomly by the GoWalk
+									countryFiles[country] = osPathname
+								}
+								fileName = append(fileName, regexCountry)
+							}
+							return nil
+						},
+						// (optional) set true for faster yet non-deterministic enumeration (see godoc)
+						Unsorted: true,
+					})
+				}
 
-			if err != nil {
-				log.Fatal(err)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				// sort.Strings(countries)
+				result[strings.TrimPrefix(dir.Name(), "wov_")] = countryFiles
+				countryFiles = make(map[string](string))
+				// countries = nil
+				fileName = nil
+				regexCountry = ""
 			}
-
-			// sort.Strings(countries)
-			result[strings.TrimPrefix(dir.Name(), "wov_")] = countryFiles
-			countryFiles = make(map[string](string))
-			// countries = nil
-			fileName = nil
-			regexCountry = ""
 		}
 	}
 
