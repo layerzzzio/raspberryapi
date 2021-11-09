@@ -24,7 +24,7 @@ func TestList(t *testing.T) {
 				IsDPKGInstalledFn: func(string) bool {
 					return false
 				},
-				IsFileExistsFn: func(string) bool {
+				HasDirectoryAtLeastOneFileFn: func(string) bool {
 					return false
 				},
 			},
