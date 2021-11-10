@@ -705,6 +705,7 @@ func TestListNameFilesInDirectory(t *testing.T) {
 			directoryPath: "./testdata",
 			wantedData: []string{
 				"Ireland.ovpn", "Netherlands.ovpn", "Slovakia.ovpn", "USA - New York.ovpn",
+				"dummyfile.zip", "dummyfile.zip", "dummyregular.txt",
 				"hk-hkg.prod.surfshark.com_udp.ovpn", "ipvanish-AT-Vienna-vie-c05.ovpn",
 				"ipvanish-FR-Bordeaux-bod-c02.ovpn", "ipvanish-KR-Seoul-sel-a01.ovpn",
 				"ipvanish-LV-Riga-rix-c04.ovpn", "ipvanish-UK-Manchester-man-c13.ovpn",
