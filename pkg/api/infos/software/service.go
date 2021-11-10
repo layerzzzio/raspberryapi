@@ -31,7 +31,7 @@ type SOFSYS interface {
 // Infos represents the infos interface
 type Infos interface {
 	IsDPKGInstalled(string) bool
-	HasDirectoryAtLeastOneFile(string) bool
+	HasDirectoryAtLeastOneFile(string, bool) bool
 }
 
 // New creates a Software application service instance.

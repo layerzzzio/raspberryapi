@@ -150,11 +150,37 @@ func TestHasDirectoryAtLeastOneFile(t *testing.T) {
 	cases := []struct {
 		name          string
 		directoryPath string
+		isIgnoreZip   bool
 		wantedData    bool
 	}{
 		{
 			name:          "success: found file",
 			directoryPath: "./testdata/vyprvpn",
+			isIgnoreZip:   true,
+			wantedData:    true,
+		},
+		{
+			name:          "success: found no file",
+			directoryPath: "./testdata/onlyzip",
+			isIgnoreZip:   true,
+			wantedData:    false,
+		},
+		{
+			name:          "success: found no file",
+			directoryPath: "./testdata/onlyzip",
+			isIgnoreZip:   false,
+			wantedData:    true,
+		},
+		{
+			name:          "success: found no file",
+			directoryPath: "./testdata/mix_zip_and_regular",
+			isIgnoreZip:   true,
+			wantedData:    true,
+		},
+		{
+			name:          "success: found no file",
+			directoryPath: "./testdata/mix_zip_and_regular",
+			isIgnoreZip:   false,
 			wantedData:    true,
 		},
 	}
@@ -162,7 +188,7 @@ func TestHasDirectoryAtLeastOneFile(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			i := infos.New()
-			hasFile := i.HasDirectoryAtLeastOneFile(tc.directoryPath)
+			hasFile := i.HasDirectoryAtLeastOneFile(tc.directoryPath, tc.isIgnoreZip)
 			assert.Equal(t, tc.wantedData, hasFile)
 		})
 	}
@@ -679,6 +705,7 @@ func TestListNameFilesInDirectory(t *testing.T) {
 			directoryPath: "./testdata",
 			wantedData: []string{
 				"Ireland.ovpn", "Netherlands.ovpn", "Slovakia.ovpn", "USA - New York.ovpn",
+				"dummyfile.zip", "dummyfile.zip", "dummyregular.txt",
 				"hk-hkg.prod.surfshark.com_udp.ovpn", "ipvanish-AT-Vienna-vie-c05.ovpn",
 				"ipvanish-FR-Bordeaux-bod-c02.ovpn", "ipvanish-KR-Seoul-sel-a01.ovpn",
 				"ipvanish-LV-Riga-rix-c04.ovpn", "ipvanish-UK-Manchester-man-c13.ovpn",
