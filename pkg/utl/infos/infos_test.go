@@ -160,10 +160,28 @@ func TestHasDirectoryAtLeastOneFile(t *testing.T) {
 			wantedData:    true,
 		},
 		{
-			name:          "success: found file",
-			directoryPath: "./testdata/dummy",
+			name:          "success: found no file",
+			directoryPath: "./testdata/onlyzip",
 			isIgnoreZip:   true,
 			wantedData:    false,
+		},
+		{
+			name:          "success: found no file",
+			directoryPath: "./testdata/onlyzip",
+			isIgnoreZip:   false,
+			wantedData:    true,
+		},
+		{
+			name:          "success: found no file",
+			directoryPath: "./testdata/mix_zip_and_regular",
+			isIgnoreZip:   true,
+			wantedData:    true,
+		},
+		{
+			name:          "success: found no file",
+			directoryPath: "./testdata/mix_zip_and_regular",
+			isIgnoreZip:   false,
+			wantedData:    true,
 		},
 	}
 

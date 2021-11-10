@@ -99,8 +99,10 @@ func (s Service) HasDirectoryAtLeastOneFile(directoryPath string, isIgnoreZip bo
 	if s.IsFileExists(directoryPath) {
 		err := godirwalk.Walk(directoryPath, &godirwalk.Options{
 			Callback: func(osPathname string, de *godirwalk.Dirent) error {
-				if strings.Contains(osPathname, ".zip") == isIgnoreZip {
-					return godirwalk.SkipThis
+				if isIgnoreZip {
+					if strings.Contains(osPathname, ".zip") {
+						return godirwalk.SkipThis
+					}
 				}
 
 				if de.IsRegular() {
