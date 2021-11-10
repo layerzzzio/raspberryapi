@@ -150,19 +150,27 @@ func TestHasDirectoryAtLeastOneFile(t *testing.T) {
 	cases := []struct {
 		name          string
 		directoryPath string
+		isIgnoreZip   bool
 		wantedData    bool
 	}{
 		{
 			name:          "success: found file",
 			directoryPath: "./testdata/vyprvpn",
+			isIgnoreZip:   true,
 			wantedData:    true,
+		},
+		{
+			name:          "success: found file",
+			directoryPath: "./testdata/dummy",
+			isIgnoreZip:   true,
+			wantedData:    false,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			i := infos.New()
-			hasFile := i.HasDirectoryAtLeastOneFile(tc.directoryPath)
+			hasFile := i.HasDirectoryAtLeastOneFile(tc.directoryPath, tc.isIgnoreZip)
 			assert.Equal(t, tc.wantedData, hasFile)
 		})
 	}

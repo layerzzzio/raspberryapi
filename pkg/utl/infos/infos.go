@@ -93,12 +93,16 @@ func (s Service) IsFileExists(filePath string) bool {
 // }
 
 // HasDeepestDirectoryFiles check if a parent directory contains at least one file in its child directories
-func (s Service) HasDirectoryAtLeastOneFile(directoryPath string) bool {
+func (s Service) HasDirectoryAtLeastOneFile(directoryPath string, isIgnoreZip bool) bool {
 	result := false
 
 	if s.IsFileExists(directoryPath) {
 		err := godirwalk.Walk(directoryPath, &godirwalk.Options{
 			Callback: func(osPathname string, de *godirwalk.Dirent) error {
+				if strings.Contains(osPathname, ".zip") == isIgnoreZip {
+					return godirwalk.SkipThis
+				}
+
 				if de.IsRegular() {
 					result = true
 				}
@@ -463,7 +467,7 @@ func (s Service) VPNCountries(directoryPath string) map[string](map[string]strin
 
 		for _, dir := range wovDir {
 			if dir.IsDir() && dir.Name()[:4] == "wov_" {
-				isValidDirectory := s.HasDirectoryAtLeastOneFile(directoryPath + "/" + dir.Name())
+				isValidDirectory := s.HasDirectoryAtLeastOneFile(directoryPath+"/"+dir.Name(), true)
 				if isValidDirectory {
 					err = godirwalk.Walk(directoryPath+"/"+dir.Name()+"/vpnconfigs", &godirwalk.Options{
 						Callback: func(osPathname string, de *godirwalk.Dirent) error {

@@ -25,7 +25,7 @@ type Infos struct {
 	VPNConfigFileFn              func(string, string, string) []string
 	ProcessesPidsFn              func(string) []string
 	StatusVPNWithOpenVPNFn       func(string, string) map[string]bool
-	HasDirectoryAtLeastOneFileFn func(string) bool
+	HasDirectoryAtLeastOneFileFn func(string, bool) bool
 }
 
 // ReadFile mock
@@ -124,6 +124,6 @@ func (i Infos) StatusVPNWithOpenVPN(regexPs string, regexName string) map[string
 }
 
 // HasDirectoryAtLeastOneFile mock
-func (i Infos) HasDirectoryAtLeastOneFile(path string) bool {
-	return i.HasDirectoryAtLeastOneFileFn(path)
+func (i Infos) HasDirectoryAtLeastOneFile(path string, isIgnoreZip bool) bool {
+	return i.HasDirectoryAtLeastOneFileFn(path, isIgnoreZip)
 }

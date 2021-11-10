@@ -11,10 +11,10 @@ func (so *Software) List() (rpi.Software, error) {
 	isUnzipInstalled := so.i.IsDPKGInstalled("unzip")
 
 	openVpnEtcDir := "/etc/openvpn/wov_"
-	isNordVPNInstalled := so.i.HasDirectoryAtLeastOneFile(openVpnEtcDir + "nordvpn/vpnconfigs")
-	isSurfSharkVPNInstalled := so.i.HasDirectoryAtLeastOneFile(openVpnEtcDir + "surfshark/vpnconfigs")
-	isIpVanishVPNInstalled := so.i.HasDirectoryAtLeastOneFile(openVpnEtcDir + "ipvanish/vpnconfigs")
-	isVyprVpnVPNInstalled := so.i.HasDirectoryAtLeastOneFile(openVpnEtcDir + "vyprvpn/vpnconfigs")
+	isNordVPNInstalled := so.i.HasDirectoryAtLeastOneFile(openVpnEtcDir+"nordvpn/vpnconfigs", true)
+	isSurfSharkVPNInstalled := so.i.HasDirectoryAtLeastOneFile(openVpnEtcDir+"surfshark/vpnconfigs", true)
+	isIpVanishVPNInstalled := so.i.HasDirectoryAtLeastOneFile(openVpnEtcDir+"ipvanish/vpnconfigs", true)
+	isVyprVpnVPNInstalled := so.i.HasDirectoryAtLeastOneFile(openVpnEtcDir+"vyprvpn/vpnconfigs", true)
 
 	return so.sofsys.List(
 		isVNCInstalled,
