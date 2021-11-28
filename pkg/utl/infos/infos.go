@@ -14,6 +14,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/karrick/godirwalk"
 	"github.com/raspibuddy/rpi"
@@ -69,6 +70,75 @@ func (s Service) ReadFile(filePath string) ([]string, error) {
 	}
 
 	return result, nil
+}
+
+// IsFileContainsUntil return a given keyword from a file for a number of seconds
+// timelimit is the period in second
+func (s Service) IsFileContainsUntil(
+	filePath string,
+	keywords1 IFCK,
+	keywords2 IFCK,
+	timelimit int,
+) (string, error) {
+	counter := 0
+
+	for {
+		keyword, err := s.IsFileContainsKey1OrKey2(filePath, keywords1, keywords2)
+
+		fmt.Println(keyword)
+		fmt.Println(fmt.Sprint(err))
+
+		if err != nil {
+			if fmt.Sprint(err) == "reading file failed" && counter > 10 {
+				return keyword, err
+			}
+		}
+
+		// the timelimit iteration is about the same number in seconds
+		// indeed, IsFileContainsKey1OrKey2 is quasi instanenous and we pause the program for 1 second
+		// example: timelimit=10 is roughly 10 seconds
+		if counter > timelimit || keyword != "not_found" {
+			return keyword, err
+		}
+
+		counter += 1
+		time.Sleep(1 * time.Second)
+	}
+}
+
+type IFCK struct {
+	Keywords []string
+	Name     string
+}
+
+// IsFileContainsKey1OrKey2 returns which keyword is found in a file.
+// If nothing is found, "not_found" is returned
+func (s Service) IsFileContainsKey1OrKey2(
+	filePath string,
+	keywords1 IFCK,
+	keywords2 IFCK,
+) (string, error) {
+	defaultResult := "not_found"
+
+	content, err := s.ReadFile(filePath)
+	if err != nil {
+		return defaultResult, fmt.Errorf("reading file failed")
+	}
+
+	keywords1LC := AllItemsToLowerOrUpperCase(keywords1.Keywords, "lower")
+	keywords2LC := AllItemsToLowerOrUpperCase(keywords2.Keywords, "lower")
+
+	for i := 0; i < len(content); i++ {
+		if StringContainsOneOrSeveralItems(strings.ToLower(content[i]), keywords1LC) {
+			return keywords1.Name, nil
+		}
+
+		if StringContainsOneOrSeveralItems(strings.ToLower(content[i]), keywords2LC) {
+			return keywords2.Name, nil
+		}
+	}
+
+	return defaultResult, nil
 }
 
 // IsFileExists checks if a file exists
@@ -541,6 +611,42 @@ func StringItemExists(array []string, item string) bool {
 	}
 
 	return false
+}
+
+func ArrayContainsItem(array []string, item string) bool {
+	for _, i := range array {
+		if strings.Contains(i, item) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func StringContainsOneOrSeveralItems(data string, arrayItems []string) bool {
+	for _, ai := range arrayItems {
+		if strings.Contains(data, ai) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func AllItemsToLowerOrUpperCase(array []string, caseType string) []string {
+	result := []string{}
+
+	for _, k := range array {
+		if caseType == "lower" {
+			result = append(result, strings.ToLower(k))
+		} else if caseType == "upper" {
+			result = append(result, strings.ToUpper(k))
+		} else {
+			log.Fatal("caseType should be either lower or upper")
+		}
+	}
+
+	return result
 }
 
 // VPNConfigFiles returns a list of vpn files

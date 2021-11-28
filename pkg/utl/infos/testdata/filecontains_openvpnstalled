@@ -1,0 +1,14 @@
+Sat Nov 27 05:18:26 2021 OpenVPN 2.4.7 arm-unknown-linux-gnueabihf [SSL (OpenSSL)] [LZO] [LZ4] [EPOLL] [PKCS11] [MH/PKTINFO] [AEAD] built on Apr 28 2021
+Sat Nov 27 05:18:26 2021 library versions: OpenSSL 1.1.1d  10 Sep 2019, LZO 2.10
+Sat Nov 27 05:18:27 2021 TCP/UDP: Preserving recently used remote address: [AF_INET]128.90.96.34:443
+Sat Nov 27 05:18:27 2021 Socket Buffers: R=[180224->180224] S=[180224->180224]
+Sat Nov 27 05:18:27 2021 UDP link local: (not bound)
+Sat Nov 27 05:18:27 2021 UDP link remote: [AF_INET]128.90.96.34:443
+Sat Nov 27 05:18:27 2021 TLS: Initial packet from [AF_INET]128.90.96.34:443, sid=4b9a6d9c 644dc43c
+Sat Nov 27 05:18:27 2021 WARNING: this configuration may cache passwords in memory -- use the auth-nocache option to prevent this
+Sat Nov 27 05:18:27 2021 VERIFY OK: depth=2, C=CH, ST=Lucerne, L=Meggen, O=Golden Frog GmbH, CN=Golden Frog GmbH Root CA, emailAddress=admin@goldenfrog.com
+Sat Nov 27 05:18:27 2021 VERIFY OK: depth=1, C=CH, ST=Lucerne, L=Meggen, O=Golden Frog GmbH, CN=VyprVPN Intermediate CA, emailAddress=admin@goldenfrog.com
+Sat Nov 27 05:18:27 2021 VERIFY X509NAME OK: C=CH, ST=Lucerne, L=Meggen, O=Golden Frog GmbH, CN=fr1.vyprvpn.com, emailAddress=admin@goldenfrog.com
+Sat Nov 27 05:18:27 2021 VERIFY OK: depth=0, C=CH, ST=Lucerne, L=Meggen, O=Golden Frog GmbH, CN=fr1.vyprvpn.com, emailAddress=admin@goldenfrog.com
+Sat Nov 27 05:18:30 2021 Control Channel: TLSv1.2, cipher TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384, 4096 bit RSA
+Sat Nov 27 05:18:30 2021 [fr1.vyprvpn.com] Peer Connection Initiated with [AF_INET]128.90.96.34:443

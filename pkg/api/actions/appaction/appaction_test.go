@@ -67,6 +67,15 @@ func TestExecuteWOVA(t *testing.T) {
 						Stdout:     "string0-string1",
 					}, nil
 				},
+				ConfirmVPNAuthenticationFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       "FuncA",
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "string0-string1",
+					}, nil
+				},
 			},
 			infos: &mock.Infos{
 				VPNConfigFileFn: func(string, string, string) []string {
@@ -117,6 +126,15 @@ func TestExecuteWOVA(t *testing.T) {
 					}, nil
 				},
 				KillProcessFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       "FuncA",
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "string0-string1",
+					}, nil
+				},
+				ConfirmVPNAuthenticationFn: func(interface{}) (rpi.Exec, error) {
 					return rpi.Exec{
 						Name:       "FuncA",
 						StartTime:  1,
@@ -204,6 +222,15 @@ func TestExecuteWOVA(t *testing.T) {
 					}, nil
 				},
 				KillProcessFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       "FuncA",
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "string0-string1",
+					}, nil
+				},
+				ConfirmVPNAuthenticationFn: func(interface{}) (rpi.Exec, error) {
 					return rpi.Exec{
 						Name:       "FuncA",
 						StartTime:  1,
