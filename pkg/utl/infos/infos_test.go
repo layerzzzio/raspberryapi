@@ -321,29 +321,67 @@ func TestIsFileContainsUntil(t *testing.T) {
 			wantedData: "not_found",
 			wantedErr:  nil,
 		},
+		{
+			name:     "success: reading file failed",
+			filepath: "./testdata/openvpn_temp",
+			keywords1: infos.IFCK{
+				Name: "auth_failure",
+				Keywords: []string{
+					"AUTH_FAILEDXXX",
+					"auth-failureXXX",
+				},
+			},
+			keywords2: infos.IFCK{
+				Name: "auth_success",
+				Keywords: []string{
+					"Initialization Sequence CompletedXXX",
+				},
+			},
+			timelimit: 3,
+			filedata: []string{
+				"Sat Nov 27 05:18:30 2021 [fr1.vyprvpn.com] Peer Connection Initiated with [AF_INET]128.90.96.34:443",
+				"Sat Nov 27 05:18:31 2021 SENT CONTROL [fr1.vyprvpn.com]: 'PUSH_REQUEST' (status=1)",
+				"Sat Nov 27 05:18:31 2021 AUTH: Received control message: AUTH_FAILED",
+				"Sat Nov 27 05:18:31 2021 SIGTERM[soft,auth-failure] received, process exiting_D",
+			},
+			wantedData: "not_found",
+			wantedErr:  fmt.Errorf("reading file failed"),
+		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			i := infos.New()
 
-			err := actions.OverwriteToFile(actions.WriteToFileArg{
-				File:        tc.filepath,
-				Data:        tc.filedata,
-				Multiline:   true,
-				Permissions: 0755,
-			})
+			if tc.name != "success: reading file failed" {
+				err := actions.OverwriteToFile(actions.WriteToFileArg{
+					File:        tc.filepath,
+					Data:        tc.filedata,
+					Multiline:   true,
+					Permissions: 0755,
+				})
 
-			if err != nil {
-				log.Fatalf(err.Error())
+				if err != nil {
+					log.Fatalf(err.Error())
+				}
 			}
 
-			keyword, err := i.IsFileContainsUntil(tc.filepath, tc.keywords1, tc.keywords2, tc.timelimit)
+			if tc.name == "success: reading file failed" {
+				keyword, err := i.IsFileContainsUntil(tc.filepath+"XXX", tc.keywords1, tc.keywords2, tc.timelimit)
+				assert.Equal(t, tc.wantedData, keyword)
+				assert.Equal(t, tc.wantedErr, err)
+			} else {
+				keyword, err := i.IsFileContainsUntil(tc.filepath, tc.keywords1, tc.keywords2, tc.timelimit)
+				assert.Equal(t, tc.wantedData, keyword)
+				assert.Equal(t, tc.wantedErr, err)
+			}
 
-			os.Remove(tc.filepath)
+			if tc.name == "success: reading file failed" {
+				os.Remove(tc.filepath + "XXX")
+			} else {
+				os.Remove(tc.filepath)
+			}
 
-			assert.Equal(t, tc.wantedData, keyword)
-			assert.Equal(t, tc.wantedErr, err)
 		})
 	}
 }
@@ -944,7 +982,8 @@ func TestListNameFilesInDirectory(t *testing.T) {
 			directoryPath: "./testdata",
 			wantedData: []string{
 				"Ireland.ovpn", "Netherlands.ovpn", "Slovakia.ovpn", "USA - New York.ovpn",
-				"dummyfile.zip", "dummyfile.zip", "dummyregular.txt", "filecontains_openvpnfailure", "filecontains_openvpnsuccess",
+				"dummyfile.zip", "dummyfile.zip", "dummyregular.txt",
+				"filecontains_openvpnfailure", "filecontains_openvpnstalled", "filecontains_openvpnsuccess",
 				"hk-hkg.prod.surfshark.com_udp.ovpn", "ipvanish-AT-Vienna-vie-c05.ovpn",
 				"ipvanish-FR-Bordeaux-bod-c02.ovpn", "ipvanish-KR-Seoul-sel-a01.ovpn",
 				"ipvanish-LV-Riga-rix-c04.ovpn", "ipvanish-UK-Manchester-man-c13.ovpn",

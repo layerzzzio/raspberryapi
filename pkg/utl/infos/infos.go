@@ -85,8 +85,8 @@ func (s Service) IsFileContainsUntil(
 	for {
 		keyword, err := s.IsFileContainsKey1OrKey2(filePath, keywords1, keywords2)
 
-		fmt.Printf("1) --------- %v\n", keyword)
-		fmt.Printf("2) --------- %v\n", fmt.Sprint(err))
+		fmt.Println(keyword)
+		fmt.Println(fmt.Sprint(err))
 
 		if err != nil {
 			if fmt.Sprint(err) == "reading file failed" && counter > 10 {
@@ -97,7 +97,7 @@ func (s Service) IsFileContainsUntil(
 		// the timelimit iteration is about the same number in seconds
 		// indeed, IsFileContainsKey1OrKey2 is quasi instanenous and we pause the program for 1 second
 		// example: timelimit=10 is roughly 10 seconds
-		if counter > timelimit {
+		if counter > timelimit || keyword != "not_found" {
 			return keyword, err
 		}
 
