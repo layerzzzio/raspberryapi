@@ -199,6 +199,9 @@ const (
 
 	// ActionVPNWithOVPN is the name of the actions vpn with opvn method
 	ActionVPNWithOVPN = "action_vpn_with_ovpn"
+
+	// ConfirmVPNAuthentication is the name of the action to confirm if VPN authentication workded or not
+	ConfirmVPNAuthentication = "confirm_vpn_auth"
 )
 
 var (
@@ -718,6 +721,98 @@ func (s Service) ExecuteBashCommand(arg interface{}) (rpi.Exec, error) {
 
 	return rpi.Exec{
 		Name:       ExecuteBashCommand,
+		StartTime:  startTime,
+		EndTime:    endTime,
+		ExitStatus: uint8(exitStatus),
+		Stderr:     stdErr,
+	}, nil
+}
+
+type CVPNAUTH struct {
+	Filepath  string
+	Timelimit string
+}
+
+// ConfirmVPNAuthentication checks if a VPN authentication works on not
+func (s Service) ConfirmVPNAuthentication(arg interface{}) (rpi.Exec, error) {
+	// in seconds
+	var timelimit string
+	var filepath string
+
+	switch v := arg.(type) {
+	case CVPNAUTH:
+		filepath = v.Filepath
+		timelimit = v.Timelimit
+	case OtherParams:
+		filepath = arg.(OtherParams).Value["filepath"]
+		timelimit = arg.(OtherParams).Value["timelimit"]
+	default:
+		return rpi.Exec{ExitStatus: 1}, &Error{[]string{
+			"filepath", "keyword",
+		}}
+	}
+
+	// execution start time
+	startTime := uint64(time.Now().Unix())
+	var exitStatus int
+	var stdErr string
+
+	timelimitint, errTL := strconv.Atoi(timelimit)
+	if errTL != nil {
+		return rpi.Exec{
+			Name:       ConfirmVPNAuthentication,
+			StartTime:  startTime,
+			EndTime:    uint64(time.Now().Unix()),
+			ExitStatus: uint8(1),
+			Stderr:     "timelimit is not an int",
+		}, nil
+	}
+
+	keyword, err := infos.New().IsFileContainsUntil(
+		filepath,
+		infos.IFCK{
+			Name: "auth_failure",
+			Keywords: []string{
+				"AUTH_FAILED",
+				"auth-failure",
+			},
+		}, infos.IFCK{
+			Name: "auth_success",
+			Keywords: []string{
+				"Initialization Sequence Completed",
+			},
+		},
+		timelimitint,
+	)
+
+	if err != nil {
+		return rpi.Exec{
+			Name:       ConfirmVPNAuthentication,
+			StartTime:  startTime,
+			EndTime:    uint64(time.Now().Unix()),
+			ExitStatus: uint8(1),
+			Stderr:     fmt.Sprint(err),
+		}, nil
+	}
+
+	if keyword == "auth_failure" {
+		exitStatus = 1
+		stdErr = "auth_failure"
+	} else if keyword == "not_found" {
+		exitStatus = 1
+		stdErr = "auth_stalled"
+	} else if keyword == "auth_success" {
+		exitStatus = 0
+	} else {
+		exitStatus = 1
+		stdErr = "auth_unknown_error"
+	}
+
+	// execution end time
+	endTime := uint64(time.Now().Unix())
+
+	return rpi.Exec{
+		Name:       ConfirmVPNAuthentication,
 		StartTime:  startTime,
 		EndTime:    endTime,
 		ExitStatus: uint8(exitStatus),

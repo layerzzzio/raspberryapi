@@ -4527,3 +4527,113 @@ func TestExecuteBashCommand(t *testing.T) {
 		})
 	}
 }
+
+func TestConfirmVPNAuthentication(t *testing.T) {
+	cases := []struct {
+		name             string
+		argument         interface{}
+		wantedExitStatus uint8
+		wantedStderr     string
+		wantedErr        error
+	}{
+		{
+			name:             "error : no filepath, no timelimit",
+			wantedExitStatus: 1,
+			wantedStderr:     "",
+			wantedErr:        &actions.Error{Arguments: []string{"filepath", "keyword"}},
+		},
+		{
+			name: "error : too many arguments",
+			argument: []actions.OtherParams{
+				{Value: map[string]string{"filepath": "dummyfilepath"}},
+				{Value: map[string]string{"keyword": "dummykeyword"}},
+				{Value: map[string]string{"extra_arg": "dummyextraarg"}},
+			},
+			wantedExitStatus: 1,
+			wantedStderr:     "",
+			wantedErr:        &actions.Error{Arguments: []string{"filepath", "keyword"}},
+		},
+		{
+			name: "error : empty path & no timelimit",
+			argument: actions.CVPNAUTH{
+				Filepath: "",
+			},
+			wantedExitStatus: 1,
+			wantedStderr:     "timelimit is not an int",
+			wantedErr:        nil,
+		},
+		{
+			name: "error : empty filepath & wrong timelimit",
+			argument: actions.CVPNAUTH{
+				Filepath:  "",
+				Timelimit: "x",
+			},
+			wantedExitStatus: 1,
+			wantedStderr:     "timelimit is not an int",
+			wantedErr:        nil,
+		},
+		{
+			name: "success : auth failed",
+			argument: actions.CVPNAUTH{
+				Filepath:  "../infos/testdata/filecontains_openvpnfailure",
+				Timelimit: "1",
+			},
+			wantedExitStatus: 1,
+			wantedStderr:     "auth_failure",
+			wantedErr:        nil,
+		},
+		{
+			name: "success : auth stalled",
+			argument: actions.CVPNAUTH{
+				Filepath:  "../infos/testdata/filecontains_openvpnstalled",
+				Timelimit: "1",
+			},
+			wantedExitStatus: 1,
+			wantedStderr:     "auth_stalled",
+			wantedErr:        nil,
+		},
+		{
+			name: "success : couldn't read file",
+			argument: actions.CVPNAUTH{
+				Filepath:  "../infos/testdata/filecontains_openvpnstalledXXXX",
+				Timelimit: "1",
+			},
+			wantedExitStatus: 1,
+			wantedStderr:     "reading file failed",
+			wantedErr:        nil,
+		},
+		{
+			name: "success : auth success",
+			argument: actions.CVPNAUTH{
+				Filepath:  "../infos/testdata/filecontains_openvpnsuccess",
+				Timelimit: "1",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+		{
+			name: "success : other params - auth success",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"filepath":  "../infos/testdata/filecontains_openvpnsuccess",
+					"timelimit": "1",
+				},
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			a := actions.New()
+			command, err := a.ConfirmVPNAuthentication(tc.argument)
+			assert.Equal(t, tc.wantedExitStatus, command.ExitStatus)
+			assert.Equal(t, tc.wantedStderr, command.Stderr)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}

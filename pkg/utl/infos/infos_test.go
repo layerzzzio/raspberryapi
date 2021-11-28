@@ -109,6 +109,245 @@ func TestIsFileExists(t *testing.T) {
 	}
 }
 
+func TestIsFileContainsKey1OrKey2(t *testing.T) {
+	cases := []struct {
+		name       string
+		filepath   string
+		keywords1  infos.IFCK
+		keywords2  infos.IFCK
+		wantedData string
+		wantedErr  error
+	}{
+		{
+			name:     "success: auth success",
+			filepath: "./testdata/filecontains_openvpnsuccess",
+			keywords1: infos.IFCK{
+				Name: "auth_failure",
+				Keywords: []string{
+					"AUTH_FAILED",
+					"auth-failure",
+				},
+			},
+			keywords2: infos.IFCK{
+				Name: "auth_success",
+				Keywords: []string{
+					"Initialization Sequence Completed",
+				},
+			},
+			wantedData: "auth_success",
+			wantedErr:  nil,
+		},
+		{
+			name:     "success: auth failure (upper case)",
+			filepath: "./testdata/filecontains_openvpnfailure",
+			keywords1: infos.IFCK{
+				Name: "auth_failure",
+				Keywords: []string{
+					"AUTH_FAILED",
+					"auth-failure",
+				},
+			},
+			keywords2: infos.IFCK{
+				Name: "auth_success",
+				Keywords: []string{
+					"Initialization Sequence Completed",
+				},
+			},
+			wantedData: "auth_failure",
+			wantedErr:  nil,
+		},
+		{
+			name:     "success: auth failure (lower case)",
+			filepath: "./testdata/filecontains_openvpnfailure",
+			keywords1: infos.IFCK{
+				Name: "auth_failure",
+				Keywords: []string{
+					"AUTH_FAILED",
+					"auth-failure",
+				},
+			},
+			keywords2: infos.IFCK{
+				Name: "auth_success",
+				Keywords: []string{
+					"Initialization Sequence Completed",
+				},
+			},
+			wantedData: "auth_failure",
+			wantedErr:  nil,
+		},
+		{
+			name:     "success: not found",
+			filepath: "./testdata/filecontains_openvpnfailure",
+			keywords1: infos.IFCK{
+				Name: "auth_failure",
+				Keywords: []string{
+					"AUTH_FAILEDXXX",
+					"auth-failureXXX",
+				},
+			},
+			keywords2: infos.IFCK{
+				Name: "auth_success",
+				Keywords: []string{
+					"Initialization Sequence CompletedXXX",
+				},
+			},
+			wantedData: "not_found",
+			wantedErr:  nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			i := infos.New()
+			isKeywordExist, err := i.IsFileContainsKey1OrKey2(tc.filepath, tc.keywords1, tc.keywords2)
+			assert.Equal(t, tc.wantedData, isKeywordExist)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
+func TestIsFileContainsUntil(t *testing.T) {
+	cases := []struct {
+		name       string
+		filepath   string
+		keywords1  infos.IFCK
+		keywords2  infos.IFCK
+		timelimit  int
+		filedata   []string
+		wantedData string
+		wantedErr  error
+	}{
+		{
+			name:     "success: auth success",
+			filepath: "./testdata/openvpn_temp",
+			keywords1: infos.IFCK{
+				Name: "auth_failure",
+				Keywords: []string{
+					"AUTH_FAILED",
+					"auth-failure",
+				},
+			},
+			keywords2: infos.IFCK{
+				Name: "auth_success",
+				Keywords: []string{
+					"Initialization Sequence Completed",
+				},
+			},
+			timelimit: 1,
+			filedata: []string{
+				"Sat Nov 27 12:12:08 2021 /sbin/ip route add 0.0.0.0/1 via 10.2.38.1",
+				"Sat Nov 27 12:12:08 2021 /sbin/ip route add 128.0.0.0/1 via 10.2.38.1",
+				"Sat Nov 27 12:12:08 2021 Initialization Sequence Completed",
+				"Sat Nov 27 12:12:08 2021 /sbin/ip route add 128.0.0.0/1 via 10.2.38.1_A",
+			},
+			wantedData: "auth_success",
+			wantedErr:  nil,
+		},
+		{
+			name:     "success: auth failure (upper case)",
+			filepath: "./testdata/openvpn_temp",
+			keywords1: infos.IFCK{
+				Name: "auth_failure",
+				Keywords: []string{
+					"AUTH_FAILED",
+					"auth-failure",
+				},
+			},
+			keywords2: infos.IFCK{
+				Name: "auth_success",
+				Keywords: []string{
+					"Initialization Sequence Completed",
+				},
+			},
+			timelimit: 1,
+			filedata: []string{
+				"Sat Nov 27 05:18:30 2021 [fr1.vyprvpn.com] Peer Connection Initiated with [AF_INET]128.90.96.34:443",
+				"Sat Nov 27 05:18:31 2021 SENT CONTROL [fr1.vyprvpn.com]: 'PUSH_REQUEST' (status=1)",
+				"Sat Nov 27 05:18:31 2021 AUTH: Received control message: AUTH_FAILED",
+				"Sat Nov 27 05:18:31 2021 SIGTERM[soft,auth-failure] received, process exiting_B",
+			},
+			wantedData: "auth_failure",
+			wantedErr:  nil,
+		},
+		{
+			name:     "success: auth failure (lower case)",
+			filepath: "./testdata/openvpn_temp",
+			keywords1: infos.IFCK{
+				Name: "auth_failure",
+				Keywords: []string{
+					"AUTH_FAILED",
+					"auth-failure",
+				},
+			},
+			keywords2: infos.IFCK{
+				Name: "auth_success",
+				Keywords: []string{
+					"Initialization Sequence Completed",
+				},
+			},
+			timelimit: 2,
+			filedata: []string{
+				"Sat Nov 27 05:18:30 2021 [fr1.vyprvpn.com] Peer Connection Initiated with [AF_INET]128.90.96.34:443",
+				"Sat Nov 27 05:18:31 2021 SENT CONTROL [fr1.vyprvpn.com]: 'PUSH_REQUEST' (status=1)",
+				"Sat Nov 27 05:18:31 2021 AUTH: Received control message: auth_failed",
+				"Sat Nov 27 05:18:31 2021 SIGTERM[soft,auth-failure] received, process exiting_C",
+			},
+			wantedData: "auth_failure",
+			wantedErr:  nil,
+		},
+		{
+			name:     "success: not found",
+			filepath: "./testdata/openvpn_temp",
+			keywords1: infos.IFCK{
+				Name: "auth_failure",
+				Keywords: []string{
+					"AUTH_FAILEDXXX",
+					"auth-failureXXX",
+				},
+			},
+			keywords2: infos.IFCK{
+				Name: "auth_success",
+				Keywords: []string{
+					"Initialization Sequence CompletedXXX",
+				},
+			},
+			timelimit: 3,
+			filedata: []string{
+				"Sat Nov 27 05:18:30 2021 [fr1.vyprvpn.com] Peer Connection Initiated with [AF_INET]128.90.96.34:443",
+				"Sat Nov 27 05:18:31 2021 SENT CONTROL [fr1.vyprvpn.com]: 'PUSH_REQUEST' (status=1)",
+				"Sat Nov 27 05:18:31 2021 AUTH: Received control message: AUTH_FAILED",
+				"Sat Nov 27 05:18:31 2021 SIGTERM[soft,auth-failure] received, process exiting_D",
+			},
+			wantedData: "not_found",
+			wantedErr:  nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			i := infos.New()
+
+			err := actions.OverwriteToFile(actions.WriteToFileArg{
+				File:        tc.filepath,
+				Data:        tc.filedata,
+				Multiline:   true,
+				Permissions: 0755,
+			})
+
+			if err != nil {
+				log.Fatalf(err.Error())
+			}
+
+			keyword, err := i.IsFileContainsUntil(tc.filepath, tc.keywords1, tc.keywords2, tc.timelimit)
+
+			os.Remove(tc.filepath)
+
+			assert.Equal(t, tc.wantedData, keyword)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
 // func TestIsDirectory(t *testing.T) {
 // 	cases := []struct {
 // 		name       string
@@ -705,7 +944,7 @@ func TestListNameFilesInDirectory(t *testing.T) {
 			directoryPath: "./testdata",
 			wantedData: []string{
 				"Ireland.ovpn", "Netherlands.ovpn", "Slovakia.ovpn", "USA - New York.ovpn",
-				"dummyfile.zip", "dummyfile.zip", "dummyregular.txt",
+				"dummyfile.zip", "dummyfile.zip", "dummyregular.txt", "filecontains_openvpnfailure", "filecontains_openvpnsuccess",
 				"hk-hkg.prod.surfshark.com_udp.ovpn", "ipvanish-AT-Vienna-vie-c05.ovpn",
 				"ipvanish-FR-Bordeaux-bod-c02.ovpn", "ipvanish-KR-Seoul-sel-a01.ovpn",
 				"ipvanish-LV-Riga-rix-c04.ovpn", "ipvanish-UK-Manchester-man-c13.ovpn",
@@ -749,6 +988,117 @@ func TestStringItemExists(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			interfaces := infos.StringItemExists(tc.array, tc.item)
 			assert.Equal(t, tc.wantedData, interfaces)
+		})
+	}
+}
+
+func TestArrayContainsItem(t *testing.T) {
+	cases := []struct {
+		name       string
+		item       string
+		array      []string
+		wantedData bool
+	}{
+		{
+			name:       "success: contains (1)",
+			item:       "France",
+			array:      []string{"India", "Canada", "Japan", "Germany", "France"},
+			wantedData: true,
+		},
+		{
+			name: "success: contains (2)",
+			item: "initialization sequence completed",
+			array: []string{
+				"Sat Nov 27 12:12:08 2021 /sbin/ip route add 128.0.0.0/1 via 10.2.38.1",
+				"sat nov 27 12:12:08 2021 initialization sequence completed",
+			},
+			wantedData: true,
+		},
+		{
+			name:       "failure: does not contain (1)",
+			item:       "Francexxx",
+			array:      []string{"India", "Canada", "Japan", "Germany", "Italy"},
+			wantedData: false,
+		},
+		{
+			name:       "failure: does not contain (2)",
+			item:       "Francexxx",
+			array:      []string{"India", "Canada", "Japan", "Germany", "Italy", "France"},
+			wantedData: false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := infos.ArrayContainsItem(tc.array, tc.item)
+			assert.Equal(t, tc.wantedData, result)
+		})
+	}
+}
+
+func TestStringContainsOneOrSeveralItems(t *testing.T) {
+	cases := []struct {
+		name       string
+		data       string
+		arrayItems []string
+		wantedData bool
+	}{
+		{
+			name:       "success: contains (1)",
+			data:       "France",
+			arrayItems: []string{"India", "Canada", "Japan", "Germany", "France"},
+			wantedData: true,
+		},
+		{
+			name: "success: contains (2)",
+			data: "sat nov 27 12:12:08 2021 initialization sequence completed",
+			arrayItems: []string{
+				"random_item",
+				"initialization sequence completed",
+			},
+			wantedData: true,
+		},
+		{
+			name:       "failure: does not contain (1)",
+			data:       "Francexxx",
+			arrayItems: []string{"India", "France"},
+			wantedData: true,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := infos.StringContainsOneOrSeveralItems(tc.data, tc.arrayItems)
+			assert.Equal(t, tc.wantedData, result)
+		})
+	}
+}
+
+func TestAllItemsToLowerOrUpperCase(t *testing.T) {
+	cases := []struct {
+		name       string
+		caseType   string
+		array      []string
+		wantedData []string
+	}{
+		{
+			name:       "success: lower",
+			caseType:   "lower",
+			array:      []string{"India", "Canada", "Japan", "Germany", "France"},
+			wantedData: []string{"india", "canada", "japan", "germany", "france"},
+		},
+		{
+			name:       "success: upper",
+			caseType:   "upper",
+			array:      []string{"India", "Canada", "Japan", "Germany", "France"},
+			wantedData: []string{"INDIA", "CANADA", "JAPAN", "GERMANY", "FRANCE"},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := infos.AllItemsToLowerOrUpperCase(tc.array, tc.caseType)
+			assert.Equal(t, tc.wantedData, result)
 		})
 	}
 }

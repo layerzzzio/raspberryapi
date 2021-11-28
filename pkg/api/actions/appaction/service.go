@@ -26,6 +26,7 @@ type AACSYS interface {
 type Actions interface {
 	ExecuteBashCommand(interface{}) (rpi.Exec, error)
 	KillProcess(interface{}) (rpi.Exec, error)
+	ConfirmVPNAuthentication(interface{}) (rpi.Exec, error)
 }
 
 // Infos represents the infos interface

@@ -30,10 +30,11 @@ func (aac *AppAction) ExecuteWOVA(
 		randomIndex := rand.Intn(len(configFiles))
 		configFile := configFiles[randomIndex]
 		connectCommand := fmt.Sprintf(
-			"bash -c 'openvpn --config %v --auth-user-pass <(echo -e \"%v\n%v\")'",
+			"bash -c 'openvpn --config %v --auth-user-pass <(echo -e \"%v\n%v\") &> /tmp/%v_authstatus.log'",
 			configFile,
 			username,
-			password)
+			password,
+			vpnName)
 		connect = fmt.Sprintf("nohup %v > /dev/null 2>&1 &", connectCommand)
 
 		plan = map[int](map[int]actions.Func){
@@ -45,6 +46,18 @@ func (aac *AppAction) ExecuteWOVA(
 						// https://stackoverflow.com/questions/38869427/openvpn-on-linux-passing-username-and-password-in-command-line
 						actions.EBC{
 							Command: connect,
+						},
+					},
+				},
+			},
+			2: {
+				1: {
+					Name:      actions.ConfirmVPNAuthentication,
+					Reference: aac.a.ConfirmVPNAuthentication,
+					Argument: []interface{}{
+						actions.CVPNAUTH{
+							Filepath:  fmt.Sprintf("/tmp/%v_authstatus.log", vpnName),
+							Timelimit: "15",
 						},
 					},
 				},
