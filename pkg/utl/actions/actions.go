@@ -800,7 +800,7 @@ func (s Service) ConfirmVPNAuthentication(arg interface{}) (rpi.Exec, error) {
 		stdErr = "auth_failure"
 	} else if keyword == "not_found" {
 		exitStatus = 1
-		stdErr = "auth_stalled"
+		stdErr = "stalled"
 	} else if keyword == "auth_success" {
 		exitStatus = 0
 	} else {
