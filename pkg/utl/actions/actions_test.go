@@ -4583,13 +4583,13 @@ func TestConfirmVPNAuthentication(t *testing.T) {
 			wantedErr:        nil,
 		},
 		{
-			name: "success : auth stalled",
+			name: "success : stalled",
 			argument: actions.CVPNAUTH{
 				Filepath:  "../infos/testdata/filecontains_openvpnstalled",
 				Timelimit: "1",
 			},
 			wantedExitStatus: 1,
-			wantedStderr:     "auth_stalled",
+			wantedStderr:     "stalled",
 			wantedErr:        nil,
 		},
 		{
