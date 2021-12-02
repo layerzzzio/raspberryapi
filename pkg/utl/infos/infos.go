@@ -782,3 +782,38 @@ func (s Service) StatusVPNWithOpenVPN(
 
 	return result
 }
+
+// ApiVersion extracts the version of the current (latest) API
+// Example:
+// apiPath := "/usr/bin/rpi_0.1.0_linux_armv5"
+// method returns 0.1.0
+func (s Service) ApiVersion(directoryPath string) string {
+	var apiPath string
+	// regex
+	r1, _ := regexp.Compile("raspibuddy-([0-9]+.[0-9]+.[0-9]+)")
+	r2, _ := regexp.Compile("[0-9]+.[0-9]+.[0-9]+")
+
+	// read files that starts with raspibuddy
+	if s.IsFileExists(directoryPath) {
+		err := godirwalk.Walk(directoryPath, &godirwalk.Options{
+			Callback: func(osPathname string, de *godirwalk.Dirent) error {
+				if r1.Match([]byte(de.Name())) {
+					apiPath = de.Name()
+				}
+				return nil
+			},
+			// (optional) set true for faster yet non-deterministic enumeration (see godoc)
+			Unsorted: true,
+		})
+
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	// extract version
+	inter := r1.FindString(apiPath)
+	result := r2.FindString(inter)
+
+	return result
+}
