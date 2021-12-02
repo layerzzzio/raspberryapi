@@ -194,6 +194,9 @@ const (
 	// InstallAptGet is the name of the install with apt-get method
 	InstallAptGet = "install_apt_get"
 
+	// DeployVersion is the name of deploy a specific version on the device
+	DeployVersion = "deploy_api_version"
+
 	// InstallVPNWithOVPN is the name of the install install vpn with opvn method
 	InstallVPNWithOVPN = "install_vpn_with_ovpn"
 

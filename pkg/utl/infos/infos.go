@@ -32,6 +32,12 @@ func New() *Service {
 	return &Service{}
 }
 
+// infos constants
+const (
+	// ApiVersionRegex is the default api version regex
+	ApiVersionRegex = "[0-9]+.[0-9]+.[0-9]+"
+)
+
 // ReadFile reads a file
 func (s Service) ReadFile(filePath string) ([]string, error) {
 	var result []string
@@ -790,8 +796,8 @@ func (s Service) StatusVPNWithOpenVPN(
 func (s Service) ApiVersion(directoryPath string) string {
 	var apiPath string
 	// regex
-	r1, _ := regexp.Compile("raspibuddy-([0-9]+.[0-9]+.[0-9]+)")
-	r2, _ := regexp.Compile("[0-9]+.[0-9]+.[0-9]+")
+	r1, _ := regexp.Compile(fmt.Sprintf("raspibuddy-(%v)", ApiVersionRegex))
+	r2, _ := regexp.Compile(ApiVersionRegex)
 
 	// read files that starts with raspibuddy
 	if s.IsFileExists(directoryPath) {
