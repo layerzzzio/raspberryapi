@@ -779,3 +779,847 @@ func TestExecuteCA(t *testing.T) {
 		})
 	}
 }
+
+func TestExecuteSSH(t *testing.T) {
+	var response rpi.Action
+
+	cases := []struct {
+		name         string
+		req          string
+		consys       *mocksys.Action
+		wantedStatus int
+		wantedResp   rpi.Action
+	}{
+		{
+			name:         "error: invalid request response (no action)",
+			req:          "",
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name:         "error: action enable is empty",
+			req:          "?action=",
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name:         "error: bad action type",
+			req:          "?action=dummyaction",
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name: "error: ExecuteSSH result is nil",
+			req:  "?action=enable",
+			consys: &mocksys.Action{
+				ExecuteSSHFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{}, errors.New("test error")
+				},
+			},
+			wantedStatus: http.StatusInternalServerError,
+		},
+		// {
+		// 	name:         "success",
+		// 	wantedStatus: http.StatusOK,
+		// 	req:          "?action=enable",
+		// 	consys: &mocksys.Action{
+		// 		ExecuteSSHFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+		// 			return rpi.Action{
+		// 				Name:          actions.SSH,
+		// 				NumberOfSteps: 1,
+		// 				StartTime:     uint64(time.Now().Unix()),
+		// 				EndTime:       uint64(time.Now().Unix()),
+		// 				ExitStatus:    0,
+		// 			}, nil
+		// 		},
+		// 	},
+		// },
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			r := server.New()
+			rg := r.Group("")
+			a := actions.New()
+			i := infos.New()
+			s := configure.New(tc.consys, a, i)
+			transport.NewHTTP(s, rg)
+			ts := httptest.NewServer(r)
+
+			defer ts.Close()
+			path := ts.URL + "/configure/ssh" + tc.req
+
+			res, err := http.Post(path, "application/json", bytes.NewBufferString(tc.req))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			defer res.Body.Close()
+
+			body, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				panic(err)
+			}
+
+			if tc.wantedResp.Name != "" {
+				if err := json.Unmarshal(body, &response); err != nil {
+					t.Fatal(err)
+				}
+				assert.Equal(t, tc.wantedResp, response)
+			}
+			assert.Equal(t, tc.wantedStatus, res.StatusCode)
+		})
+	}
+}
+
+func TestExecuteVNC(t *testing.T) {
+	var response rpi.Action
+
+	cases := []struct {
+		name         string
+		req          string
+		consys       *mocksys.Action
+		wantedStatus int
+		wantedResp   rpi.Action
+	}{
+		{
+			name:         "error: invalid request response (no action)",
+			req:          "",
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name:         "error: action enable is empty",
+			req:          "?action=",
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name:         "error: bad action type",
+			req:          "?action=dummyaction",
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name: "error: ExecuteVNC result is nil",
+			req:  "?action=enable",
+			consys: &mocksys.Action{
+				ExecuteVNCFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{}, errors.New("test error")
+				},
+			},
+			wantedStatus: http.StatusInternalServerError,
+		},
+		// {
+		// 	name:         "success",
+		// 	wantedStatus: http.StatusOK,
+		// 	req:          "?action=enable",
+		// 	consys: &mocksys.Action{
+		// 		ExecuteSSHFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+		// 			return rpi.Action{
+		// 				Name:          actions.SSH,
+		// 				NumberOfSteps: 1,
+		// 				StartTime:     uint64(time.Now().Unix()),
+		// 				EndTime:       uint64(time.Now().Unix()),
+		// 				ExitStatus:    0,
+		// 			}, nil
+		// 		},
+		// 	},
+		// },
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			r := server.New()
+			rg := r.Group("")
+			a := actions.New()
+			i := infos.New()
+			s := configure.New(tc.consys, a, i)
+			transport.NewHTTP(s, rg)
+			ts := httptest.NewServer(r)
+
+			defer ts.Close()
+			path := ts.URL + "/configure/vnc" + tc.req
+
+			res, err := http.Post(path, "application/json", bytes.NewBufferString(tc.req))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			defer res.Body.Close()
+
+			body, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				panic(err)
+			}
+
+			if tc.wantedResp.Name != "" {
+				if err := json.Unmarshal(body, &response); err != nil {
+					t.Fatal(err)
+				}
+				assert.Equal(t, tc.wantedResp, response)
+			}
+			assert.Equal(t, tc.wantedStatus, res.StatusCode)
+		})
+	}
+}
+
+func TestExecuteSPI(t *testing.T) {
+	var response rpi.Action
+
+	cases := []struct {
+		name         string
+		req          string
+		consys       *mocksys.Action
+		wantedStatus int
+		wantedResp   rpi.Action
+	}{
+		{
+			name:         "error: invalid request response (no action)",
+			req:          "",
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name:         "error: action enable is empty",
+			req:          "?action=",
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name:         "error: bad action type",
+			req:          "?action=dummyaction",
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name: "error: ExecuteSPI result is nil",
+			req:  "?action=enable",
+			consys: &mocksys.Action{
+				ExecuteSPIFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{}, errors.New("test error")
+				},
+			},
+			wantedStatus: http.StatusInternalServerError,
+		},
+		// {
+		// 	name:         "success",
+		// 	wantedStatus: http.StatusOK,
+		// 	req:          "?action=enable",
+		// 	consys: &mocksys.Action{
+		// 		ExecuteSSHFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+		// 			return rpi.Action{
+		// 				Name:          actions.SSH,
+		// 				NumberOfSteps: 1,
+		// 				StartTime:     uint64(time.Now().Unix()),
+		// 				EndTime:       uint64(time.Now().Unix()),
+		// 				ExitStatus:    0,
+		// 			}, nil
+		// 		},
+		// 	},
+		// },
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			r := server.New()
+			rg := r.Group("")
+			a := actions.New()
+			i := infos.New()
+			s := configure.New(tc.consys, a, i)
+			transport.NewHTTP(s, rg)
+			ts := httptest.NewServer(r)
+
+			defer ts.Close()
+			path := ts.URL + "/configure/spi" + tc.req
+
+			res, err := http.Post(path, "application/json", bytes.NewBufferString(tc.req))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			defer res.Body.Close()
+
+			body, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				panic(err)
+			}
+
+			if tc.wantedResp.Name != "" {
+				if err := json.Unmarshal(body, &response); err != nil {
+					t.Fatal(err)
+				}
+				assert.Equal(t, tc.wantedResp, response)
+			}
+			assert.Equal(t, tc.wantedStatus, res.StatusCode)
+		})
+	}
+}
+
+func TestExecuteI2C(t *testing.T) {
+	var response rpi.Action
+
+	cases := []struct {
+		name         string
+		req          string
+		consys       *mocksys.Action
+		wantedStatus int
+		wantedResp   rpi.Action
+	}{
+		{
+			name:         "error: invalid request response (no action)",
+			req:          "",
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name:         "error: action enable is empty",
+			req:          "?action=",
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name:         "error: bad action type",
+			req:          "?action=dummyaction",
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name: "error: ExecuteI2C result is nil",
+			req:  "?action=enable",
+			consys: &mocksys.Action{
+				ExecuteI2CFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{}, errors.New("test error")
+				},
+			},
+			wantedStatus: http.StatusInternalServerError,
+		},
+		// {
+		// 	name:         "success",
+		// 	wantedStatus: http.StatusOK,
+		// 	req:          "?action=enable",
+		// 	consys: &mocksys.Action{
+		// 		ExecuteSSHFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+		// 			return rpi.Action{
+		// 				Name:          actions.SSH,
+		// 				NumberOfSteps: 1,
+		// 				StartTime:     uint64(time.Now().Unix()),
+		// 				EndTime:       uint64(time.Now().Unix()),
+		// 				ExitStatus:    0,
+		// 			}, nil
+		// 		},
+		// 	},
+		// },
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			r := server.New()
+			rg := r.Group("")
+			a := actions.New()
+			i := infos.New()
+			s := configure.New(tc.consys, a, i)
+			transport.NewHTTP(s, rg)
+			ts := httptest.NewServer(r)
+
+			defer ts.Close()
+			path := ts.URL + "/configure/i2c" + tc.req
+
+			res, err := http.Post(path, "application/json", bytes.NewBufferString(tc.req))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			defer res.Body.Close()
+
+			body, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				panic(err)
+			}
+
+			if tc.wantedResp.Name != "" {
+				if err := json.Unmarshal(body, &response); err != nil {
+					t.Fatal(err)
+				}
+				assert.Equal(t, tc.wantedResp, response)
+			}
+			assert.Equal(t, tc.wantedStatus, res.StatusCode)
+		})
+	}
+}
+
+func TestExecuteONW(t *testing.T) {
+	var response rpi.Action
+
+	cases := []struct {
+		name         string
+		req          string
+		consys       *mocksys.Action
+		wantedStatus int
+		wantedResp   rpi.Action
+	}{
+		{
+			name:         "error: invalid request response (no action)",
+			req:          "",
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name:         "error: action enable is empty",
+			req:          "?action=",
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name:         "error: bad action type",
+			req:          "?action=dummyaction",
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name: "error: ExecuteONW result is nil",
+			req:  "?action=enable",
+			consys: &mocksys.Action{
+				ExecuteONWFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{}, errors.New("test error")
+				},
+			},
+			wantedStatus: http.StatusInternalServerError,
+		},
+		{
+			name:         "success",
+			wantedStatus: http.StatusOK,
+			req:          "?action=enable",
+			consys: &mocksys.Action{
+				ExecuteONWFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.OneWire,
+						NumberOfSteps: 1,
+						StartTime:     uint64(time.Now().Unix()),
+						EndTime:       uint64(time.Now().Unix()),
+						ExitStatus:    0,
+					}, nil
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			r := server.New()
+			rg := r.Group("")
+			a := actions.New()
+			i := infos.New()
+			s := configure.New(tc.consys, a, i)
+			transport.NewHTTP(s, rg)
+			ts := httptest.NewServer(r)
+
+			defer ts.Close()
+			path := ts.URL + "/configure/onewire" + tc.req
+
+			res, err := http.Post(path, "application/json", bytes.NewBufferString(tc.req))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			defer res.Body.Close()
+
+			body, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				panic(err)
+			}
+
+			if tc.wantedResp.Name != "" {
+				if err := json.Unmarshal(body, &response); err != nil {
+					t.Fatal(err)
+				}
+				assert.Equal(t, tc.wantedResp, response)
+			}
+			assert.Equal(t, tc.wantedStatus, res.StatusCode)
+		})
+	}
+}
+
+func TestExecuteRG(t *testing.T) {
+	var response rpi.Action
+
+	cases := []struct {
+		name         string
+		req          string
+		consys       *mocksys.Action
+		wantedStatus int
+		wantedResp   rpi.Action
+	}{
+		{
+			name:         "error: invalid request response (no action)",
+			req:          "",
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name:         "error: action enable is empty",
+			req:          "?action=",
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name:         "error: bad action type",
+			req:          "?action=dummyaction",
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name: "error: ExecuteRG result is nil",
+			req:  "?action=enable",
+			consys: &mocksys.Action{
+				ExecuteRGFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{}, errors.New("test error")
+				},
+			},
+			wantedStatus: http.StatusInternalServerError,
+		},
+		{
+			name:         "success",
+			wantedStatus: http.StatusOK,
+			req:          "?action=enable",
+			consys: &mocksys.Action{
+				ExecuteRGFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.RGPIO,
+						NumberOfSteps: 1,
+						StartTime:     uint64(time.Now().Unix()),
+						EndTime:       uint64(time.Now().Unix()),
+						ExitStatus:    0,
+					}, nil
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			r := server.New()
+			rg := r.Group("")
+			a := actions.New()
+			i := infos.New()
+			s := configure.New(tc.consys, a, i)
+			transport.NewHTTP(s, rg)
+			ts := httptest.NewServer(r)
+
+			defer ts.Close()
+			path := ts.URL + "/configure/rgpio" + tc.req
+
+			res, err := http.Post(path, "application/json", bytes.NewBufferString(tc.req))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			defer res.Body.Close()
+
+			body, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				panic(err)
+			}
+
+			if tc.wantedResp.Name != "" {
+				if err := json.Unmarshal(body, &response); err != nil {
+					t.Fatal(err)
+				}
+				assert.Equal(t, tc.wantedResp, response)
+			}
+			assert.Equal(t, tc.wantedStatus, res.StatusCode)
+		})
+	}
+}
+
+func TestExecuteUPD(t *testing.T) {
+	var response rpi.Action
+
+	cases := []struct {
+		name         string
+		req          string
+		consys       *mocksys.Action
+		wantedStatus int
+		wantedResp   rpi.Action
+	}{
+
+		{
+			name: "error: ExecuteUPD result is nil",
+			consys: &mocksys.Action{
+				ExecuteUPDFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{}, errors.New("test error")
+				},
+			},
+			wantedStatus: http.StatusInternalServerError,
+		},
+		{
+			name:         "success",
+			wantedStatus: http.StatusOK,
+			consys: &mocksys.Action{
+				ExecuteUPDFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.Update,
+						NumberOfSteps: 1,
+						StartTime:     uint64(time.Now().Unix()),
+						EndTime:       uint64(time.Now().Unix()),
+						ExitStatus:    0,
+					}, nil
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			r := server.New()
+			rg := r.Group("")
+			a := actions.New()
+			i := infos.New()
+			s := configure.New(tc.consys, a, i)
+			transport.NewHTTP(s, rg)
+			ts := httptest.NewServer(r)
+
+			defer ts.Close()
+			path := ts.URL + "/configure/update" + tc.req
+
+			res, err := http.Post(path, "application/json", bytes.NewBufferString(tc.req))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			defer res.Body.Close()
+
+			body, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				panic(err)
+			}
+
+			if tc.wantedResp.Name != "" {
+				if err := json.Unmarshal(body, &response); err != nil {
+					t.Fatal(err)
+				}
+				assert.Equal(t, tc.wantedResp, response)
+			}
+			assert.Equal(t, tc.wantedStatus, res.StatusCode)
+		})
+	}
+}
+
+func TestExecuteUPG(t *testing.T) {
+	var response rpi.Action
+
+	cases := []struct {
+		name         string
+		req          string
+		consys       *mocksys.Action
+		wantedStatus int
+		wantedResp   rpi.Action
+	}{
+
+		{
+			name: "error: ExecuteUPG result is nil",
+			consys: &mocksys.Action{
+				ExecuteUPGFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{}, errors.New("test error")
+				},
+			},
+			wantedStatus: http.StatusInternalServerError,
+		},
+		{
+			name:         "success",
+			wantedStatus: http.StatusOK,
+			consys: &mocksys.Action{
+				ExecuteUPGFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.Upgrade,
+						NumberOfSteps: 1,
+						StartTime:     uint64(time.Now().Unix()),
+						EndTime:       uint64(time.Now().Unix()),
+						ExitStatus:    0,
+					}, nil
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			r := server.New()
+			rg := r.Group("")
+			a := actions.New()
+			i := infos.New()
+			s := configure.New(tc.consys, a, i)
+			transport.NewHTTP(s, rg)
+			ts := httptest.NewServer(r)
+
+			defer ts.Close()
+			path := ts.URL + "/configure/upgrade" + tc.req
+
+			res, err := http.Post(path, "application/json", bytes.NewBufferString(tc.req))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			defer res.Body.Close()
+
+			body, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				panic(err)
+			}
+
+			if tc.wantedResp.Name != "" {
+				if err := json.Unmarshal(body, &response); err != nil {
+					t.Fatal(err)
+				}
+				assert.Equal(t, tc.wantedResp, response)
+			}
+			assert.Equal(t, tc.wantedStatus, res.StatusCode)
+		})
+	}
+}
+
+func TestExecuteUPDG(t *testing.T) {
+	var response rpi.Action
+
+	cases := []struct {
+		name         string
+		req          string
+		consys       *mocksys.Action
+		wantedStatus int
+		wantedResp   rpi.Action
+	}{
+
+		{
+			name: "error: ExecuteUPDG result is nil",
+			consys: &mocksys.Action{
+				ExecuteUPDGFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{}, errors.New("test error")
+				},
+			},
+			wantedStatus: http.StatusInternalServerError,
+		},
+		{
+			name:         "success",
+			wantedStatus: http.StatusOK,
+			consys: &mocksys.Action{
+				ExecuteUPDGFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.UpDateGrade,
+						NumberOfSteps: 1,
+						StartTime:     uint64(time.Now().Unix()),
+						EndTime:       uint64(time.Now().Unix()),
+						ExitStatus:    0,
+					}, nil
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			r := server.New()
+			rg := r.Group("")
+			a := actions.New()
+			i := infos.New()
+			s := configure.New(tc.consys, a, i)
+			transport.NewHTTP(s, rg)
+			ts := httptest.NewServer(r)
+
+			defer ts.Close()
+			path := ts.URL + "/configure/updateupgrade" + tc.req
+
+			res, err := http.Post(path, "application/json", bytes.NewBufferString(tc.req))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			defer res.Body.Close()
+
+			body, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				panic(err)
+			}
+
+			if tc.wantedResp.Name != "" {
+				if err := json.Unmarshal(body, &response); err != nil {
+					t.Fatal(err)
+				}
+				assert.Equal(t, tc.wantedResp, response)
+			}
+			assert.Equal(t, tc.wantedStatus, res.StatusCode)
+		})
+	}
+}
+
+func TestExecuteWC(t *testing.T) {
+	var response rpi.Action
+
+	cases := []struct {
+		name         string
+		req          string
+		consys       *mocksys.Action
+		wantedStatus int
+		wantedResp   rpi.Action
+	}{
+		{
+			name:         "error: invalid request response",
+			req:          "",
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name:         "error: invalid request response (no iface)",
+			req:          "?country=france&iface",
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name:         "error: invalid request response (no country)",
+			req:          "?country=&iface=wlan0",
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name: "error: ExecuteWC result is nil",
+			req:  "?country=france&iface=wlan0",
+			consys: &mocksys.Action{
+				ExecuteWCFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{}, errors.New("test error")
+				},
+			},
+			wantedStatus: http.StatusInternalServerError,
+		},
+		{
+			name:         "success",
+			wantedStatus: http.StatusOK,
+			req:          "?country=france&iface=wlan0",
+			consys: &mocksys.Action{
+				ExecuteWCFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.WifiCountry,
+						NumberOfSteps: 1,
+						StartTime:     uint64(time.Now().Unix()),
+						EndTime:       uint64(time.Now().Unix()),
+						ExitStatus:    0,
+					}, nil
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			r := server.New()
+			rg := r.Group("")
+			a := actions.New()
+			i := infos.New()
+			s := configure.New(tc.consys, a, i)
+			transport.NewHTTP(s, rg)
+			ts := httptest.NewServer(r)
+
+			defer ts.Close()
+			path := ts.URL + "/configure/wificountry" + tc.req
+
+			fmt.Println(path)
+
+			res, err := http.Post(path, "application/json", bytes.NewBufferString(tc.req))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			defer res.Body.Close()
+
+			body, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				panic(err)
+			}
+
+			if tc.wantedResp.Name != "" {
+				if err := json.Unmarshal(body, &response); err != nil {
+					t.Fatal(err)
+				}
+				assert.Equal(t, tc.wantedResp, response)
+			}
+			assert.Equal(t, tc.wantedStatus, res.StatusCode)
+		})
+	}
+}

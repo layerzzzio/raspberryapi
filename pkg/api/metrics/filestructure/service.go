@@ -18,7 +18,7 @@ type FileStructure struct {
 
 // LFSYS represents a filestructure repository service.
 type FSSYS interface {
-	ViewLF(*rpi.File, map[int64]string) (rpi.FileStructure, error)
+	ViewLF(*rpi.File, map[string]int64) (rpi.FileStructure, error)
 }
 
 // Metrics represents the system metrics interface
@@ -30,7 +30,7 @@ type Metrics interface {
 		float32,
 		metrics.ShouldIgnoreFolder,
 		chan int,
-	) (*rpi.File, map[int64]string)
+	) (*rpi.File, map[string]int64)
 }
 
 // New creates a FileStructure application service instance.

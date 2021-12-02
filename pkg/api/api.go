@@ -1,6 +1,14 @@
 package api
 
 import (
+	"github.com/raspibuddy/rpi/pkg/api/actions/appaction"
+	aal "github.com/raspibuddy/rpi/pkg/api/actions/appaction/logging"
+	aas "github.com/raspibuddy/rpi/pkg/api/actions/appaction/platform/sys"
+	aat "github.com/raspibuddy/rpi/pkg/api/actions/appaction/transport"
+	"github.com/raspibuddy/rpi/pkg/api/actions/appinstall"
+	ail "github.com/raspibuddy/rpi/pkg/api/actions/appinstall/logging"
+	ais "github.com/raspibuddy/rpi/pkg/api/actions/appinstall/platform/sys"
+	ait "github.com/raspibuddy/rpi/pkg/api/actions/appinstall/transport"
 	"github.com/raspibuddy/rpi/pkg/api/actions/configure"
 	acl "github.com/raspibuddy/rpi/pkg/api/actions/configure/logging"
 	acs "github.com/raspibuddy/rpi/pkg/api/actions/configure/platform/sys"
@@ -9,6 +17,22 @@ import (
 	adl "github.com/raspibuddy/rpi/pkg/api/actions/destroy/logging"
 	ads "github.com/raspibuddy/rpi/pkg/api/actions/destroy/platform/sys"
 	adt "github.com/raspibuddy/rpi/pkg/api/actions/destroy/transport"
+	"github.com/raspibuddy/rpi/pkg/api/actions/general"
+	agl "github.com/raspibuddy/rpi/pkg/api/actions/general/logging"
+	ags "github.com/raspibuddy/rpi/pkg/api/actions/general/platform/sys"
+	agt "github.com/raspibuddy/rpi/pkg/api/actions/general/transport"
+	"github.com/raspibuddy/rpi/pkg/api/admin/version"
+	vel "github.com/raspibuddy/rpi/pkg/api/admin/version/logging"
+	ves "github.com/raspibuddy/rpi/pkg/api/admin/version/platform/sys"
+	vet "github.com/raspibuddy/rpi/pkg/api/admin/version/transport"
+	"github.com/raspibuddy/rpi/pkg/api/infos/appconfig"
+	iacl "github.com/raspibuddy/rpi/pkg/api/infos/appconfig/logging"
+	iacs "github.com/raspibuddy/rpi/pkg/api/infos/appconfig/platform/sys"
+	iact "github.com/raspibuddy/rpi/pkg/api/infos/appconfig/transport"
+	"github.com/raspibuddy/rpi/pkg/api/infos/appstatus"
+	iasl "github.com/raspibuddy/rpi/pkg/api/infos/appstatus/logging"
+	iass "github.com/raspibuddy/rpi/pkg/api/infos/appstatus/platform/sys"
+	iast "github.com/raspibuddy/rpi/pkg/api/infos/appstatus/transport"
 	"github.com/raspibuddy/rpi/pkg/api/infos/boot"
 	ibol "github.com/raspibuddy/rpi/pkg/api/infos/boot/logging"
 	ibos "github.com/raspibuddy/rpi/pkg/api/infos/boot/platform/sys"
@@ -29,6 +53,10 @@ import (
 	iinl "github.com/raspibuddy/rpi/pkg/api/infos/rpinterface/logging"
 	iins "github.com/raspibuddy/rpi/pkg/api/infos/rpinterface/platform/sys"
 	iint "github.com/raspibuddy/rpi/pkg/api/infos/rpinterface/transport"
+	"github.com/raspibuddy/rpi/pkg/api/infos/software"
+	isol "github.com/raspibuddy/rpi/pkg/api/infos/software/logging"
+	isos "github.com/raspibuddy/rpi/pkg/api/infos/software/platform/sys"
+	isot "github.com/raspibuddy/rpi/pkg/api/infos/software/transport"
 	"github.com/raspibuddy/rpi/pkg/api/metrics/cpu"
 	cl "github.com/raspibuddy/rpi/pkg/api/metrics/cpu/logging"
 	cs "github.com/raspibuddy/rpi/pkg/api/metrics/cpu/platform/sys"
@@ -100,7 +128,10 @@ func Start(cfg *config.Configuration) error {
 
 	// actions
 	adt.NewHTTP(adl.New(destroy.New(ads.Destroy{}, a), log).Service, v1)
+	agt.NewHTTP(agl.New(general.New(ags.General{}, a), log).Service, v1)
 	act.NewHTTP(acl.New(configure.New(acs.Configure{}, a, i), log).Service, v1)
+	ait.NewHTTP(ail.New(appinstall.New(ais.Install{}, a, i), log).Service, v1)
+	aat.NewHTTP(aal.New(appaction.New(aas.AppAction{}, a, i), log).Service, v1)
 
 	// infos
 	ihut.NewHTTP(ihul.New(humanuser.New(ihus.HumanUser{}, i), log).Service, v1)
@@ -108,6 +139,12 @@ func Start(cfg *config.Configuration) error {
 	idit.NewHTTP(idil.New(display.New(idis.Display{}, i), log).Service, v1)
 	icot.NewHTTP(icol.New(configfile.New(icos.ConfigFile{}, i), log).Service, v1)
 	iint.NewHTTP(iinl.New(rpinterface.New(iins.RpInterface{}, i), log).Service, v1)
+	isot.NewHTTP(isol.New(software.New(isos.Software{}, i), log).Service, v1)
+	iact.NewHTTP(iacl.New(appconfig.New(iacs.AppConfigVPNWithOvpn{}, i), log).Service, v1)
+	iast.NewHTTP(iasl.New(appstatus.New(iass.AppStatus{}, i), log).Service, v1)
+
+	// admin
+	vet.NewHTTP(vel.New(version.New(ves.Version{}, i), log).Service, v1)
 
 	server.Start(e, &server.Config{
 		Port:                cfg.Server.Port,

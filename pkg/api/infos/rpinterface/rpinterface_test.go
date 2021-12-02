@@ -38,9 +38,50 @@ func TestList(t *testing.T) {
 				IsFileExistsFn: func(string) bool {
 					return false
 				},
+				IsQuietGrepFn: func(string, string, string) bool {
+					return false
+				},
+				IsSSHKeyGeneratingFn: func(string) bool {
+					return false
+				},
+				IsDPKGInstalledFn: func(string) bool {
+					return false
+				},
+				IsSPIFn: func(string) bool {
+					return false
+				},
+				IsI2CFn: func(string) bool {
+					return false
+				},
+				IsVariableSetFn: func([]string, string, string) bool {
+					return false
+				},
+				ListWifiInterfacesFn: func(string) []string {
+					return []string{}
+				},
+				IsWpaSupComFn: func() map[string]bool {
+					return map[string]bool{}
+				},
+				ZoneInfoFn: func(string) map[string]string {
+					return map[string]string{}
+				},
 			},
 			intsys: mocksys.RpInterface{
-				ListFn: func([]string, bool) (rpi.RpInterface, error) {
+				ListFn: func(
+					[]string,
+					bool,
+					bool,
+					bool,
+					bool,
+					bool,
+					bool,
+					bool,
+					bool,
+					bool,
+					[]string,
+					map[string]bool,
+					map[string]string,
+				) (rpi.RpInterface, error) {
 					return rpi.RpInterface{}, nil
 				},
 			},
@@ -64,18 +105,81 @@ func TestList(t *testing.T) {
 				IsFileExistsFn: func(string) bool {
 					return false
 				},
+				IsQuietGrepFn: func(string, string, string) bool {
+					return false
+				},
+				IsSSHKeyGeneratingFn: func(string) bool {
+					return false
+				},
+				IsDPKGInstalledFn: func(string) bool {
+					return false
+				},
+				IsSPIFn: func(string) bool {
+					return false
+				},
+				IsI2CFn: func(string) bool {
+					return false
+				},
+				IsVariableSetFn: func([]string, string, string) bool {
+					return false
+				},
+				ListWifiInterfacesFn: func(string) []string {
+					return []string{}
+				},
+				IsWpaSupComFn: func() map[string]bool {
+					return map[string]bool{}
+				},
+				ZoneInfoFn: func(string) map[string]string {
+					return map[string]string{"FR": "France"}
+				},
 			},
 			intsys: mocksys.RpInterface{
-				ListFn: func([]string, bool) (rpi.RpInterface, error) {
+				ListFn: func(
+					[]string,
+					bool,
+					bool,
+					bool,
+					bool,
+					bool,
+					bool,
+					bool,
+					bool,
+					bool,
+					[]string,
+					map[string]bool,
+					map[string]string,
+				) (rpi.RpInterface, error) {
 					return rpi.RpInterface{
-						IsStartXElf: true,
-						IsCamera:    false,
+						IsStartXElf:        true,
+						IsCamera:           false,
+						IsSSH:              true,
+						IsSSHKeyGenerating: true,
+						IsVNC:              true,
+						IsSPI:              true,
+						IsI2C:              true,
+						IsVNCInstalled:     true,
+						IsOneWire:          true,
+						IsRemoteGpio:       true,
+						IsWifiInterfaces:   false,
+						IsWpaSupCom:        map[string]bool{"wlan0": true},
+						ZoneInfo:           map[string]string{"FR": "France"},
 					}, nil
 				},
 			},
 			wantedData: rpi.RpInterface{
-				IsStartXElf: true,
-				IsCamera:    false,
+				IsStartXElf:        true,
+				IsCamera:           false,
+				IsSSH:              true,
+				IsSSHKeyGenerating: true,
+				IsVNC:              true,
+				IsSPI:              true,
+				IsI2C:              true,
+				IsVNCInstalled:     true,
+				IsOneWire:          true,
+				IsRemoteGpio:       true,
+				IsWifiInterfaces:   false,
+				IsWpaSupCom:        map[string]bool{"wlan0": true},
+				ZoneInfo:           map[string]string{"FR": "France"},
 			},
 			wantedErr: nil,
 		},
