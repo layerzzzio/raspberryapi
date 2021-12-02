@@ -1396,3 +1396,60 @@ func TestStatusVPNWithOpenVPN(t *testing.T) {
 		})
 	}
 }
+
+func TestApiVersion(t *testing.T) {
+
+	cases := []struct {
+		name          string
+		directoryPath string
+		apiName       string
+		wantedData    string
+	}{
+		{
+			name:          "success: regular version",
+			directoryPath: ".",
+			apiName:       "raspibuddy-0.11.10000_linux_armv5",
+			wantedData:    "0.11.10000",
+		},
+		{
+			name:          "success: no version",
+			directoryPath: ".",
+			apiName:       "raspibuddy_linux_armv5",
+			wantedData:    "",
+		},
+		{
+			name:          "success: empty version",
+			directoryPath: ".",
+			apiName:       "raspibuddy-.._linux_armv5",
+			wantedData:    "",
+		},
+		{
+			name:          "success: partial version (major)",
+			directoryPath: ".",
+			apiName:       "raspibuddy-1.._linux_armv5",
+			wantedData:    "",
+		},
+		{
+			name:          "success: partial version (major & minor)",
+			directoryPath: ".",
+			apiName:       "raspibuddy-1.2._linux_armv5",
+			wantedData:    "",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			i := infos.New()
+
+			_, err := os.Create(tc.apiName)
+			if err != nil {
+				log.Fatal("could not create file")
+			}
+
+			version := i.ApiVersion(tc.directoryPath)
+			assert.Equal(t, tc.wantedData, version)
+
+			os.Remove(tc.apiName)
+		})
+	}
+}

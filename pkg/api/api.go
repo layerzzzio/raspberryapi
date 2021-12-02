@@ -21,7 +21,10 @@ import (
 	agl "github.com/raspibuddy/rpi/pkg/api/actions/general/logging"
 	ags "github.com/raspibuddy/rpi/pkg/api/actions/general/platform/sys"
 	agt "github.com/raspibuddy/rpi/pkg/api/actions/general/transport"
-
+	"github.com/raspibuddy/rpi/pkg/api/admin/version"
+	vel "github.com/raspibuddy/rpi/pkg/api/admin/version/logging"
+	ves "github.com/raspibuddy/rpi/pkg/api/admin/version/platform/sys"
+	vet "github.com/raspibuddy/rpi/pkg/api/admin/version/transport"
 	"github.com/raspibuddy/rpi/pkg/api/infos/appconfig"
 	iacl "github.com/raspibuddy/rpi/pkg/api/infos/appconfig/logging"
 	iacs "github.com/raspibuddy/rpi/pkg/api/infos/appconfig/platform/sys"
@@ -139,6 +142,9 @@ func Start(cfg *config.Configuration) error {
 	isot.NewHTTP(isol.New(software.New(isos.Software{}, i), log).Service, v1)
 	iact.NewHTTP(iacl.New(appconfig.New(iacs.AppConfigVPNWithOvpn{}, i), log).Service, v1)
 	iast.NewHTTP(iasl.New(appstatus.New(iass.AppStatus{}, i), log).Service, v1)
+
+	// admin
+	vet.NewHTTP(vel.New(version.New(ves.Version{}, i), log).Service, v1)
 
 	server.Start(e, &server.Config{
 		Port:                cfg.Server.Port,

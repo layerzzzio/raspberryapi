@@ -28,6 +28,7 @@ type Infos struct {
 	HasDirectoryAtLeastOneFileFn func(string, bool) bool
 	IsFileContainsKey1OrKey2Fn   func(string, string, string) (string, error)
 	IsFileContainsUntilFn        func(string, string, string, int) (string, error)
+	ApiVersionFn                 func(string) string
 }
 
 // ReadFile mock
@@ -138,4 +139,9 @@ func (i Infos) IsFileContainsKey1OrKey2(filepath string, keyword1 string, keywor
 // IsFileContainsUntil mock
 func (i Infos) IsFileContainsUntil(filepath string, keyword1 string, keyword2 string, timelimit int) (string, error) {
 	return i.IsFileContainsUntilFn(filepath, keyword1, keyword2, timelimit)
+}
+
+// ApiVersion mock
+func (i Infos) ApiVersion(apiPath string) string {
+	return i.ApiVersionFn(apiPath)
 }
