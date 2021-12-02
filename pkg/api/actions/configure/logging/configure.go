@@ -166,3 +166,173 @@ func (ls *LogService) ExecuteCA(ctx echo.Context, action string) (resp rpi.Actio
 	}(time.Now())
 	return ls.Service.ExecuteCA(action)
 }
+
+// ExecuteSSH is the logging function attached to the execute ssh service and responsible for logging it out.
+func (ls *LogService) ExecuteSSH(ctx echo.Context, action string) (resp rpi.Action, err error) {
+	defer func(begin time.Time) {
+		ls.logger.Log(
+			ctx,
+			name,
+			fmt.Sprintf("request: execute %v ssh", action),
+			err,
+			map[string]interface{}{
+				"resp": resp,
+				"took": time.Since(begin),
+			},
+		)
+	}(time.Now())
+	return ls.Service.ExecuteSSH(action)
+}
+
+// ExecuteVNC is the logging function attached to the execute vnc service and responsible for logging it out.
+func (ls *LogService) ExecuteVNC(ctx echo.Context, action string) (resp rpi.Action, err error) {
+	defer func(begin time.Time) {
+		ls.logger.Log(
+			ctx,
+			name,
+			fmt.Sprintf("request: execute %v vnc", action),
+			err,
+			map[string]interface{}{
+				"resp": resp,
+				"took": time.Since(begin),
+			},
+		)
+	}(time.Now())
+	return ls.Service.ExecuteVNC(action)
+}
+
+// ExecuteSPI is the logging function attached to the execute spi service and responsible for logging it out.
+func (ls *LogService) ExecuteSPI(ctx echo.Context, action string) (resp rpi.Action, err error) {
+	defer func(begin time.Time) {
+		ls.logger.Log(
+			ctx,
+			name,
+			fmt.Sprintf("request: execute %v spi", action),
+			err,
+			map[string]interface{}{
+				"resp": resp,
+				"took": time.Since(begin),
+			},
+		)
+	}(time.Now())
+	return ls.Service.ExecuteSPI(action)
+}
+
+// ExecuteI2C is the logging function attached to the execute i2c service and responsible for logging it out.
+func (ls *LogService) ExecuteI2C(ctx echo.Context, action string) (resp rpi.Action, err error) {
+	defer func(begin time.Time) {
+		ls.logger.Log(
+			ctx,
+			name,
+			fmt.Sprintf("request: execute %v i2c", action),
+			err,
+			map[string]interface{}{
+				"resp": resp,
+				"took": time.Since(begin),
+			},
+		)
+	}(time.Now())
+	return ls.Service.ExecuteI2C(action)
+}
+
+// ExecuteONW is the logging function attached to the execute one-wire service and responsible for logging it out.
+func (ls *LogService) ExecuteONW(ctx echo.Context, action string) (resp rpi.Action, err error) {
+	defer func(begin time.Time) {
+		ls.logger.Log(
+			ctx,
+			name,
+			fmt.Sprintf("request: execute %v one wire", action),
+			err,
+			map[string]interface{}{
+				"resp": resp,
+				"took": time.Since(begin),
+			},
+		)
+	}(time.Now())
+	return ls.Service.ExecuteONW(action)
+}
+
+// ExecuteRG is the logging function attached to the execute remote gpio service and responsible for logging it out.
+func (ls *LogService) ExecuteRG(ctx echo.Context, action string) (resp rpi.Action, err error) {
+	defer func(begin time.Time) {
+		ls.logger.Log(
+			ctx,
+			name,
+			fmt.Sprintf("request: execute %v remote gpio", action),
+			err,
+			map[string]interface{}{
+				"resp": resp,
+				"took": time.Since(begin),
+			},
+		)
+	}(time.Now())
+	return ls.Service.ExecuteRG(action)
+}
+
+// ExecuteUPD is the logging function attached to the execute update service and responsible for logging it out.
+func (ls *LogService) ExecuteUPD(ctx echo.Context) (resp rpi.Action, err error) {
+	defer func(begin time.Time) {
+		ls.logger.Log(
+			ctx,
+			name,
+			"request: execute %v update",
+			err,
+			map[string]interface{}{
+				"resp": resp,
+				"took": time.Since(begin),
+			},
+		)
+	}(time.Now())
+	return ls.Service.ExecuteUPD()
+}
+
+// ExecuteUPG is the logging function attached to the execute upgrade service and responsible for logging it out.
+func (ls *LogService) ExecuteUPG(ctx echo.Context) (resp rpi.Action, err error) {
+	defer func(begin time.Time) {
+		ls.logger.Log(
+			ctx,
+			name,
+			"request: execute %v upgrade",
+			err,
+			map[string]interface{}{
+				"resp": resp,
+				"took": time.Since(begin),
+			},
+		)
+	}(time.Now())
+	return ls.Service.ExecuteUPG()
+}
+
+// ExecuteUPDG is the logging function attached to the execute update & upgrade service and responsible for logging it out.
+func (ls *LogService) ExecuteUPDG(ctx echo.Context) (resp rpi.Action, err error) {
+	defer func(begin time.Time) {
+		ls.logger.Log(
+			ctx,
+			name,
+			"request: execute %v update & upgrade",
+			err,
+			map[string]interface{}{
+				"resp": resp,
+				"took": time.Since(begin),
+			},
+		)
+	}(time.Now())
+	return ls.Service.ExecuteUPDG()
+}
+
+// ExecuteWC is the logging function attached to the execute wifi country service and responsible for logging it out.
+func (ls *LogService) ExecuteWC(ctx echo.Context, iface string, country string) (resp rpi.Action, err error) {
+	defer func(begin time.Time) {
+		ls.logger.Log(
+			ctx,
+			name,
+			"request: execute %v wifi country",
+			err,
+			map[string]interface{}{
+				"resp": resp,
+				"took": time.Since(begin),
+			},
+		)
+	}(time.Now())
+	return ls.Service.ExecuteWC(iface, country)
+}

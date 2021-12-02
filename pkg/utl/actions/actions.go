@@ -59,8 +59,17 @@ const (
 	// DisableOrEnableCameraRegex is the regex used to detect start_x variable in /boot/config.txt
 	DisableOrEnableCameraRegex = `^\s*#?\s*start_x\s*=.*`
 
+	// DisableOrEnableSPIRegex is the regex used to detect dtparam=spi variable in /boot/config.txt
+	DisableOrEnableSPIRegex = `^\s*#?\s*dtparam\s*=\s*spi\s*=.*`
+
+	// DisableOrEnableI2CRegex is the regex used to detect dtparam=i2c_arm variable in /boot/config.txt
+	DisableOrEnableI2CRegex = `^\s*#?\s*dtparam\s*=\s*i2c_arm\s*=.*`
+
 	// StartxCameraRegex is the regex used to detect startx variable in /boot/config.txt
 	StartxCameraRegex = `^\s*startx.*`
+
+	// OneWireCommentRegex is the regex used to comment one-wire variable in /boot/config.txt
+	OneWireCommentRegex = `^\s*#?\s*dtoverlay\s*=\s*w1-gpio.*`
 
 	// FixupFileCameraRegex is the regex used to detect fixup_file variable in /boot/config.txt
 	FixupFileCameraRegex = `^\s*fixup_file.*`
@@ -79,6 +88,15 @@ const (
 
 	// DeleteFile is the name of the delete file exec
 	DeleteFile = "delete_file"
+
+	// Reboot is the name of the reboot exec
+	Reboot = "reboot"
+
+	// Shutdown is the name of the shutdown exec
+	Shutdown = "shutdown"
+
+	// RebootShutdown is the name of the reboot or shutdown exec
+	RebootShutdown = "RebootShutdown"
 
 	// KillProcess is the name of the kill process exec
 	KillProcess = "kill_process"
@@ -104,11 +122,23 @@ const (
 	// WaitForNetworkAtBoot is the name of the wait for network at boot
 	WaitForNetworkAtBoot = "wait_for_network_at_boot"
 
+	// DisableOrEnableRemoteGpio is the name of the disable or enable rgpio
+	DisableOrEnableRemoteGpio = "disable_or_enable_rgpio"
+
 	// Overscan is the name of the overscan actions
 	Overscan = "overscan"
 
 	// DisableOrEnableCameraInterface is the name of the disable or enable camera interface actions
 	DisableOrEnableCameraInterface = "disable_or_enable_camera_interface"
+
+	// DisableOrEnableSPIInterface is the name of the disable or enable spi interface actions
+	DisableOrEnableSPIInterface = "disable_or_enable_spi_interface"
+
+	// DisableOrEnableI2CInterface is the name of the disable or enable i2c interface actions
+	DisableOrEnableI2CInterface = "disable_or_enable_i2c_interface"
+
+	// DisableOrEnableONWInterface is the name of the disable or enable one-wore interface actions
+	DisableOrEnableONWInterface = "disable_or_enable_one_wire_interface"
 
 	// CameraInterface is the name of the camera interface actions
 	CameraInterface = "camera_interface"
@@ -130,6 +160,48 @@ const (
 
 	// DeleteUser is the name of the deleting user method
 	DeleteUser = "delete_user"
+
+	// SSH is the name of the ssh user method
+	SSH = "ssh"
+
+	// VNC is the name of the vnc user method
+	VNC = "vnc"
+
+	// SPI is the name of the spi user method
+	SPI = "spi"
+
+	// I2C is the name of the i2c user method
+	I2C = "i2c"
+
+	// OneWire is the name of the one-wire user method
+	OneWire = "one_wire"
+
+	// RGPIO is the name of the remote gpio user method
+	RGPIO = "remote_gpio"
+
+	// Update is the name of the update method
+	Update = "update"
+
+	// Upgrade is the name of the upgrade method
+	Upgrade = "upgrade"
+
+	// UpDateGrade is the name of the update & upgrade method
+	UpDateGrade = "update_upgrade"
+
+	// WifiCountry is the name of the wifi country method
+	WifiCountry = "wifi_country"
+
+	// InstallAptGet is the name of the install with apt-get method
+	InstallAptGet = "install_apt_get"
+
+	// InstallVPNWithOVPN is the name of the install install vpn with opvn method
+	InstallVPNWithOVPN = "install_vpn_with_ovpn"
+
+	// ActionVPNWithOVPN is the name of the actions vpn with opvn method
+	ActionVPNWithOVPN = "action_vpn_with_ovpn"
+
+	// ConfirmVPNAuthentication is the name of the action to confirm if VPN authentication workded or not
+	ConfirmVPNAuthentication = "confirm_vpn_auth"
 )
 
 var (
@@ -603,6 +675,151 @@ func (s Service) DeleteUser(arg interface{}) (rpi.Exec, error) {
 	}, nil
 }
 
+type EBC struct {
+	Command string
+}
+
+const ExecuteBashCommand = "execute_bash_command"
+
+// DisableOrEnableBashCommand runs a bash command depending on the action value
+func (s Service) ExecuteBashCommand(arg interface{}) (rpi.Exec, error) {
+	var command string
+
+	switch v := arg.(type) {
+	case EBC:
+		command = v.Command
+	case OtherParams:
+		command = arg.(OtherParams).Value["command"]
+	default:
+		return rpi.Exec{ExitStatus: 1}, &Error{[]string{"command"}}
+	}
+
+	// execution start time
+	startTime := uint64(time.Now().Unix())
+	exitStatus := 0
+	var stdErr string
+
+	if command == "" {
+		exitStatus = 1
+		stdErr = "no command"
+	} else {
+		var err error
+		_, err = exec.Command(
+			"sh",
+			"-c",
+			command,
+		).Output()
+
+		if err != nil {
+			exitStatus = 1
+			stdErr = fmt.Sprint(err)
+		}
+	}
+
+	// execution end time
+	endTime := uint64(time.Now().Unix())
+
+	return rpi.Exec{
+		Name:       ExecuteBashCommand,
+		StartTime:  startTime,
+		EndTime:    endTime,
+		ExitStatus: uint8(exitStatus),
+		Stderr:     stdErr,
+	}, nil
+}
+
+type CVPNAUTH struct {
+	Filepath  string
+	Timelimit string
+}
+
+// ConfirmVPNAuthentication checks if a VPN authentication works on not
+func (s Service) ConfirmVPNAuthentication(arg interface{}) (rpi.Exec, error) {
+	// in seconds
+	var timelimit string
+	var filepath string
+
+	switch v := arg.(type) {
+	case CVPNAUTH:
+		filepath = v.Filepath
+		timelimit = v.Timelimit
+	case OtherParams:
+		filepath = arg.(OtherParams).Value["filepath"]
+		timelimit = arg.(OtherParams).Value["timelimit"]
+	default:
+		return rpi.Exec{ExitStatus: 1}, &Error{[]string{
+			"filepath", "keyword",
+		}}
+	}
+
+	// execution start time
+	startTime := uint64(time.Now().Unix())
+	var exitStatus int
+	var stdErr string
+
+	timelimitint, errTL := strconv.Atoi(timelimit)
+	if errTL != nil {
+		return rpi.Exec{
+			Name:       ConfirmVPNAuthentication,
+			StartTime:  startTime,
+			EndTime:    uint64(time.Now().Unix()),
+			ExitStatus: uint8(1),
+			Stderr:     "timelimit is not an int",
+		}, nil
+	}
+
+	keyword, err := infos.New().IsFileContainsUntil(
+		filepath,
+		infos.IFCK{
+			Name: "auth_failure",
+			Keywords: []string{
+				"AUTH_FAILED",
+				"auth-failure",
+			},
+		}, infos.IFCK{
+			Name: "auth_success",
+			Keywords: []string{
+				"Initialization Sequence Completed",
+			},
+		},
+		timelimitint,
+	)
+
+	if err != nil {
+		return rpi.Exec{
+			Name:       ConfirmVPNAuthentication,
+			StartTime:  startTime,
+			EndTime:    uint64(time.Now().Unix()),
+			ExitStatus: uint8(1),
+			Stderr:     fmt.Sprint(err),
+		}, nil
+	}
+
+	if keyword == "auth_failure" {
+		exitStatus = 1
+		stdErr = "auth_failure"
+	} else if keyword == "not_found" {
+		exitStatus = 1
+		stdErr = "stalled"
+	} else if keyword == "auth_success" {
+		exitStatus = 0
+	} else {
+		exitStatus = 1
+		stdErr = "auth_unknown_error"
+	}
+
+	// execution end time
+	endTime := uint64(time.Now().Unix())
+
+	return rpi.Exec{
+		Name:       ConfirmVPNAuthentication,
+		StartTime:  startTime,
+		EndTime:    endTime,
+		ExitStatus: uint8(exitStatus),
+		Stderr:     stdErr,
+	}, nil
+}
+
 // EnableOrDisableConfig is the argument for enable or disable methods
 type EnableOrDisableConfig struct {
 	Action        string
@@ -676,6 +893,73 @@ func (s Service) WaitForNetworkAtBoot(arg interface{}) (rpi.Exec, error) {
 
 	return rpi.Exec{
 		Name:       WaitForNetworkAtBoot,
+		StartTime:  startTime,
+		EndTime:    endTime,
+		ExitStatus: uint8(exitStatus),
+		Stderr:     stdErr,
+	}, nil
+}
+
+// DisableOrEnableRemoteGpio enable or disable remote gpio at boot
+func (s Service) DisableOrEnableRemoteGpio(arg interface{}) (rpi.Exec, error) {
+	var directory string
+	var action string
+
+	switch v := arg.(type) {
+	case EnableOrDisableConfig:
+		directory = v.DirOrFilePath
+		action = v.Action
+	case OtherParams:
+		directory = arg.(OtherParams).Value["directory"]
+		action = arg.(OtherParams).Value["action"]
+	default:
+		return rpi.Exec{ExitStatus: 1}, &Error{[]string{"directory", "action"}}
+	}
+
+	// execution start time
+	startTime := uint64(time.Now().Unix())
+	exitStatus := 0
+	var stdErr string
+
+	if action == Enable {
+		// create the directory and the parent directories
+		_ = os.MkdirAll(directory, 0755)
+
+		// create a file wait.conf and populate it
+		err := OverwriteToFile(WriteToFileArg{
+			File: directory + "/public.conf",
+			Data: []string{
+				"[Service]",
+				"ExecStart=",
+				"ExecStart=/usr/bin/pigpiod",
+			},
+			Multiline: true,
+		})
+
+		// if error, it is logged here
+		if err != nil {
+			exitStatus = 1
+			stdErr = fmt.Sprint(err)
+		}
+	} else if action == Disable {
+		// remove the file
+		err := os.Remove(directory + "/public.conf")
+
+		// if error, it is logged here
+		if err != nil {
+			exitStatus = 1
+			stdErr = fmt.Sprint(err)
+		}
+	} else {
+		exitStatus = 1
+		stdErr = "bad action type"
+	}
+
+	// execution end time
+	endTime := uint64(time.Now().Unix())
+
+	return rpi.Exec{
+		Name:       DisableOrEnableRemoteGpio,
 		StartTime:  startTime,
 		EndTime:    endTime,
 		ExitStatus: uint8(exitStatus),

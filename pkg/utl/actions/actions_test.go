@@ -2572,6 +2572,180 @@ func TestWaitForNetworkAtBoot(t *testing.T) {
 	}
 }
 
+func TestDisableOrEnableRemoteGpio(t *testing.T) {
+	cases := []struct {
+		name             string
+		argument         interface{}
+		isSuccess        bool
+		enable           bool
+		wantedData       []string
+		wantedErr        error
+		wantedExitStatus uint8
+		wantedStderr     string
+	}{
+		{
+			name: "error : no such file or directory (enable)",
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: "",
+				Action:        actions.Enable,
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "creating and opening file failed",
+			wantedErr:        nil,
+		},
+		{
+			name: "error : no such file or directory (disable)",
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: "",
+				Action:        actions.Disable,
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "remove /public.conf: no such file or directory",
+			wantedErr:        nil,
+		},
+		{
+			name: "error : bad action type",
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: dummydirectorypath,
+				Action:        "dummyactiontype",
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "bad action type",
+			wantedErr:        nil,
+		},
+		{
+			name: "error : too many arguments",
+			argument: []actions.OtherParams{
+				{Value: map[string]string{"directory": dummydirectorypath}},
+				{Value: map[string]string{"action": "dummyaction"}},
+				{Value: map[string]string{"dummyextraarg": "dummyextraarg"}},
+			},
+			isSuccess:        false,
+			wantedExitStatus: 1,
+			wantedStderr:     "",
+			wantedErr:        &actions.Error{Arguments: []string{"directory", "action"}},
+		},
+		{
+			name: "success enabling with otherParams",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"directory": dummydirectorypath,
+					"action":    actions.Enable,
+				},
+			},
+			isSuccess: true,
+			enable:    true,
+			wantedData: []string{
+				"[Service]",
+				"ExecStart=",
+				"ExecStart=/usr/bin/pigpiod",
+			},
+			wantedErr:        nil,
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+		},
+		{
+			name: "success enabling with regular params",
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: dummydirectorypath,
+				Action:        actions.Enable,
+			},
+			isSuccess: true,
+			enable:    true,
+			wantedData: []string{
+				"[Service]",
+				"ExecStart=",
+				"ExecStart=/usr/bin/pigpiod",
+			},
+			wantedErr:        nil,
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+		},
+		{
+			name: "success disable with otherParams",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"directory": dummydirectorypath,
+					"action":    actions.Disable,
+				},
+			},
+			isSuccess:        true,
+			enable:           false,
+			wantedErr:        nil,
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+		},
+		{
+			name: "success disable with regular params",
+			argument: actions.EnableOrDisableConfig{
+				DirOrFilePath: dummydirectorypath,
+				Action:        actions.Disable,
+			},
+			isSuccess:        true,
+			enable:           false,
+			wantedErr:        nil,
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var remoteGpio rpi.Exec
+			var err error
+			a := actions.New()
+
+			if tc.isSuccess {
+				if tc.enable == false {
+					_ = os.MkdirAll(dummydirectorypath, 0755)
+					if err := actions.OverwriteToFile(actions.WriteToFileArg{
+						File:      "./" + dummydirectorypath + "/public.conf",
+						Data:      []string{"dummydata"},
+						Multiline: true,
+					}); err != nil {
+						fmt.Println(err)
+					}
+				}
+
+				remoteGpio, err = a.DisableOrEnableRemoteGpio(tc.argument)
+				if err != nil {
+					fmt.Println(err)
+				}
+
+				if tc.enable {
+					// read the new line and delete
+					readLines, err := infos.New().ReadFile("./" + dummydirectorypath + "/public.conf")
+					if err != nil {
+						fmt.Println(err)
+					}
+
+					// fmt.Println(readLines)
+
+					// assert statements
+					assert.Equal(t, tc.wantedData, readLines)
+				}
+
+				if err = os.RemoveAll(dummydirectorypath); err != nil {
+					fmt.Println(err)
+				}
+
+			} else {
+				remoteGpio, err = a.DisableOrEnableRemoteGpio(tc.argument)
+				if e := os.RemoveAll(dummydirectorypath); err != nil {
+					fmt.Println(e)
+				}
+			}
+
+			assert.Equal(t, tc.wantedExitStatus, remoteGpio.ExitStatus)
+			assert.Equal(t, tc.wantedStderr, remoteGpio.Stderr)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
 func TestRemoveDuplicateStrings(t *testing.T) {
 	cases := []struct {
 		name       string
@@ -4279,6 +4453,186 @@ func TestSetVariableInConfigFile(t *testing.T) {
 
 			assert.Equal(t, tc.wantedExitStatus, overscan.ExitStatus)
 			assert.Equal(t, tc.wantedStderr, overscan.Stderr)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
+func TestExecuteBashCommand(t *testing.T) {
+	cases := []struct {
+		name             string
+		argument         interface{}
+		wantedExitStatus uint8
+		wantedStderr     string
+		wantedErr        error
+	}{
+		{
+			name: "error : no command",
+			argument: actions.EBC{
+				Command: "",
+			},
+			wantedExitStatus: 1,
+			wantedStderr:     "no command",
+			wantedErr:        nil,
+		},
+		{
+			name: "error : command not right",
+			argument: actions.EBC{
+				Command: "x",
+			},
+			wantedExitStatus: 1,
+			wantedStderr:     "exit status 127",
+			wantedErr:        nil,
+		},
+		{
+			name: "error : too many arguments",
+			argument: []actions.OtherParams{
+				{Value: map[string]string{"command": dummyfilepath}},
+				{Value: map[string]string{"dummy": dummyfilepath}},
+			},
+			wantedExitStatus: 1,
+			wantedStderr:     "",
+			wantedErr:        &actions.Error{Arguments: []string{"command"}},
+		},
+		{
+			name: "success: other params",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"command": "pwd",
+				},
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+		{
+			name: "success: regular params",
+			argument: actions.EBC{
+				Command: "pwd",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			a := actions.New()
+			command, err := a.ExecuteBashCommand(tc.argument)
+			assert.Equal(t, tc.wantedExitStatus, command.ExitStatus)
+			assert.Equal(t, tc.wantedStderr, command.Stderr)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
+func TestConfirmVPNAuthentication(t *testing.T) {
+	cases := []struct {
+		name             string
+		argument         interface{}
+		wantedExitStatus uint8
+		wantedStderr     string
+		wantedErr        error
+	}{
+		{
+			name:             "error : no filepath, no timelimit",
+			wantedExitStatus: 1,
+			wantedStderr:     "",
+			wantedErr:        &actions.Error{Arguments: []string{"filepath", "keyword"}},
+		},
+		{
+			name: "error : too many arguments",
+			argument: []actions.OtherParams{
+				{Value: map[string]string{"filepath": "dummyfilepath"}},
+				{Value: map[string]string{"keyword": "dummykeyword"}},
+				{Value: map[string]string{"extra_arg": "dummyextraarg"}},
+			},
+			wantedExitStatus: 1,
+			wantedStderr:     "",
+			wantedErr:        &actions.Error{Arguments: []string{"filepath", "keyword"}},
+		},
+		{
+			name: "error : empty path & no timelimit",
+			argument: actions.CVPNAUTH{
+				Filepath: "",
+			},
+			wantedExitStatus: 1,
+			wantedStderr:     "timelimit is not an int",
+			wantedErr:        nil,
+		},
+		{
+			name: "error : empty filepath & wrong timelimit",
+			argument: actions.CVPNAUTH{
+				Filepath:  "",
+				Timelimit: "x",
+			},
+			wantedExitStatus: 1,
+			wantedStderr:     "timelimit is not an int",
+			wantedErr:        nil,
+		},
+		{
+			name: "success : auth failed",
+			argument: actions.CVPNAUTH{
+				Filepath:  "../infos/testdata/filecontains_openvpnfailure",
+				Timelimit: "1",
+			},
+			wantedExitStatus: 1,
+			wantedStderr:     "auth_failure",
+			wantedErr:        nil,
+		},
+		{
+			name: "success : stalled",
+			argument: actions.CVPNAUTH{
+				Filepath:  "../infos/testdata/filecontains_openvpnstalled",
+				Timelimit: "1",
+			},
+			wantedExitStatus: 1,
+			wantedStderr:     "stalled",
+			wantedErr:        nil,
+		},
+		{
+			name: "success : couldn't read file",
+			argument: actions.CVPNAUTH{
+				Filepath:  "../infos/testdata/filecontains_openvpnstalledXXXX",
+				Timelimit: "1",
+			},
+			wantedExitStatus: 1,
+			wantedStderr:     "reading file failed",
+			wantedErr:        nil,
+		},
+		{
+			name: "success : auth success",
+			argument: actions.CVPNAUTH{
+				Filepath:  "../infos/testdata/filecontains_openvpnsuccess",
+				Timelimit: "1",
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+		{
+			name: "success : other params - auth success",
+			argument: actions.OtherParams{
+				Value: map[string]string{
+					"filepath":  "../infos/testdata/filecontains_openvpnsuccess",
+					"timelimit": "1",
+				},
+			},
+			wantedExitStatus: 0,
+			wantedStderr:     "",
+			wantedErr:        nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			a := actions.New()
+			command, err := a.ConfirmVPNAuthentication(tc.argument)
+			assert.Equal(t, tc.wantedExitStatus, command.ExitStatus)
+			assert.Equal(t, tc.wantedStderr, command.Stderr)
 			assert.Equal(t, tc.wantedErr, err)
 		})
 	}

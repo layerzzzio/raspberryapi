@@ -1,6 +1,7 @@
 package configure
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -349,4 +350,449 @@ func (con *Configure) ExecuteCA(action string) (rpi.Action, error) {
 	}
 
 	return con.consys.ExecuteCA(plan)
+}
+
+// ExecuteSSH enable or disable ssh
+func (con *Configure) ExecuteSSH(action string) (rpi.Action, error) {
+	var plan map[int]map[int]actions.Func
+	var command string
+
+	if action == "enable" {
+		command = "ssh-keygen -A && update-rc.d ssh enable && invoke-rc.d ssh start"
+	} else if action == "disable" {
+		command = "update-rc.d ssh disable && invoke-rc.d ssh stop"
+	} else {
+		return rpi.Action{}, echo.NewHTTPError(http.StatusInternalServerError, "bad action type: enable or disable ssh failed")
+	}
+
+	plan = map[int](map[int]actions.Func){
+		1: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{Command: command},
+				},
+			},
+		},
+	}
+
+	return con.consys.ExecuteSSH(plan)
+}
+
+// ExecuteVNC enable or disable vnc
+func (con *Configure) ExecuteVNC(action string) (rpi.Action, error) {
+	var plan map[int]map[int]actions.Func
+	var command string
+
+	if action == "enable" {
+		command = "systemctl enable vncserver-x11-serviced.service && systemctl start vncserver-x11-serviced.service"
+	} else if action == "disable" {
+		command = "systemctl disable vncserver-x11-serviced.service && systemctl stop vncserver-x11-serviced.service"
+	} else {
+		return rpi.Action{}, echo.NewHTTPError(http.StatusInternalServerError, "bad action type: enable or disable vnc failed")
+	}
+
+	plan = map[int](map[int]actions.Func){
+		1: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{Command: command},
+				},
+			},
+		},
+	}
+
+	return con.consys.ExecuteVNC(plan)
+}
+
+// ExecuteSPI enable or disable spi
+func (con *Configure) ExecuteSPI(action string) (rpi.Action, error) {
+	var plan map[int]map[int]actions.Func
+	var data string
+
+	if action == "enable" {
+		data = "on"
+	} else if action == "disable" {
+		data = "off"
+	} else {
+		return rpi.Action{}, echo.NewHTTPError(http.StatusInternalServerError, "bad action type: enable or disable spi failed")
+	}
+
+	blacklist := "/etc/modprobe.d/raspi-blacklist.conf"
+	sedBlacklist := "s/^\\(blacklist[[:space:]]*spi[-_]bcm2708\\)/#\\1/"
+
+	plan = map[int](map[int]actions.Func){
+		1: {
+			1: {
+				Name:      actions.DisableOrEnableConfig,
+				Reference: con.a.DisableOrEnableConfig,
+				Argument: []interface{}{
+					actions.EODC{
+						DirOrFilePath: con.i.GetConfigFiles()["bootconfig"].Path,
+						Action:        action,
+						Data:          "dtparam=spi=" + data,
+						Regex:         actions.DisableOrEnableSPIRegex,
+						FunctionName:  actions.DisableOrEnableSPIInterface,
+						AssetFile:     "../assets/config.txt",
+					},
+				},
+			},
+		},
+		2: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: fmt.Sprintf("if ! [ -e %v ]; then touch %v ; fi", blacklist, blacklist),
+					},
+				},
+			},
+		},
+		3: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: fmt.Sprintf("sed %v -i -e \"%v\"", blacklist, sedBlacklist),
+					},
+				},
+			},
+		},
+		4: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: "dtparam spi=" + data,
+					},
+				},
+			},
+		},
+	}
+
+	return con.consys.ExecuteSPI(plan)
+}
+
+// ExecuteI2C enable or disable i2c
+func (con *Configure) ExecuteI2C(action string) (rpi.Action, error) {
+	var plan map[int]map[int]actions.Func
+	var data string
+
+	if action == "enable" {
+		data = "on"
+	} else if action == "disable" {
+		data = "off"
+	} else {
+		return rpi.Action{}, echo.NewHTTPError(http.StatusInternalServerError, "bad action type: enable or disable i2c failed")
+	}
+
+	blacklist := "/etc/modprobe.d/raspi-blacklist.conf"
+	sedBlacklist := "s/^\\(blacklist[[:space:]]*i2c[-_]bcm2708\\)/#\\1/"
+
+	etcModules := "/etc/modules"
+	setEtcModules := "s/^#[[:space:]]*\\(i2c[-_]dev\\)/\\1/"
+
+	plan = map[int](map[int]actions.Func){
+		1: {
+			1: {
+				Name:      actions.DisableOrEnableConfig,
+				Reference: con.a.DisableOrEnableConfig,
+				Argument: []interface{}{
+					actions.EODC{
+						DirOrFilePath: con.i.GetConfigFiles()["bootconfig"].Path,
+						Action:        action,
+						Data:          "dtparam=i2c_arm=" + data,
+						Regex:         actions.DisableOrEnableI2CRegex,
+						FunctionName:  actions.DisableOrEnableI2CInterface,
+						AssetFile:     "../assets/config.txt",
+					},
+				},
+			},
+		},
+		2: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: fmt.Sprintf("if ! [ -e %v ]; then touch %v ; fi", blacklist, blacklist),
+					},
+				},
+			},
+		},
+		3: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: fmt.Sprintf("sed %v -i -e \"%v\"", blacklist, sedBlacklist),
+					},
+				},
+			},
+		},
+		4: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: fmt.Sprintf("sed %v -i -e %v", etcModules, setEtcModules),
+					},
+				},
+			},
+		},
+		5: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: fmt.Sprintf("if ! grep -q \"^i2c[-_]dev\" %v; then printf \"i2c-dev\n\" >> %v ; fi", etcModules, etcModules),
+					},
+				},
+			},
+		},
+		6: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: fmt.Sprintf("dtparam i2c_arm=%v", data),
+					},
+				},
+			},
+		},
+		7: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: "modprobe i2c-dev",
+					},
+				},
+			},
+		},
+	}
+
+	return con.consys.ExecuteI2C(plan)
+}
+
+// ExecuteONW enable or disable one-wire
+func (con *Configure) ExecuteONW(action string) (rpi.Action, error) {
+	var plan map[int]map[int]actions.Func
+
+	if action == "enable" {
+		plan = map[int](map[int]actions.Func){
+			1: {
+				1: {
+					Name:      actions.CommentOrUncommentInFile,
+					Reference: con.a.CommentOrUncommentInFile,
+					Argument: []interface{}{
+						actions.COUSLINF{
+							DirOrFilePath: con.i.GetConfigFiles()["bootconfig"].Path,
+							Action:        "uncomment",
+							DefaultData:   "dtoverlay=w1-gpio",
+							Regex:         actions.OneWireCommentRegex,
+							FunctionName:  "uncomment_dtoverlay_w1_gpio",
+							AssetFile:     "../assets/config.txt",
+						},
+					},
+				},
+			},
+		}
+	} else if action == "disable" {
+		plan = map[int](map[int]actions.Func){
+			1: {
+				1: {
+					Name:      actions.CommentOrUncommentInFile,
+					Reference: con.a.CommentOrUncommentInFile,
+					Argument: []interface{}{
+						actions.COUSLINF{
+							DirOrFilePath: con.i.GetConfigFiles()["bootconfig"].Path,
+							Action:        "comment",
+							DefaultData:   "#dtoverlay=w1-gpio",
+							Regex:         actions.OneWireCommentRegex,
+							FunctionName:  "comment_dtoverlay_w1_gpio",
+							AssetFile:     "../assets/config.txt",
+						},
+					},
+				},
+			},
+		}
+	} else {
+		return rpi.Action{}, echo.NewHTTPError(http.StatusInternalServerError, "bad action type: enable or disable one-wire failed")
+	}
+
+	return con.consys.ExecuteONW(plan)
+}
+
+// ExecuteRG enable or disable remote gpio
+func (con *Configure) ExecuteRG(action string) (rpi.Action, error) {
+	plan := map[int](map[int]actions.Func){
+		1: {
+			1: {
+				Name:      actions.DisableOrEnableRemoteGpio,
+				Reference: con.a.DisableOrEnableRemoteGpio,
+				Argument: []interface{}{
+					actions.EnableOrDisableConfig{
+						DirOrFilePath: constants.RGPIOSERVICE,
+						Action:        action,
+					},
+				},
+			},
+		},
+		2: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: "systemctl daemon-reload",
+					},
+				},
+			},
+		},
+		3: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: "if systemctl -q is-enabled pigpiod ; then systemctl restart pigpiod ; fi",
+					},
+				},
+			},
+		},
+	}
+
+	return con.consys.ExecuteRG(plan)
+}
+
+// ExecuteUPD update the system
+func (con *Configure) ExecuteUPD() (rpi.Action, error) {
+	plan := map[int](map[int]actions.Func){
+		1: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: "apt-get update -y",
+					},
+				},
+			},
+		},
+	}
+
+	return con.consys.ExecuteUPD(plan)
+}
+
+// ExecuteUPG upgrade the system
+func (con *Configure) ExecuteUPG() (rpi.Action, error) {
+	plan := map[int](map[int]actions.Func){
+		1: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: "apt-get upgrade -y",
+					},
+				},
+			},
+		},
+	}
+
+	return con.consys.ExecuteUPG(plan)
+}
+
+// ExecuteUPDG update & upgrade the system
+func (con *Configure) ExecuteUPDG() (rpi.Action, error) {
+	plan := map[int](map[int]actions.Func){
+		1: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: "apt-get update -y",
+					},
+				},
+			},
+		},
+		2: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: "apt-get upgrade -y",
+					},
+				},
+			},
+		},
+	}
+
+	return con.consys.ExecuteUPDG(plan)
+}
+
+// ExecuteWC changes the wifi country of the system
+func (con *Configure) ExecuteWC(iface string, country string) (rpi.Action, error) {
+	plan := map[int](map[int]actions.Func){
+		1: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: fmt.Sprintf("wpa_cli -i %v set country %v", iface, country),
+					},
+				},
+			},
+		},
+		2: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: fmt.Sprintf("wpa_cli -i %v save_config > /dev/null 2>&1", iface),
+					},
+				},
+			},
+		},
+		3: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: fmt.Sprintf("iw reg set %v 2> /dev/null", country),
+					},
+				},
+			},
+		},
+		4: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: con.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: "if hash rfkill 2> /dev/null ; then rfkill unblock wifi ; for filename in /var/lib/systemd/rfkill/*:wlan ; do echo 0 > $filename ; done ; fi",
+					},
+				},
+			},
+		},
+	}
+
+	return con.consys.ExecuteWC(plan)
 }

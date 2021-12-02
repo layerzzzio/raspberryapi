@@ -10,7 +10,21 @@ import (
 type RpInterface struct{}
 
 // List returns a list of RpInterface info
-func (int RpInterface) List(readLines []string, isStartXElf bool) (rpi.RpInterface, error) {
+func (int RpInterface) List(
+	readLines []string,
+	isStartXElf bool,
+	isSSH bool,
+	isSSHKeyGenerating bool,
+	isVNC bool,
+	isVNCInstalledCheck bool,
+	isSPI bool,
+	isI2C bool,
+	isOneWire bool,
+	isRemoteGpio bool,
+	wifiInterfaces []string,
+	isWpaSupCom map[string]bool,
+	zoneInfo map[string]string,
+) (rpi.RpInterface, error) {
 	isCamera := false
 	// I use a regex here to cover the below cases:
 	// start_x=0 (regular)
@@ -24,8 +38,24 @@ func (int RpInterface) List(readLines []string, isStartXElf bool) (rpi.RpInterfa
 		}
 	}
 
+	isWifiInterfaces := false
+	if len(wifiInterfaces) > 0 {
+		isWifiInterfaces = true
+	}
+
 	return rpi.RpInterface{
-		IsStartXElf: isStartXElf,
-		IsCamera:    isCamera,
+		IsStartXElf:        isStartXElf,
+		IsCamera:           isCamera,
+		IsSSH:              isSSH,
+		IsSSHKeyGenerating: isSSHKeyGenerating,
+		IsVNC:              isVNC,
+		IsVNCInstalled:     isVNCInstalledCheck,
+		IsSPI:              isSPI,
+		IsI2C:              isI2C,
+		IsOneWire:          isOneWire,
+		IsRemoteGpio:       isRemoteGpio,
+		IsWifiInterfaces:   isWifiInterfaces,
+		IsWpaSupCom:        isWpaSupCom,
+		ZoneInfo:           zoneInfo,
 	}, nil
 }

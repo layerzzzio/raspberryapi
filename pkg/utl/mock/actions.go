@@ -20,6 +20,9 @@ type Actions struct {
 	DeleteUserFn                   func(arg interface{}) (rpi.Exec, error)
 	CommentOrUncommentInFileFn     func(arg interface{}) (rpi.Exec, error)
 	SetVariableInConfigFileFn      func(arg interface{}) (rpi.Exec, error)
+	ExecuteBashCommandFn           func(arg interface{}) (rpi.Exec, error)
+	DisableOrEnableRemoteGpioFn    func(arg interface{}) (rpi.Exec, error)
+	ConfirmVPNAuthenticationFn     func(arg interface{}) (rpi.Exec, error)
 }
 
 // DeleteFile mock
@@ -85,4 +88,16 @@ func (a Actions) CommentOrUncommentInFile(arg interface{}) (rpi.Exec, error) {
 
 func (a Actions) SetVariableInConfigFile(arg interface{}) (rpi.Exec, error) {
 	return a.SetVariableInConfigFileFn(arg)
+}
+
+func (a Actions) ExecuteBashCommand(arg interface{}) (rpi.Exec, error) {
+	return a.ExecuteBashCommandFn(arg)
+}
+
+func (a Actions) DisableOrEnableRemoteGpio(arg interface{}) (rpi.Exec, error) {
+	return a.DisableOrEnableRemoteGpioFn(arg)
+}
+
+func (a Actions) ConfirmVPNAuthentication(arg interface{}) (rpi.Exec, error) {
+	return a.ConfirmVPNAuthenticationFn(arg)
 }

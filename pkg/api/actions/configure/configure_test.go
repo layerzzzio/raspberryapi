@@ -1047,8 +1047,1356 @@ func TestExecuteCA(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			s := configure.New(tc.consys, tc.actions, tc.infos)
-			overscan, err := s.ExecuteCA(tc.action)
-			assert.Equal(t, tc.wantedData, overscan)
+			camera, err := s.ExecuteCA(tc.action)
+			assert.Equal(t, tc.wantedData, camera)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
+func TestExecuteSSH(t *testing.T) {
+	cases := []struct {
+		name       string
+		action     string
+		plan       map[int](map[int]actions.Func)
+		actions    *mock.Actions
+		infos      *mock.Infos
+		consys     *mocksys.Action
+		wantedData rpi.Action
+		wantedErr  error
+	}{
+		{
+			name:   "error",
+			action: "enable-xxx",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      actions.ExecuteBashCommand,
+						Reference: actions.ExecuteBashCommand,
+						Argument: []interface{}{
+							actions.EBC{
+								Command: "command",
+							},
+						},
+					},
+				},
+			},
+			wantedData: rpi.Action{},
+			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "bad action type: enable or disable ssh failed"),
+		},
+		{
+			name:   "success",
+			action: "enable",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      actions.ExecuteBashCommand,
+						Reference: actions.ExecuteBashCommand,
+						Argument: []interface{}{
+							actions.EBC{Command: "command"},
+						},
+					},
+				},
+			},
+			actions: &mock.Actions{
+				ExecuteBashCommandFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       actions.SSH,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					}, nil
+				},
+			},
+			consys: &mocksys.Action{
+				ExecuteSSHFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.SSH,
+						NumberOfSteps: 1,
+						Progress: map[string]rpi.Exec{
+							"1": {
+								Name:       actions.ExecuteBashCommand,
+								StartTime:  1,
+								EndTime:    2,
+								ExitStatus: 0,
+								Stdout:     "path-enable",
+							},
+						},
+						ExitStatus: 0,
+						StartTime:  2,
+						EndTime:    uint64(time.Now().Unix()),
+					}, nil
+				},
+			},
+			wantedData: rpi.Action{
+				Name:          actions.SSH,
+				NumberOfSteps: 1,
+				Progress: map[string]rpi.Exec{
+					"1": {
+						Name:       actions.ExecuteBashCommand,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					},
+				},
+				ExitStatus: 0,
+				StartTime:  2,
+				EndTime:    uint64(time.Now().Unix()),
+			},
+			wantedErr: nil,
+		},
+		{
+			name:   "success",
+			action: "disable",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      actions.ExecuteBashCommand,
+						Reference: actions.ExecuteBashCommand,
+						Argument: []interface{}{
+							actions.EBC{
+								Command: "command",
+							},
+						},
+					},
+				},
+			},
+			actions: &mock.Actions{
+				ExecuteBashCommandFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       actions.SSH,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					}, nil
+				},
+			},
+			infos: &mock.Infos{
+				GetConfigFilesFn: func() map[string]rpi.ConfigFileDetails {
+					return map[string]rpi.ConfigFileDetails{
+						"bootconfig": {
+							Path: "/dummy/path",
+						},
+					}
+				},
+			},
+			consys: &mocksys.Action{
+				ExecuteSSHFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.SSH,
+						NumberOfSteps: 1,
+						Progress: map[string]rpi.Exec{
+							"1": {
+								Name:       actions.ExecuteBashCommand,
+								StartTime:  1,
+								EndTime:    2,
+								ExitStatus: 0,
+								Stdout:     "path-enable",
+							},
+						},
+						ExitStatus: 0,
+						StartTime:  2,
+						EndTime:    uint64(time.Now().Unix()),
+					}, nil
+				},
+			},
+			wantedData: rpi.Action{
+				Name:          actions.SSH,
+				NumberOfSteps: 1,
+				Progress: map[string]rpi.Exec{
+					"1": {
+						Name:       actions.ExecuteBashCommand,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					},
+				},
+				ExitStatus: 0,
+				StartTime:  2,
+				EndTime:    uint64(time.Now().Unix()),
+			},
+			wantedErr: nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := configure.New(tc.consys, tc.actions, tc.infos)
+			camera, err := s.ExecuteSSH(tc.action)
+			assert.Equal(t, tc.wantedData, camera)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
+func TestExecuteVNC(t *testing.T) {
+	cases := []struct {
+		name       string
+		action     string
+		plan       map[int](map[int]actions.Func)
+		actions    *mock.Actions
+		infos      *mock.Infos
+		consys     *mocksys.Action
+		wantedData rpi.Action
+		wantedErr  error
+	}{
+		{
+			name:   "error",
+			action: "enable-xxx",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      actions.ExecuteBashCommand,
+						Reference: actions.ExecuteBashCommand,
+						Argument: []interface{}{
+							actions.EBC{
+								Command: "command",
+							},
+						},
+					},
+				},
+			},
+			wantedData: rpi.Action{},
+			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "bad action type: enable or disable vnc failed"),
+		},
+		{
+			name:   "success",
+			action: "enable",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      actions.ExecuteBashCommand,
+						Reference: actions.ExecuteBashCommand,
+						Argument: []interface{}{
+							actions.EBC{Command: "command"},
+						},
+					},
+				},
+			},
+			actions: &mock.Actions{
+				ExecuteBashCommandFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       actions.VNC,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					}, nil
+				},
+			},
+			consys: &mocksys.Action{
+				ExecuteVNCFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.VNC,
+						NumberOfSteps: 1,
+						Progress: map[string]rpi.Exec{
+							"1": {
+								Name:       actions.ExecuteBashCommand,
+								StartTime:  1,
+								EndTime:    2,
+								ExitStatus: 0,
+								Stdout:     "path-enable",
+							},
+						},
+						ExitStatus: 0,
+						StartTime:  2,
+						EndTime:    uint64(time.Now().Unix()),
+					}, nil
+				},
+			},
+			wantedData: rpi.Action{
+				Name:          actions.VNC,
+				NumberOfSteps: 1,
+				Progress: map[string]rpi.Exec{
+					"1": {
+						Name:       actions.ExecuteBashCommand,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					},
+				},
+				ExitStatus: 0,
+				StartTime:  2,
+				EndTime:    uint64(time.Now().Unix()),
+			},
+			wantedErr: nil,
+		},
+		{
+			name:   "success",
+			action: "disable",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      actions.ExecuteBashCommand,
+						Reference: actions.ExecuteBashCommand,
+						Argument: []interface{}{
+							actions.EBC{
+								Command: "command",
+							},
+						},
+					},
+				},
+			},
+			actions: &mock.Actions{
+				ExecuteBashCommandFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       actions.VNC,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					}, nil
+				},
+			},
+			consys: &mocksys.Action{
+				ExecuteVNCFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.VNC,
+						NumberOfSteps: 1,
+						Progress: map[string]rpi.Exec{
+							"1": {
+								Name:       actions.ExecuteBashCommand,
+								StartTime:  1,
+								EndTime:    2,
+								ExitStatus: 0,
+								Stdout:     "path-enable",
+							},
+						},
+						ExitStatus: 0,
+						StartTime:  2,
+						EndTime:    uint64(time.Now().Unix()),
+					}, nil
+				},
+			},
+			wantedData: rpi.Action{
+				Name:          actions.VNC,
+				NumberOfSteps: 1,
+				Progress: map[string]rpi.Exec{
+					"1": {
+						Name:       actions.ExecuteBashCommand,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					},
+				},
+				ExitStatus: 0,
+				StartTime:  2,
+				EndTime:    uint64(time.Now().Unix()),
+			},
+			wantedErr: nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := configure.New(tc.consys, tc.actions, tc.infos)
+			vnc, err := s.ExecuteVNC(tc.action)
+			assert.Equal(t, tc.wantedData, vnc)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
+func TestExecuteSPI(t *testing.T) {
+	cases := []struct {
+		name       string
+		action     string
+		plan       map[int](map[int]actions.Func)
+		actions    *mock.Actions
+		infos      *mock.Infos
+		consys     *mocksys.Action
+		wantedData rpi.Action
+		wantedErr  error
+	}{
+		{
+			name:   "error",
+			action: "enable-xxx",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      actions.ExecuteBashCommand,
+						Reference: actions.ExecuteBashCommand,
+						Argument: []interface{}{
+							actions.EBC{
+								Command: "command",
+							},
+						},
+					},
+				},
+			},
+			wantedData: rpi.Action{},
+			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "bad action type: enable or disable spi failed"),
+		},
+		{
+			name:   "success",
+			action: "enable",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      actions.ExecuteBashCommand,
+						Reference: actions.ExecuteBashCommand,
+						Argument: []interface{}{
+							actions.EBC{Command: "command"},
+						},
+					},
+				},
+			},
+			actions: &mock.Actions{
+				DisableOrEnableConfigFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       actions.SPI,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					}, nil
+				},
+			},
+			infos: &mock.Infos{
+				GetConfigFilesFn: func() map[string]rpi.ConfigFileDetails {
+					return map[string]rpi.ConfigFileDetails{
+						"bootconfig": {
+							Path: "/dummy/path",
+						},
+					}
+				},
+			},
+			consys: &mocksys.Action{
+				ExecuteSPIFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.SPI,
+						NumberOfSteps: 1,
+						Progress: map[string]rpi.Exec{
+							"1": {
+								Name:       actions.ExecuteBashCommand,
+								StartTime:  1,
+								EndTime:    2,
+								ExitStatus: 0,
+								Stdout:     "path-enable",
+							},
+						},
+						ExitStatus: 0,
+						StartTime:  2,
+						EndTime:    uint64(time.Now().Unix()),
+					}, nil
+				},
+			},
+			wantedData: rpi.Action{
+				Name:          actions.SPI,
+				NumberOfSteps: 1,
+				Progress: map[string]rpi.Exec{
+					"1": {
+						Name:       actions.ExecuteBashCommand,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					},
+				},
+				ExitStatus: 0,
+				StartTime:  2,
+				EndTime:    uint64(time.Now().Unix()),
+			},
+			wantedErr: nil,
+		},
+		{
+			name:   "success",
+			action: "disable",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      actions.ExecuteBashCommand,
+						Reference: actions.ExecuteBashCommand,
+						Argument: []interface{}{
+							actions.EBC{
+								Command: "command",
+							},
+						},
+					},
+				},
+			},
+			actions: &mock.Actions{
+				DisableOrEnableConfigFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       actions.SPI,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					}, nil
+				},
+			},
+			infos: &mock.Infos{
+				GetConfigFilesFn: func() map[string]rpi.ConfigFileDetails {
+					return map[string]rpi.ConfigFileDetails{
+						"bootconfig": {
+							Path: "/dummy/path",
+						},
+					}
+				},
+			},
+			consys: &mocksys.Action{
+				ExecuteSPIFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.SPI,
+						NumberOfSteps: 1,
+						Progress: map[string]rpi.Exec{
+							"1": {
+								Name:       actions.ExecuteBashCommand,
+								StartTime:  1,
+								EndTime:    2,
+								ExitStatus: 0,
+								Stdout:     "path-enable",
+							},
+						},
+						ExitStatus: 0,
+						StartTime:  2,
+						EndTime:    uint64(time.Now().Unix()),
+					}, nil
+				},
+			},
+			wantedData: rpi.Action{
+				Name:          actions.SPI,
+				NumberOfSteps: 1,
+				Progress: map[string]rpi.Exec{
+					"1": {
+						Name:       actions.ExecuteBashCommand,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					},
+				},
+				ExitStatus: 0,
+				StartTime:  2,
+				EndTime:    uint64(time.Now().Unix()),
+			},
+			wantedErr: nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := configure.New(tc.consys, tc.actions, tc.infos)
+			camera, err := s.ExecuteSPI(tc.action)
+			assert.Equal(t, tc.wantedData, camera)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
+func TestExecuteI2C(t *testing.T) {
+	cases := []struct {
+		name       string
+		action     string
+		plan       map[int](map[int]actions.Func)
+		actions    *mock.Actions
+		infos      *mock.Infos
+		consys     *mocksys.Action
+		wantedData rpi.Action
+		wantedErr  error
+	}{
+		{
+			name:   "error",
+			action: "enable-xxx",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      actions.ExecuteBashCommand,
+						Reference: actions.ExecuteBashCommand,
+						Argument: []interface{}{
+							actions.EBC{
+								Command: "command",
+							},
+						},
+					},
+				},
+			},
+			wantedData: rpi.Action{},
+			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "bad action type: enable or disable i2c failed"),
+		},
+		{
+			name:   "success",
+			action: "enable",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      actions.ExecuteBashCommand,
+						Reference: actions.ExecuteBashCommand,
+						Argument: []interface{}{
+							actions.EBC{Command: "command"},
+						},
+					},
+				},
+			},
+			actions: &mock.Actions{
+				DisableOrEnableConfigFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       actions.SPI,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					}, nil
+				},
+			},
+			infos: &mock.Infos{
+				GetConfigFilesFn: func() map[string]rpi.ConfigFileDetails {
+					return map[string]rpi.ConfigFileDetails{
+						"bootconfig": {
+							Path: "/dummy/path",
+						},
+					}
+				},
+			},
+			consys: &mocksys.Action{
+				ExecuteI2CFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.I2C,
+						NumberOfSteps: 1,
+						Progress: map[string]rpi.Exec{
+							"1": {
+								Name:       actions.ExecuteBashCommand,
+								StartTime:  1,
+								EndTime:    2,
+								ExitStatus: 0,
+								Stdout:     "path-enable",
+							},
+						},
+						ExitStatus: 0,
+						StartTime:  2,
+						EndTime:    uint64(time.Now().Unix()),
+					}, nil
+				},
+			},
+			wantedData: rpi.Action{
+				Name:          actions.I2C,
+				NumberOfSteps: 1,
+				Progress: map[string]rpi.Exec{
+					"1": {
+						Name:       actions.ExecuteBashCommand,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					},
+				},
+				ExitStatus: 0,
+				StartTime:  2,
+				EndTime:    uint64(time.Now().Unix()),
+			},
+			wantedErr: nil,
+		},
+		{
+			name:   "success",
+			action: "disable",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      actions.ExecuteBashCommand,
+						Reference: actions.ExecuteBashCommand,
+						Argument: []interface{}{
+							actions.EBC{
+								Command: "command",
+							},
+						},
+					},
+				},
+			},
+			actions: &mock.Actions{
+				DisableOrEnableConfigFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       actions.SPI,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					}, nil
+				},
+			},
+			infos: &mock.Infos{
+				GetConfigFilesFn: func() map[string]rpi.ConfigFileDetails {
+					return map[string]rpi.ConfigFileDetails{
+						"bootconfig": {
+							Path: "/dummy/path",
+						},
+					}
+				},
+			},
+			consys: &mocksys.Action{
+				ExecuteI2CFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.I2C,
+						NumberOfSteps: 1,
+						Progress: map[string]rpi.Exec{
+							"1": {
+								Name:       actions.ExecuteBashCommand,
+								StartTime:  1,
+								EndTime:    2,
+								ExitStatus: 0,
+								Stdout:     "path-enable",
+							},
+						},
+						ExitStatus: 0,
+						StartTime:  2,
+						EndTime:    uint64(time.Now().Unix()),
+					}, nil
+				},
+			},
+			wantedData: rpi.Action{
+				Name:          actions.I2C,
+				NumberOfSteps: 1,
+				Progress: map[string]rpi.Exec{
+					"1": {
+						Name:       actions.ExecuteBashCommand,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					},
+				},
+				ExitStatus: 0,
+				StartTime:  2,
+				EndTime:    uint64(time.Now().Unix()),
+			},
+			wantedErr: nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := configure.New(tc.consys, tc.actions, tc.infos)
+			camera, err := s.ExecuteI2C(tc.action)
+			assert.Equal(t, tc.wantedData, camera)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
+func TestExecuteONW(t *testing.T) {
+	cases := []struct {
+		name       string
+		action     string
+		plan       map[int](map[int]actions.Func)
+		actions    *mock.Actions
+		infos      *mock.Infos
+		consys     *mocksys.Action
+		wantedData rpi.Action
+		wantedErr  error
+	}{
+		{
+			name:   "error",
+			action: "enable-xxx",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      actions.ExecuteBashCommand,
+						Reference: actions.ExecuteBashCommand,
+						Argument: []interface{}{
+							actions.EBC{
+								Command: "command",
+							},
+						},
+					},
+				},
+			},
+			wantedData: rpi.Action{},
+			wantedErr:  echo.NewHTTPError(http.StatusInternalServerError, "bad action type: enable or disable one-wire failed"),
+		},
+		{
+			name:   "success",
+			action: "enable",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      actions.ExecuteBashCommand,
+						Reference: actions.ExecuteBashCommand,
+						Argument: []interface{}{
+							actions.EBC{Command: "command"},
+						},
+					},
+				},
+			},
+			actions: &mock.Actions{
+				DisableOrEnableConfigFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       actions.OneWire,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					}, nil
+				},
+			},
+			infos: &mock.Infos{
+				GetConfigFilesFn: func() map[string]rpi.ConfigFileDetails {
+					return map[string]rpi.ConfigFileDetails{
+						"bootconfig": {
+							Path: "/dummy/path",
+						},
+					}
+				},
+			},
+			consys: &mocksys.Action{
+				ExecuteONWFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.OneWire,
+						NumberOfSteps: 1,
+						Progress: map[string]rpi.Exec{
+							"1": {
+								Name:       actions.ExecuteBashCommand,
+								StartTime:  1,
+								EndTime:    2,
+								ExitStatus: 0,
+								Stdout:     "path-enable",
+							},
+						},
+						ExitStatus: 0,
+						StartTime:  2,
+						EndTime:    uint64(time.Now().Unix()),
+					}, nil
+				},
+			},
+			wantedData: rpi.Action{
+				Name:          actions.OneWire,
+				NumberOfSteps: 1,
+				Progress: map[string]rpi.Exec{
+					"1": {
+						Name:       actions.ExecuteBashCommand,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					},
+				},
+				ExitStatus: 0,
+				StartTime:  2,
+				EndTime:    uint64(time.Now().Unix()),
+			},
+			wantedErr: nil,
+		},
+		{
+			name:   "success",
+			action: "disable",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      actions.ExecuteBashCommand,
+						Reference: actions.ExecuteBashCommand,
+						Argument: []interface{}{
+							actions.EBC{
+								Command: "command",
+							},
+						},
+					},
+				},
+			},
+			actions: &mock.Actions{
+				DisableOrEnableConfigFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       actions.OneWire,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					}, nil
+				},
+			},
+			infos: &mock.Infos{
+				GetConfigFilesFn: func() map[string]rpi.ConfigFileDetails {
+					return map[string]rpi.ConfigFileDetails{
+						"bootconfig": {
+							Path: "/dummy/path",
+						},
+					}
+				},
+			},
+			consys: &mocksys.Action{
+				ExecuteONWFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.OneWire,
+						NumberOfSteps: 1,
+						Progress: map[string]rpi.Exec{
+							"1": {
+								Name:       actions.ExecuteBashCommand,
+								StartTime:  1,
+								EndTime:    2,
+								ExitStatus: 0,
+								Stdout:     "path-enable",
+							},
+						},
+						ExitStatus: 0,
+						StartTime:  2,
+						EndTime:    uint64(time.Now().Unix()),
+					}, nil
+				},
+			},
+			wantedData: rpi.Action{
+				Name:          actions.OneWire,
+				NumberOfSteps: 1,
+				Progress: map[string]rpi.Exec{
+					"1": {
+						Name:       actions.ExecuteBashCommand,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					},
+				},
+				ExitStatus: 0,
+				StartTime:  2,
+				EndTime:    uint64(time.Now().Unix()),
+			},
+			wantedErr: nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := configure.New(tc.consys, tc.actions, tc.infos)
+			camera, err := s.ExecuteONW(tc.action)
+			assert.Equal(t, tc.wantedData, camera)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
+func TestExecuteRG(t *testing.T) {
+	cases := []struct {
+		name       string
+		action     string
+		plan       map[int](map[int]actions.Func)
+		actions    *mock.Actions
+		infos      *mock.Infos
+		consys     *mocksys.Action
+		wantedData rpi.Action
+		wantedErr  error
+	}{
+		{
+			name:   "success",
+			action: "enable",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      actions.ExecuteBashCommand,
+						Reference: actions.ExecuteBashCommand,
+						Argument: []interface{}{
+							actions.EBC{Command: "command"},
+						},
+					},
+				},
+			},
+			actions: &mock.Actions{
+				DisableOrEnableRemoteGpioFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       actions.RGPIO,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					}, nil
+				},
+			},
+			consys: &mocksys.Action{
+				ExecuteRGFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.RGPIO,
+						NumberOfSteps: 1,
+						Progress: map[string]rpi.Exec{
+							"1": {
+								Name:       actions.ExecuteBashCommand,
+								StartTime:  1,
+								EndTime:    2,
+								ExitStatus: 0,
+								Stdout:     "path-enable",
+							},
+						},
+						ExitStatus: 0,
+						StartTime:  2,
+						EndTime:    uint64(time.Now().Unix()),
+					}, nil
+				},
+			},
+			wantedData: rpi.Action{
+				Name:          actions.RGPIO,
+				NumberOfSteps: 1,
+				Progress: map[string]rpi.Exec{
+					"1": {
+						Name:       actions.ExecuteBashCommand,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					},
+				},
+				ExitStatus: 0,
+				StartTime:  2,
+				EndTime:    uint64(time.Now().Unix()),
+			},
+			wantedErr: nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := configure.New(tc.consys, tc.actions, tc.infos)
+			camera, err := s.ExecuteRG(tc.action)
+			assert.Equal(t, tc.wantedData, camera)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
+func TestExecuteUPD(t *testing.T) {
+	cases := []struct {
+		name       string
+		plan       map[int](map[int]actions.Func)
+		actions    *mock.Actions
+		infos      *mock.Infos
+		consys     *mocksys.Action
+		wantedData rpi.Action
+		wantedErr  error
+	}{
+		{
+			name: "success",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      actions.ExecuteBashCommand,
+						Reference: actions.ExecuteBashCommand,
+						Argument: []interface{}{
+							actions.EBC{Command: "command"},
+						},
+					},
+				},
+			},
+			actions: &mock.Actions{
+				ExecuteBashCommandFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       actions.Update,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					}, nil
+				},
+			},
+			consys: &mocksys.Action{
+				ExecuteUPDFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.Update,
+						NumberOfSteps: 1,
+						Progress: map[string]rpi.Exec{
+							"1": {
+								Name:       actions.ExecuteBashCommand,
+								StartTime:  1,
+								EndTime:    2,
+								ExitStatus: 0,
+								Stdout:     "path-enable",
+							},
+						},
+						ExitStatus: 0,
+						StartTime:  2,
+						EndTime:    uint64(time.Now().Unix()),
+					}, nil
+				},
+			},
+			wantedData: rpi.Action{
+				Name:          actions.Update,
+				NumberOfSteps: 1,
+				Progress: map[string]rpi.Exec{
+					"1": {
+						Name:       actions.ExecuteBashCommand,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					},
+				},
+				ExitStatus: 0,
+				StartTime:  2,
+				EndTime:    uint64(time.Now().Unix()),
+			},
+			wantedErr: nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := configure.New(tc.consys, tc.actions, tc.infos)
+			camera, err := s.ExecuteUPD()
+			assert.Equal(t, tc.wantedData, camera)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
+func TestExecuteUPG(t *testing.T) {
+	cases := []struct {
+		name       string
+		plan       map[int](map[int]actions.Func)
+		actions    *mock.Actions
+		infos      *mock.Infos
+		consys     *mocksys.Action
+		wantedData rpi.Action
+		wantedErr  error
+	}{
+		{
+			name: "success",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      actions.ExecuteBashCommand,
+						Reference: actions.ExecuteBashCommand,
+						Argument: []interface{}{
+							actions.EBC{Command: "command"},
+						},
+					},
+				},
+			},
+			actions: &mock.Actions{
+				ExecuteBashCommandFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       actions.Upgrade,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					}, nil
+				},
+			},
+			consys: &mocksys.Action{
+				ExecuteUPGFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.Upgrade,
+						NumberOfSteps: 1,
+						Progress: map[string]rpi.Exec{
+							"1": {
+								Name:       actions.ExecuteBashCommand,
+								StartTime:  1,
+								EndTime:    2,
+								ExitStatus: 0,
+								Stdout:     "path-enable",
+							},
+						},
+						ExitStatus: 0,
+						StartTime:  2,
+						EndTime:    uint64(time.Now().Unix()),
+					}, nil
+				},
+			},
+			wantedData: rpi.Action{
+				Name:          actions.Upgrade,
+				NumberOfSteps: 1,
+				Progress: map[string]rpi.Exec{
+					"1": {
+						Name:       actions.ExecuteBashCommand,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					},
+				},
+				ExitStatus: 0,
+				StartTime:  2,
+				EndTime:    uint64(time.Now().Unix()),
+			},
+			wantedErr: nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := configure.New(tc.consys, tc.actions, tc.infos)
+			camera, err := s.ExecuteUPG()
+			assert.Equal(t, tc.wantedData, camera)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
+func TestExecuteUPDG(t *testing.T) {
+	cases := []struct {
+		name       string
+		plan       map[int](map[int]actions.Func)
+		actions    *mock.Actions
+		infos      *mock.Infos
+		consys     *mocksys.Action
+		wantedData rpi.Action
+		wantedErr  error
+	}{
+		{
+			name: "success",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      actions.ExecuteBashCommand,
+						Reference: actions.ExecuteBashCommand,
+						Argument: []interface{}{
+							actions.EBC{Command: "command"},
+						},
+					},
+				},
+			},
+			actions: &mock.Actions{
+				ExecuteBashCommandFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       actions.UpDateGrade,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					}, nil
+				},
+			},
+			consys: &mocksys.Action{
+				ExecuteUPDGFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.UpDateGrade,
+						NumberOfSteps: 1,
+						Progress: map[string]rpi.Exec{
+							"1": {
+								Name:       actions.ExecuteBashCommand,
+								StartTime:  1,
+								EndTime:    2,
+								ExitStatus: 0,
+								Stdout:     "path-enable",
+							},
+						},
+						ExitStatus: 0,
+						StartTime:  2,
+						EndTime:    uint64(time.Now().Unix()),
+					}, nil
+				},
+			},
+			wantedData: rpi.Action{
+				Name:          actions.UpDateGrade,
+				NumberOfSteps: 1,
+				Progress: map[string]rpi.Exec{
+					"1": {
+						Name:       actions.ExecuteBashCommand,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					},
+				},
+				ExitStatus: 0,
+				StartTime:  2,
+				EndTime:    uint64(time.Now().Unix()),
+			},
+			wantedErr: nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := configure.New(tc.consys, tc.actions, tc.infos)
+			camera, err := s.ExecuteUPDG()
+			assert.Equal(t, tc.wantedData, camera)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
+
+func TestExecuteWC(t *testing.T) {
+	cases := []struct {
+		name       string
+		iface      string
+		country    string
+		plan       map[int](map[int]actions.Func)
+		actions    *mock.Actions
+		infos      *mock.Infos
+		consys     *mocksys.Action
+		wantedData rpi.Action
+		wantedErr  error
+	}{
+		{
+			name:    "success",
+			iface:   "wlan0",
+			country: "france",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      actions.ExecuteBashCommand,
+						Reference: actions.ExecuteBashCommand,
+						Argument: []interface{}{
+							actions.EBC{Command: "command"},
+						},
+					},
+				},
+			},
+			infos: &mock.Infos{
+				GetConfigFilesFn: func() map[string]rpi.ConfigFileDetails {
+					return map[string]rpi.ConfigFileDetails{
+						"iso3166": {
+							Path: "/dummy/path",
+						},
+					}
+				},
+			},
+			actions: &mock.Actions{
+				ExecuteBashCommandFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       actions.ExecuteBashCommand,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "path-enable",
+					}, nil
+				},
+			},
+			consys: &mocksys.Action{
+				ExecuteWCFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.WifiCountry,
+						NumberOfSteps: 1,
+						Progress: map[string]rpi.Exec{
+							"1": {
+								Name:       actions.ExecuteBashCommand,
+								StartTime:  1,
+								EndTime:    2,
+								ExitStatus: 0,
+								Stdout:     "password-username",
+							},
+						},
+						ExitStatus: 0,
+						StartTime:  2,
+						EndTime:    uint64(time.Now().Unix()),
+					}, nil
+				},
+			},
+			wantedData: rpi.Action{
+				Name:          actions.WifiCountry,
+				NumberOfSteps: 1,
+				Progress: map[string]rpi.Exec{
+					"1": {
+						Name:       actions.ExecuteBashCommand,
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "password-username",
+					},
+				},
+				ExitStatus: 0,
+				StartTime:  2,
+				EndTime:    uint64(time.Now().Unix()),
+			},
+			wantedErr: nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := configure.New(tc.consys, tc.actions, tc.infos)
+			changePassword, err := s.ExecuteWC(tc.iface, tc.country)
+			assert.Equal(t, tc.wantedData, changePassword)
 			assert.Equal(t, tc.wantedErr, err)
 		})
 	}
