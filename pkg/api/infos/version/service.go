@@ -6,7 +6,8 @@ import (
 
 // Service represents all Version application services.
 type Service interface {
-	List() (rpi.Version, error)
+	ListAll() (rpi.Version, error)
+	ListAllApis() (rpi.Version, error)
 }
 
 // Version represents an Version application service.
@@ -17,12 +18,13 @@ type Version struct {
 
 // VSYS represents a Version repository service.
 type VSYS interface {
-	List(string) (rpi.Version, error)
+	ListAll(string, string) (rpi.Version, error)
+	ListAllApis(string, string) (rpi.Version, error)
 }
 
 // Infos represents the infos interface
 type Infos interface {
-	ApiVersion(string) string
+	ApiVersion(string, string) string
 }
 
 // New creates a Version application service instance.

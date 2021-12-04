@@ -2,5 +2,6 @@ package rpi
 
 // Version represents the current API version.
 type Version struct {
-	ApiVersion string `json:"apiVersion"`
+	RaspiBuddyVersion       string `json:"raspibuddyVersion"`
+	RaspiBuddyDeployVersion string `json:"raspibuddyDeployVersion"`
 }
