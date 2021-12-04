@@ -793,10 +793,14 @@ func (s Service) StatusVPNWithOpenVPN(
 // Example:
 // apiPath := "/usr/bin/rpi_0.1.0_linux_armv5"
 // method returns 0.1.0
-func (s Service) ApiVersion(directoryPath string) string {
+// ApiVersion extracts the version of the current (latest) API
+// Example:
+// apiPath := "/usr/bin/rpi_0.1.0_linux_armv5"
+// method returns 0.1.0
+func (s Service) ApiVersion(directoryPath string, apiPrefix string) string {
 	var apiPath string
 	// regex
-	r1, _ := regexp.Compile(fmt.Sprintf("raspibuddy-(%v)", ApiVersionRegex))
+	r1, _ := regexp.Compile(fmt.Sprintf("%v-(%v)", apiPrefix, ApiVersionRegex))
 	r2, _ := regexp.Compile(ApiVersionRegex)
 
 	// read files that starts with raspibuddy

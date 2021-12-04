@@ -1402,36 +1402,49 @@ func TestApiVersion(t *testing.T) {
 	cases := []struct {
 		name          string
 		directoryPath string
+		apiPrefix     string
 		apiName       string
 		wantedData    string
 	}{
 		{
-			name:          "success: regular version",
+			name:          "success: raspibuddy",
 			directoryPath: ".",
+			apiPrefix:     "raspibuddy",
 			apiName:       "raspibuddy-0.11.10000_linux_armv5",
+			wantedData:    "0.11.10000",
+		},
+		{
+			name:          "success: raspibuddy_deploy",
+			directoryPath: ".",
+			apiPrefix:     "raspibuddy_deploy",
+			apiName:       "raspibuddy_deploy-0.11.10000_linux_armv5",
 			wantedData:    "0.11.10000",
 		},
 		{
 			name:          "success: no version",
 			directoryPath: ".",
+			apiPrefix:     "raspibuddy",
 			apiName:       "raspibuddy_linux_armv5",
 			wantedData:    "",
 		},
 		{
 			name:          "success: empty version",
 			directoryPath: ".",
+			apiPrefix:     "raspibuddy",
 			apiName:       "raspibuddy-.._linux_armv5",
 			wantedData:    "",
 		},
 		{
 			name:          "success: partial version (major)",
 			directoryPath: ".",
+			apiPrefix:     "raspibuddy",
 			apiName:       "raspibuddy-1.._linux_armv5",
 			wantedData:    "",
 		},
 		{
 			name:          "success: partial version (major & minor)",
 			directoryPath: ".",
+			apiPrefix:     "raspibuddy",
 			apiName:       "raspibuddy-1.2._linux_armv5",
 			wantedData:    "",
 		},
@@ -1446,7 +1459,7 @@ func TestApiVersion(t *testing.T) {
 				log.Fatal("could not create file")
 			}
 
-			version := i.ApiVersion(tc.directoryPath)
+			version := i.ApiVersion(tc.directoryPath, tc.apiPrefix)
 			assert.Equal(t, tc.wantedData, version)
 
 			os.Remove(tc.apiName)

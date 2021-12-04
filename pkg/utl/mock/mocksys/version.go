@@ -6,16 +6,28 @@ import (
 
 // Version mock
 type Version struct {
-	ListFn func(
-		string,
-	) (rpi.Version, error)
+	ListAllFn     func(string, string) (rpi.Version, error)
+	ListAllApisFn func(string, string) (rpi.Version, error)
 }
 
-// List mock
-func (v Version) List(
-	version string,
+// ListAll mock
+func (v Version) ListAll(
+	raspibuddyVersion string,
+	raspibuddyDeployVersion string,
 ) (rpi.Version, error) {
-	return v.ListFn(
-		version,
+	return v.ListAllFn(
+		raspibuddyVersion,
+		raspibuddyDeployVersion,
+	)
+}
+
+// ListAll mock
+func (v Version) ListAllApis(
+	raspibuddyVersion string,
+	raspibuddyDeployVersion string,
+) (rpi.Version, error) {
+	return v.ListAllApisFn(
+		raspibuddyVersion,
+		raspibuddyDeployVersion,
 	)
 }
