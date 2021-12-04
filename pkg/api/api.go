@@ -25,6 +25,12 @@ import (
 	vel "github.com/raspibuddy/rpi/pkg/api/admin/version/logging"
 	ves "github.com/raspibuddy/rpi/pkg/api/admin/version/platform/sys"
 	vet "github.com/raspibuddy/rpi/pkg/api/admin/version/transport"
+
+	"github.com/raspibuddy/rpi/pkg/api/admin/deployment"
+	del "github.com/raspibuddy/rpi/pkg/api/admin/deployment/logging"
+	des "github.com/raspibuddy/rpi/pkg/api/admin/deployment/platform/sys"
+	det "github.com/raspibuddy/rpi/pkg/api/admin/deployment/transport"
+
 	"github.com/raspibuddy/rpi/pkg/api/infos/appconfig"
 	iacl "github.com/raspibuddy/rpi/pkg/api/infos/appconfig/logging"
 	iacs "github.com/raspibuddy/rpi/pkg/api/infos/appconfig/platform/sys"
@@ -145,6 +151,7 @@ func Start(cfg *config.Configuration) error {
 
 	// admin
 	vet.NewHTTP(vel.New(version.New(ves.Version{}, i), log).Service, v1)
+	det.NewHTTP(del.New(deployment.New(des.Deployment{}, a), log).Service, v1)
 
 	server.Start(e, &server.Config{
 		Port:                cfg.Server.Port,

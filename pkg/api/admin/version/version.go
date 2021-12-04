@@ -7,5 +7,5 @@ import (
 // List populates and returns an array of Version model.
 func (v *Version) List() (rpi.Version, error) {
 	apiVersion := v.i.ApiVersion("/usr/bin")
-	return v.vsys.List(apiVersion)
+	return v.vsys.List(apiVersion + ".XXX")
 }

@@ -7,7 +7,7 @@ import (
 
 // Service represents all Deployment application services.
 type Service interface {
-	ExecuteDP(string) (rpi.Action, error)
+	ExecuteDPTOOL(string, string) (rpi.Action, error)
 }
 
 // Deployment represents an Deployment application service.
@@ -18,7 +18,7 @@ type Deployment struct {
 
 // DSYS represents a Deployment repository service.
 type DSYS interface {
-	ExecuteDP(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteDPTOOL(map[int](map[int]actions.Func)) (rpi.Action, error)
 }
 
 // Actions represents the actions interface

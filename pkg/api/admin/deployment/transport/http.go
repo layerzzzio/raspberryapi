@@ -18,17 +18,30 @@ type HTTP struct {
 func NewHTTP(svc deployment.Service, r *echo.Group) {
 	h := HTTP{svc}
 	cr := r.Group("/deploy")
-	cr.GET("/:version", h.deployVersion)
+	cr.POST("/startstop", h.deployVersion)
+	// cr.GET("/purge", h.purge)
+
 }
 
 func (h *HTTP) deployVersion(ctx echo.Context) error {
-	version := ctx.Param("version")
-	matched, _ := regexp.MatchString(infos.ApiVersionRegex, version)
-	if !matched {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request due to an invalid process version format")
+	// URL
+	url := ctx.QueryParam("url")
+	if url == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - url is null")
 	}
 
-	result, err := h.svc.ExecuteDP(version)
+	// VERSION
+	version := ctx.QueryParam("version")
+	if version == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "Not found - version is null")
+	}
+
+	matched, _ := regexp.MatchString(infos.ApiVersionRegex, version)
+	if !matched {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request due to an invalid version format")
+	}
+
+	result, err := h.svc.ExecuteDPTOOL(url, version)
 	if err != nil {
 		return err
 	}

@@ -10,8 +10,8 @@ import (
 // Deployment represents a Deployment entity on the current system.
 type Deployment struct{}
 
-// ExecuteDP deploys an API version
-func (d Deployment) ExecuteDP(plan map[int](map[int]actions.Func)) (rpi.Action, error) {
+// ExecuteDPTOOL deploys an API version
+func (d Deployment) ExecuteDPTOOL(plan map[int](map[int]actions.Func)) (rpi.Action, error) {
 	actionStartTime := uint64(time.Now().Unix())
 	progressInit := actions.FlattenPlan(plan)
 	progress, exitStatus := actions.ExecutePlan(plan, progressInit)

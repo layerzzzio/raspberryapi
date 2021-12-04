@@ -25,12 +25,12 @@ type LogService struct {
 const name = "deployment"
 
 // List is the logging function attached to the List service and responsible for logging it out.
-func (ls *LogService) ExecuteDP(ctx echo.Context, version string) (resp rpi.Action, err error) {
+func (ls *LogService) ExecuteDPTOOL(ctx echo.Context, url string, version string) (resp rpi.Action, err error) {
 	defer func(begin time.Time) {
 		ls.logger.Log(
 			ctx,
 			name,
-			"request: deploying api version "+version,
+			"request: deploying api version "+url+"/"+version,
 			err,
 			map[string]interface{}{
 				"resp": resp,
@@ -38,5 +38,5 @@ func (ls *LogService) ExecuteDP(ctx echo.Context, version string) (resp rpi.Acti
 			},
 		)
 	}(time.Now())
-	return ls.Service.ExecuteDP(version)
+	return ls.Service.ExecuteDPTOOL(url, version)
 }

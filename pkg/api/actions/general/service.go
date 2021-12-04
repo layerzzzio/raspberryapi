@@ -8,6 +8,7 @@ import (
 // Service represents all General application services.
 type Service interface {
 	ExecuteRBS(string) (rpi.Action, error)
+	ExecuteSASO(string, string) (rpi.Action, error)
 }
 
 // General represents a General application service.
@@ -19,6 +20,7 @@ type General struct {
 // GENSYS represents a General repository service.
 type GENSYS interface {
 	ExecuteRBS(map[int](map[int]actions.Func)) (rpi.Action, error)
+	ExecuteSASO(map[int](map[int]actions.Func)) (rpi.Action, error)
 }
 
 // Actions represents the actions interface

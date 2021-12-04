@@ -7,10 +7,12 @@ import (
 	"github.com/raspibuddy/rpi/pkg/utl/actions"
 )
 
-// ExecuteDP deploys a specific version on the device.
-func (d *Deployment) ExecuteDP(version string) (rpi.Action, error) {
-	url := "https://api.github.com/repos/raspibuddy/rpi-release/releases/latest"
-	
+// ExecuteDPTOOL deploys a specific version on the device.
+func (d *Deployment) ExecuteDPTOOL(url string, version string) (rpi.Action, error) {
+	prefix := "raspibuddy_deploy-"
+	releaseName := prefix + version
+	releaseDir := "/usr/bin"
+
 	plan := map[int](map[int]actions.Func){
 		1: {
 			1: {
@@ -19,14 +21,64 @@ func (d *Deployment) ExecuteDP(version string) (rpi.Action, error) {
 				Argument: []interface{}{
 					actions.EBC{
 						Command: fmt.Sprintf(
-							"curl -s %v | grep \"%v\" | cut -d : -f 2,3 | tr -d \" | wget -qi -",
+							"rm %v/%v*",
+							releaseDir,
+							prefix,
+						),
+					},
+				},
+			},
+		},
+		2: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: d.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: fmt.Sprintf(
+							"wget -nv %v/%v -O %v/%v",
 							url,
-							version,
+							releaseName,
+							releaseDir,
+							releaseName,
+						),
+					},
+				},
+			},
+		},
+		3: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: d.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: fmt.Sprintf(
+							"chmod 755 %v/%v",
+							releaseDir,
+							releaseName,
+						),
+					},
+				},
+			},
+		},
+		4: {
+			1: {
+				Name:      actions.ExecuteBashCommand,
+				Reference: d.a.ExecuteBashCommand,
+				Argument: []interface{}{
+					actions.EBC{
+						Command: fmt.Sprintf(
+							"rm %v/raspibuddy_deploy ; ln -s %v/%v %v/raspibuddy_deploy",
+							releaseDir,
+							releaseDir,
+							releaseName,
+							releaseDir,
 						),
 					},
 				},
 			},
 		},
 	}
-	return d.dsys.ExecuteDP(plan)
+
+	return d.dsys.ExecuteDPTOOL(plan)
 }

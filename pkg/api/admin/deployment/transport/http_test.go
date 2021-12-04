@@ -7,47 +7,65 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/raspibuddy/rpi"
-	"github.com/raspibuddy/rpi/pkg/api/admin/version"
-	"github.com/raspibuddy/rpi/pkg/api/admin/version/transport"
-	"github.com/raspibuddy/rpi/pkg/utl/infos"
+	"github.com/raspibuddy/rpi/pkg/api/admin/deployment"
+	"github.com/raspibuddy/rpi/pkg/api/admin/deployment/transport"
+	"github.com/raspibuddy/rpi/pkg/utl/actions"
 	"github.com/raspibuddy/rpi/pkg/utl/mock/mocksys"
 	"github.com/raspibuddy/rpi/pkg/utl/server"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestList(t *testing.T) {
+func TestExecuteDPTOOL(t *testing.T) {
 	var response rpi.Version
 
 	cases := []struct {
 		name         string
-		vsys         *mocksys.Version
+		req          string
+		dsys         *mocksys.Action
 		wantedStatus int
-		wantedResp   rpi.Version
+		wantedResp   rpi.Action
 	}{
 		{
-			name:         "error: invalid request response",
-			wantedStatus: http.StatusInternalServerError,
+			name:         "error: no url, no version",
+			wantedStatus: http.StatusNotFound,
 		},
 		{
-			name: "error: List result is nil",
-			vsys: &mocksys.Version{
-				ListFn: func(string) (rpi.Version, error) {
-					return rpi.Version{}, errors.New("test error")
+			name:         "error: url but no version",
+			req:          "?url=https//url.com",
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name:         "error: url but badly formatted version",
+			req:          "?url=https//url.com&version=X.X.X",
+			wantedStatus: http.StatusBadRequest,
+		},
+		{
+			name: "error: ExecuteDF result is nil",
+			req:  "?url=https//url.com&version=1.1.1",
+			dsys: &mocksys.Action{
+				ExecuteDPTOOLFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{}, errors.New("test error")
 				},
 			},
 			wantedStatus: http.StatusInternalServerError,
 		},
 		{
 			name: "success",
-			vsys: &mocksys.Version{
-				ListFn: func(string) (rpi.Version, error) {
-					return rpi.Version{ApiVersion: "1.0.0"}, nil
-				},
-			},
+			req:  "?url=https//url.com&version=1.1.1",
+			dsys: &mocksys.Action{
+				ExecuteDPTOOLFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          actions.DeployVersion,
+						NumberOfSteps: 1,
+						StartTime:     uint64(time.Now().Unix()),
+						EndTime:       uint64(time.Now().Unix()),
+						ExitStatus:    0,
+					}, nil
+				}},
 			wantedStatus: http.StatusOK,
-			wantedResp:   rpi.Version{ApiVersion: "1.0.0"},
 		},
 	}
 
@@ -55,13 +73,13 @@ func TestList(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			r := server.New()
 			rg := r.Group("")
-			i := infos.New()
-			s := version.New(tc.vsys, i)
+			a := actions.New()
+			s := deployment.New(tc.dsys, a)
 			transport.NewHTTP(s, rg)
 			ts := httptest.NewServer(r)
 
 			defer ts.Close()
-			path := ts.URL + "/version"
+			path := ts.URL + "/deploy/version" + tc.req
 			res, err := http.Get(path)
 			if err != nil {
 				t.Fatal(err)
@@ -74,7 +92,7 @@ func TestList(t *testing.T) {
 				panic(err)
 			}
 
-			if tc.wantedResp.ApiVersion != "" {
+			if tc.wantedResp.Name != "" {
 				if err := json.Unmarshal(body, &response); err != nil {
 					t.Fatal(err)
 				}

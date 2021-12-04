@@ -98,6 +98,9 @@ const (
 	// RebootShutdown is the name of the reboot or shutdown exec
 	RebootShutdown = "RebootShutdown"
 
+	// StartStop is the name of the start/stop exec
+	StartStop = "StartStop"
+
 	// KillProcess is the name of the kill process exec
 	KillProcess = "kill_process"
 
