@@ -9,8 +9,8 @@ import (
 
 // ExecuteDPTOOL deploys a specific version on the device.
 func (d *Deployment) ExecuteDPTOOL(url string, version string) (rpi.Action, error) {
-	prefix := "raspibuddy_deploy-"
-	releaseName := prefix + version
+	prefix := "raspibuddy_deploy"
+	releaseName := prefix + "-" + version
 	releaseDir := "/usr/bin"
 
 	plan := map[int](map[int]actions.Func){
@@ -21,7 +21,7 @@ func (d *Deployment) ExecuteDPTOOL(url string, version string) (rpi.Action, erro
 				Argument: []interface{}{
 					actions.EBC{
 						Command: fmt.Sprintf(
-							"rm %v/%v*",
+							"rm %v/%v-*",
 							releaseDir,
 							prefix,
 						),
@@ -68,11 +68,13 @@ func (d *Deployment) ExecuteDPTOOL(url string, version string) (rpi.Action, erro
 				Argument: []interface{}{
 					actions.EBC{
 						Command: fmt.Sprintf(
-							"rm %v/raspibuddy_deploy ; ln -s %v/%v %v/raspibuddy_deploy",
+							"rm %v/%v ; ln -s %v/%v %v/%v",
 							releaseDir,
+							prefix,
 							releaseDir,
 							releaseName,
 							releaseDir,
+							prefix,
 						),
 					},
 				},

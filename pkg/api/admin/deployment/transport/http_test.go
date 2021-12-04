@@ -1,6 +1,7 @@
 package transport_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
@@ -80,7 +81,7 @@ func TestExecuteDPTOOL(t *testing.T) {
 
 			defer ts.Close()
 			path := ts.URL + "/deploy/version" + tc.req
-			res, err := http.Get(path)
+			res, err := http.Post(path, "application/json", bytes.NewBufferString(tc.req))
 			if err != nil {
 				t.Fatal(err)
 			}

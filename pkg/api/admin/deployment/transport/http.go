@@ -18,7 +18,7 @@ type HTTP struct {
 func NewHTTP(svc deployment.Service, r *echo.Group) {
 	h := HTTP{svc}
 	cr := r.Group("/deploy")
-	cr.POST("/startstop", h.deployVersion)
+	cr.POST("/version", h.deployVersion)
 	// cr.GET("/purge", h.purge)
 
 }

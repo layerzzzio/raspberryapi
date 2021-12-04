@@ -200,7 +200,7 @@ func TestExecuteSASO(t *testing.T) {
 			ts := httptest.NewServer(r)
 
 			defer ts.Close()
-			path := ts.URL + "/general/startstop" + tc.req
+			path := ts.URL + "/general/systemctl" + tc.req
 
 			fmt.Println(path)
 

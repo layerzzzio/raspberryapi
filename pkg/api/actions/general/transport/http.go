@@ -18,7 +18,7 @@ func NewHTTP(svc general.Service, r *echo.Group) {
 	h := HTTP{svc}
 	cr := r.Group("/general")
 	cr.POST("/boot", h.rebootshutdown)
-	cr.POST("/startstop", h.startStop)
+	cr.POST("/systemctl", h.startStop)
 }
 
 func (h *HTTP) rebootshutdown(ctx echo.Context) error {

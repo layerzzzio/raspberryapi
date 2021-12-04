@@ -26,7 +26,7 @@ func (gen General) ExecuteRBS(plan map[int](map[int]actions.Func)) (rpi.Action, 
 	}, nil
 }
 
-// ExecuteSASO returns an action response after deleting a file
+// ExecuteSASO returns an action response after starting or stopping a service
 func (gen General) ExecuteSASO(plan map[int](map[int]actions.Func)) (rpi.Action, error) {
 	actionStartTime := uint64(time.Now().Unix())
 	progressInit := actions.FlattenPlan(plan)
