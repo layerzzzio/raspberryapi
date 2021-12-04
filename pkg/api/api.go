@@ -21,10 +21,10 @@ import (
 	agl "github.com/raspibuddy/rpi/pkg/api/actions/general/logging"
 	ags "github.com/raspibuddy/rpi/pkg/api/actions/general/platform/sys"
 	agt "github.com/raspibuddy/rpi/pkg/api/actions/general/transport"
-	"github.com/raspibuddy/rpi/pkg/api/admin/version"
-	vel "github.com/raspibuddy/rpi/pkg/api/admin/version/logging"
-	ves "github.com/raspibuddy/rpi/pkg/api/admin/version/platform/sys"
-	vet "github.com/raspibuddy/rpi/pkg/api/admin/version/transport"
+	"github.com/raspibuddy/rpi/pkg/api/admin/deployment"
+	del "github.com/raspibuddy/rpi/pkg/api/admin/deployment/logging"
+	des "github.com/raspibuddy/rpi/pkg/api/admin/deployment/platform/sys"
+	det "github.com/raspibuddy/rpi/pkg/api/admin/deployment/transport"
 	"github.com/raspibuddy/rpi/pkg/api/infos/appconfig"
 	iacl "github.com/raspibuddy/rpi/pkg/api/infos/appconfig/logging"
 	iacs "github.com/raspibuddy/rpi/pkg/api/infos/appconfig/platform/sys"
@@ -57,6 +57,10 @@ import (
 	isol "github.com/raspibuddy/rpi/pkg/api/infos/software/logging"
 	isos "github.com/raspibuddy/rpi/pkg/api/infos/software/platform/sys"
 	isot "github.com/raspibuddy/rpi/pkg/api/infos/software/transport"
+	"github.com/raspibuddy/rpi/pkg/api/infos/version"
+	vel "github.com/raspibuddy/rpi/pkg/api/infos/version/logging"
+	ves "github.com/raspibuddy/rpi/pkg/api/infos/version/platform/sys"
+	vet "github.com/raspibuddy/rpi/pkg/api/infos/version/transport"
 	"github.com/raspibuddy/rpi/pkg/api/metrics/cpu"
 	cl "github.com/raspibuddy/rpi/pkg/api/metrics/cpu/logging"
 	cs "github.com/raspibuddy/rpi/pkg/api/metrics/cpu/platform/sys"
@@ -145,6 +149,7 @@ func Start(cfg *config.Configuration) error {
 
 	// admin
 	vet.NewHTTP(vel.New(version.New(ves.Version{}, i), log).Service, v1)
+	det.NewHTTP(del.New(deployment.New(des.Deployment{}, a), log).Service, v1)
 
 	server.Start(e, &server.Config{
 		Port:                cfg.Server.Port,

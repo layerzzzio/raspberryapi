@@ -39,3 +39,18 @@ func (ls *LogService) ExecuteRBS(ctx echo.Context, actionType string) (resp rpi.
 	}(time.Now())
 	return ls.Service.ExecuteRBS(actionType)
 }
+
+// ExecuteSASO is the logging function attached to the general services and responsible for logging it out.
+func (ls *LogService) ExecuteSASO(ctx echo.Context, actionType string, service string) (resp rpi.Action, err error) {
+	defer func(begin time.Time) {
+		ls.logger.Log(
+			ctx,
+			name, fmt.Sprintf("request: %v %v", actionType, service), err,
+			map[string]interface{}{
+				"resp": resp,
+				"took": time.Since(begin),
+			},
+		)
+	}(time.Now())
+	return ls.Service.ExecuteSASO(actionType, service)
+}

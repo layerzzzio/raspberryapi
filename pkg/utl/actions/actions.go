@@ -98,6 +98,9 @@ const (
 	// RebootShutdown is the name of the reboot or shutdown exec
 	RebootShutdown = "RebootShutdown"
 
+	// StartStop is the name of the start/stop exec
+	StartStop = "StartStop"
+
 	// KillProcess is the name of the kill process exec
 	KillProcess = "kill_process"
 
@@ -193,6 +196,9 @@ const (
 
 	// InstallAptGet is the name of the install with apt-get method
 	InstallAptGet = "install_apt_get"
+
+	// DeployVersion is the name of deploy a specific version on the device
+	DeployVersion = "deploy_api_version"
 
 	// InstallVPNWithOVPN is the name of the install install vpn with opvn method
 	InstallVPNWithOVPN = "install_vpn_with_ovpn"
