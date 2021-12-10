@@ -30,22 +30,32 @@ func TestExecuteDPTOOL(t *testing.T) {
 		wantedResp   rpi.Action
 	}{
 		{
-			name:         "error: no url, no version",
-			wantedStatus: http.StatusNotFound,
+			name:         "error: no deployType, no url, no version",
+			wantedStatus: http.StatusBadRequest,
 		},
 		{
 			name:         "error: url but no version",
-			req:          "?url=https//url.com",
-			wantedStatus: http.StatusNotFound,
+			req:          "?deployType=full_deploy&url=https//url.com",
+			wantedStatus: http.StatusBadRequest,
+		},
+		{
+			name:         "error: version but no url",
+			req:          "?deployType=full_deploy&version=1.0.0",
+			wantedStatus: http.StatusBadRequest,
 		},
 		{
 			name:         "error: url but badly formatted version",
-			req:          "?url=https//url.com&version=X.X.X",
+			req:          "?deployType=full_deploy&url=https//url.com&version=X.X.X",
+			wantedStatus: http.StatusBadRequest,
+		},
+		{
+			name:         "error: deployType is wrong",
+			req:          "?deployType=full_main&url=https//&url.com&version=1.0.0",
 			wantedStatus: http.StatusBadRequest,
 		},
 		{
 			name: "error: ExecuteDF result is nil",
-			req:  "?url=https//url.com&version=1.1.1",
+			req:  "?deployType=full_deploy&url=https//url.com&version=1.1.1",
 			dsys: &mocksys.Action{
 				ExecuteDPTOOLFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
 					return rpi.Action{}, errors.New("test error")
@@ -55,7 +65,7 @@ func TestExecuteDPTOOL(t *testing.T) {
 		},
 		{
 			name: "success",
-			req:  "?url=https//url.com&version=1.1.1",
+			req:  "?deployType=full_deploy&url=https//url.com&version=1.1.1",
 			dsys: &mocksys.Action{
 				ExecuteDPTOOLFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
 					return rpi.Action{
@@ -80,7 +90,7 @@ func TestExecuteDPTOOL(t *testing.T) {
 			ts := httptest.NewServer(r)
 
 			defer ts.Close()
-			path := ts.URL + "/deploy/version" + tc.req
+			path := ts.URL + "/deploy/deploy-api" + tc.req
 			res, err := http.Post(path, "application/json", bytes.NewBufferString(tc.req))
 			if err != nil {
 				t.Fatal(err)

@@ -7,7 +7,7 @@ import (
 
 // Service represents all Deployment application services.
 type Service interface {
-	ExecuteDPTOOL(string, string) (rpi.Action, error)
+	ExecuteDPTOOL(string, string, string) (rpi.Action, error)
 }
 
 // Deployment represents an Deployment application service.
