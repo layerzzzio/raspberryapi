@@ -16,6 +16,7 @@ import (
 func TestExecuteDPTOOL(t *testing.T) {
 	cases := []struct {
 		name       string
+		deployType string
 		url        string
 		version    string
 		plan       map[int](map[int]actions.Func)
@@ -25,9 +26,10 @@ func TestExecuteDPTOOL(t *testing.T) {
 		wantedErr  error
 	}{
 		{
-			name:    "success: regular version",
-			url:     "https://domain/",
-			version: "1.0.0",
+			name:       "success: regular version",
+			deployType: "full_deploy",
+			url:        "https://domain/",
+			version:    "1.0.0",
 			plan: map[int](map[int]actions.Func){
 				1: {
 					1: {
@@ -96,7 +98,7 @@ func TestExecuteDPTOOL(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			s := deployment.New(tc.dsys, tc.actions)
-			dp, err := s.ExecuteDPTOOL(tc.url, tc.version)
+			dp, err := s.ExecuteDPTOOL(tc.deployType, tc.url, tc.version)
 			assert.Equal(t, tc.wantedData, dp)
 			assert.Equal(t, tc.wantedErr, err)
 		})

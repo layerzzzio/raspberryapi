@@ -8,10 +8,8 @@ import (
 )
 
 // ExecuteDPTOOL deploys a specific version on the device.
-func (d *Deployment) ExecuteDPTOOL(url string, version string) (rpi.Action, error) {
-	prefix := "raspibuddy_deploy"
-	releaseName := prefix + "-" + version
-	releaseDir := "/usr/bin"
+func (d *Deployment) ExecuteDPTOOL(deployType string, url string, version string) (rpi.Action, error) {
+	deployScript := "/tmp/deploy_apis.sh"
 
 	plan := map[int](map[int]actions.Func){
 		1: {
@@ -21,9 +19,9 @@ func (d *Deployment) ExecuteDPTOOL(url string, version string) (rpi.Action, erro
 				Argument: []interface{}{
 					actions.EBC{
 						Command: fmt.Sprintf(
-							"rm %v/%v-*",
-							releaseDir,
-							prefix,
+							"wget -nv %v -O %v",
+							url,
+							deployScript,
 						),
 					},
 				},
@@ -36,11 +34,8 @@ func (d *Deployment) ExecuteDPTOOL(url string, version string) (rpi.Action, erro
 				Argument: []interface{}{
 					actions.EBC{
 						Command: fmt.Sprintf(
-							"wget -nv %v/%v -O %v/%v",
-							url,
-							releaseName,
-							releaseDir,
-							releaseName,
+							"chmod 755 %v",
+							deployScript,
 						),
 					},
 				},
@@ -53,9 +48,10 @@ func (d *Deployment) ExecuteDPTOOL(url string, version string) (rpi.Action, erro
 				Argument: []interface{}{
 					actions.EBC{
 						Command: fmt.Sprintf(
-							"chmod 755 %v/%v",
-							releaseDir,
-							releaseName,
+							"%v %v %v",
+							deployScript,
+							deployType,
+							version,
 						),
 					},
 				},
@@ -68,13 +64,8 @@ func (d *Deployment) ExecuteDPTOOL(url string, version string) (rpi.Action, erro
 				Argument: []interface{}{
 					actions.EBC{
 						Command: fmt.Sprintf(
-							"rm %v/%v ; ln -s %v/%v %v/%v",
-							releaseDir,
-							prefix,
-							releaseDir,
-							releaseName,
-							releaseDir,
-							prefix,
+							"rm -f %v",
+							deployScript,
 						),
 					},
 				},
