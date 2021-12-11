@@ -22,6 +22,7 @@ type Host struct {
 		load.AvgStat,
 		string,
 		string,
+		string,
 		map[string][]metrics.DStats,
 		[]net.InterfaceStat) (rpi.Host, error)
 }
@@ -35,8 +36,9 @@ func (h Host) List(infos host.InfoStat,
 	smem mem.SwapMemoryStat,
 	load load.AvgStat,
 	temp string,
+	serialNumber string,
 	rpiv string,
 	listDev map[string][]metrics.DStats,
 	netInfo []net.InterfaceStat) (rpi.Host, error) {
-	return h.ListFn(infos, users, cpus, vcores, vmem, smem, load, temp, rpiv, listDev, netInfo)
+	return h.ListFn(infos, users, cpus, vcores, vmem, smem, load, temp, serialNumber, rpiv, listDev, netInfo)
 }

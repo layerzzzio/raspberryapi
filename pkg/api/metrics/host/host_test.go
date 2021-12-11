@@ -57,6 +57,9 @@ func TestList(t *testing.T) {
 				TemperatureFn: func() (string, string, error) {
 					return "", "", errors.New("test error info")
 				},
+				SerialNumberFn: func() (string, string, error) {
+					return "", "", errors.New("test error info")
+				},
 				RaspModelFn: func() (string, string, error) {
 					return "", "", errors.New("test error info")
 				},
@@ -97,6 +100,9 @@ func TestList(t *testing.T) {
 				TemperatureFn: func() (string, string, error) {
 					return "", "error", errors.New("test error info")
 				},
+				SerialNumberFn: func() (string, string, error) {
+					return "", "error", errors.New("test error info")
+				},
 				RaspModelFn: func() (string, string, error) {
 					return "pi zero", "", errors.New("test error info")
 				},
@@ -113,6 +119,9 @@ func TestList(t *testing.T) {
 		{
 			name: "error: temp stdErr and err are not nil",
 			metrics: &mock.Metrics{
+				SerialNumberFn: func() (string, string, error) {
+					return "", "", errors.New("test error info")
+				},
 				HostInfoFn: func() (hext.InfoStat, error) {
 					return hext.InfoStat{}, nil
 				},
@@ -153,6 +162,9 @@ func TestList(t *testing.T) {
 		{
 			name: "error: infos array is nil",
 			metrics: &mock.Metrics{
+				SerialNumberFn: func() (string, string, error) {
+					return "", "", errors.New("test error info")
+				},
 				HostInfoFn: func() (hext.InfoStat, error) {
 					return hext.InfoStat{}, errors.New("test error info")
 				},
@@ -239,6 +251,9 @@ func TestList(t *testing.T) {
 				TemperatureFn: func() (string, string, error) {
 					return "", "", errors.New("test error info")
 				},
+				SerialNumberFn: func() (string, string, error) {
+					return "", "", errors.New("test error info")
+				},
 				RaspModelFn: func() (string, string, error) {
 					return "", "", errors.New("test error info")
 				},
@@ -285,6 +300,9 @@ func TestList(t *testing.T) {
 				TemperatureFn: func() (string, string, error) {
 					return "", "", errors.New("test error info")
 				},
+				SerialNumberFn: func() (string, string, error) {
+					return "", "", errors.New("test error info")
+				},
 				RaspModelFn: func() (string, string, error) {
 					return "", "", errors.New("test error info")
 				},
@@ -303,7 +321,7 @@ func TestList(t *testing.T) {
 			metrics: &mock.Metrics{
 				HostInfoFn: func() (hext.InfoStat, error) {
 					return hext.InfoStat{
-						HostID:          "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
+						HostID:          "sn1",
 						Hostname:        "hostname_test",
 						Uptime:          540165,
 						BootTime:        1589223156,
@@ -358,6 +376,9 @@ func TestList(t *testing.T) {
 				},
 				TemperatureFn: func() (string, string, error) {
 					return "temp=20.9", "", errors.New("test error info")
+				},
+				SerialNumberFn: func() (string, string, error) {
+					return "sn1", "", errors.New("test error info")
 				},
 				RaspModelFn: func() (string, string, error) {
 					return "pi zero", "", errors.New("test error info")
@@ -427,10 +448,11 @@ func TestList(t *testing.T) {
 					load.AvgStat,
 					string,
 					string,
+					string,
 					map[string][]metrics.DStats,
 					[]net.InterfaceStat) (rpi.Host, error) {
 					return rpi.Host{
-						ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
+						ID:                 "sn1",
 						Hostname:           "hostname_test",
 						UpTime:             540165,
 						BootTime:           1589223156,
@@ -498,7 +520,7 @@ func TestList(t *testing.T) {
 				},
 			},
 			wantedData: rpi.Host{
-				ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
+				ID:                 "sn1",
 				Hostname:           "hostname_test",
 				UpTime:             540165,
 				BootTime:           1589223156,
