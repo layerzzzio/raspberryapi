@@ -457,6 +457,21 @@ func (s Service) Temperature() (string, string, error) {
 	return outStd, errStd, nil
 }
 
+// SerialNumber returns the host serial number.
+func (s Service) SerialNumber() (string, string, error) {
+	cmd := exec.Command("sh", "-c", "cat /proc/cpuinfo | grep -i serial | cut -d ' ' -f 2-")
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	if err != nil {
+		log.Error()
+	}
+	outStd, errStd := stdout.String(), stderr.String()
+
+	return strings.TrimSpace(outStd), errStd, nil
+}
+
 // RaspModel returns the host Raspberry Model.
 func (s Service) RaspModel() (string, string, error) {
 	cmd := exec.Command("cat", "/sys/firmware/devicetree/base/model")

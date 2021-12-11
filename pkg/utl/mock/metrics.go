@@ -39,6 +39,7 @@ type Metrics struct {
 	HostInfoFn       func() (host.InfoStat, error)
 	UsersFn          func() ([]host.UserStat, error)
 	TemperatureFn    func() (string, string, error)
+	SerialNumberFn   func() (string, string, error)
 	RaspModelFn      func() (string, string, error)
 	NetInfoFn        func() ([]net.InterfaceStat, error)
 	NetStatsFn       func() ([]net.IOCountersStat, error)
@@ -168,6 +169,11 @@ func (m Metrics) HostInfo() (host.InfoStat, error) {
 // Users mock
 func (m Metrics) Users() ([]host.UserStat, error) {
 	return m.UsersFn()
+}
+
+// SerialNumber mock
+func (m Metrics) SerialNumber() (string, string, error) {
+	return m.SerialNumberFn()
 }
 
 // Temperature mock

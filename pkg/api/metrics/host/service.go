@@ -34,6 +34,7 @@ type HSYS interface {
 		load.AvgStat,
 		string,
 		string,
+		string,
 		map[string][]metrics.DStats,
 		[]net.InterfaceStat) (rpi.Host, error)
 }
@@ -48,6 +49,7 @@ type Metrics interface {
 	SwapMemory() (mem.SwapMemoryStat, error)
 	LoadAvg() (load.AvgStat, error)
 	Temperature() (string, string, error)
+	SerialNumber() (string, string, error)
 	RaspModel() (string, string, error)
 	DiskStats(bool) (map[string][]metrics.DStats, error)
 	NetInfo() ([]net.InterfaceStat, error)

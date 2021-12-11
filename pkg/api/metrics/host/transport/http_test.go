@@ -51,6 +51,7 @@ func TestList(t *testing.T) {
 					load.AvgStat,
 					string,
 					string,
+					string,
 					map[string][]metrics.DStats,
 					[]net.InterfaceStat) (rpi.Host, error) {
 					return rpi.Host{}, errors.New("test error")
@@ -69,6 +70,7 @@ func TestList(t *testing.T) {
 					mem.VirtualMemoryStat,
 					mem.SwapMemoryStat,
 					load.AvgStat,
+					string,
 					string,
 					string,
 					map[string][]metrics.DStats,
@@ -321,6 +323,7 @@ func TestListWs(t *testing.T) {
 					load.AvgStat,
 					string,
 					string,
+					string,
 					map[string][]metrics.DStats,
 					[]net.InterfaceStat) (rpi.Host, error) {
 					return rpi.Host{}, errors.New("test error")
@@ -339,6 +342,7 @@ func TestListWs(t *testing.T) {
 					mem.VirtualMemoryStat,
 					mem.SwapMemoryStat,
 					load.AvgStat,
+					string,
 					string,
 					string,
 					map[string][]metrics.DStats,
