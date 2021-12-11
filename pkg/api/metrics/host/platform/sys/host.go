@@ -32,6 +32,7 @@ func (h Host) List(
 	sMemPer mem.SwapMemoryStat,
 	load load.AvgStat,
 	temp string,
+	serialNumber string,
 	rpiv string,
 	listDev map[string][]metrics.DStats,
 	netInfo []net.InterfaceStat) (rpi.Host, error) {
@@ -123,7 +124,7 @@ func (h Host) List(
 	}
 
 	result := rpi.Host{
-		ID:                 info.HostID,
+		ID:                 serialNumber,
 		RaspModel:          rpiv,
 		Hostname:           info.Hostname,
 		UpTime:             info.Uptime,

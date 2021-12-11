@@ -51,20 +51,21 @@ func TestExtractTemp(t *testing.T) {
 
 func TestList(t *testing.T) {
 	cases := []struct {
-		name       string
-		info       hext.InfoStat
-		users      []hext.UserStat
-		cpus       []cpu.InfoStat
-		vcores     []float64
-		vMemPer    mem.VirtualMemoryStat
-		sMemPer    mem.SwapMemoryStat
-		load       load.AvgStat
-		temp       string
-		rpiv       string
-		listDev    map[string][]metrics.DStats
-		netInfo    []net.InterfaceStat
-		wantedData rpi.Host
-		wantedErr  error
+		name         string
+		info         hext.InfoStat
+		users        []hext.UserStat
+		cpus         []cpu.InfoStat
+		vcores       []float64
+		vMemPer      mem.VirtualMemoryStat
+		sMemPer      mem.SwapMemoryStat
+		load         load.AvgStat
+		temp         string
+		serialNumber string
+		rpiv         string
+		listDev      map[string][]metrics.DStats
+		netInfo      []net.InterfaceStat
+		wantedData   rpi.Host
+		wantedErr    error
 	}{
 		{
 			name: "parsing disk id unsuccessful",
@@ -88,8 +89,9 @@ func TestList(t *testing.T) {
 				Load5:  5,
 				Load15: 15,
 			},
-			temp: "temp=20.9.C",
-			rpiv: "pi zero",
+			temp:         "temp=20.9.C",
+			serialNumber: "sn1",
+			rpiv:         "pi zero",
 			listDev: map[string][]metrics.DStats{
 				"/": {
 					{
@@ -152,8 +154,9 @@ func TestList(t *testing.T) {
 				Load5:  5,
 				Load15: 15,
 			},
-			temp: "temp=20.9.C",
-			rpiv: "pi zero",
+			temp:         "temp=20.9.C",
+			serialNumber: "sn1",
+			rpiv:         "pi zero",
 			listDev: map[string][]metrics.DStats{
 				"/dev1": {
 					{
@@ -236,7 +239,7 @@ func TestList(t *testing.T) {
 				},
 			},
 			wantedData: rpi.Host{
-				ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
+				ID:                 "sn1",
 				Hostname:           "hostname_test",
 				UpTime:             540165,
 				BootTime:           1589223156,
@@ -378,10 +381,11 @@ func TestList(t *testing.T) {
 				Load5:  5,
 				Load15: 15,
 			},
-			temp: "temp=20.9.C",
-			rpiv: "pi zero",
+			temp:         "temp=20.9.C",
+			serialNumber: "sn1",
+			rpiv:         "pi zero",
 			wantedData: rpi.Host{
-				ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
+				ID:                 "sn1",
 				Hostname:           "hostname_test",
 				UpTime:             540165,
 				BootTime:           1589223156,
@@ -453,9 +457,10 @@ func TestList(t *testing.T) {
 				Load5:  5,
 				Load15: 15,
 			},
-			temp: "temp=20.9.C",
+			temp:         "temp=20.9.C",
+			serialNumber: "sn1",
 			wantedData: rpi.Host{
-				ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
+				ID:                 "sn1",
 				Hostname:           "hostname_test",
 				UpTime:             540165,
 				BootTime:           1589223156,
@@ -527,9 +532,10 @@ func TestList(t *testing.T) {
 				Load5:  5,
 				Load15: 15,
 			},
-			temp: "temp=20.9.C",
+			temp:         "temp=20.9.C",
+			serialNumber: "sn1",
 			wantedData: rpi.Host{
-				ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
+				ID:                 "sn1",
 				Hostname:           "hostname_test",
 				UpTime:             540165,
 				BootTime:           1589223156,
@@ -598,9 +604,10 @@ func TestList(t *testing.T) {
 				Load5:  5,
 				Load15: 15,
 			},
-			temp: "temp=20.9.C",
+			temp:         "temp=20.9.C",
+			serialNumber: "sn1",
 			wantedData: rpi.Host{
-				ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
+				ID:                 "sn1",
 				Hostname:           "hostname_test",
 				UpTime:             540165,
 				BootTime:           1589223156,
@@ -669,9 +676,10 @@ func TestList(t *testing.T) {
 				Load5:  5,
 				Load15: 15,
 			},
-			temp: "temp=20.9.C",
+			temp:         "temp=20.9.C",
+			serialNumber: "sn1",
 			wantedData: rpi.Host{
-				ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
+				ID:                 "sn1",
 				Hostname:           "hostname_test",
 				UpTime:             540165,
 				BootTime:           1589223156,
@@ -730,9 +738,10 @@ func TestList(t *testing.T) {
 				Load5:  5,
 				Load15: 15,
 			},
-			temp: "temp=20.9.C",
+			temp:         "temp=20.9.C",
+			serialNumber: "sn1",
 			wantedData: rpi.Host{
-				ID:                 "",
+				ID:                 "sn1",
 				Hostname:           "",
 				UpTime:             0,
 				BootTime:           0,
@@ -774,8 +783,9 @@ func TestList(t *testing.T) {
 					User: "U2",
 				},
 			},
+			serialNumber: "sn1",
 			info: hext.InfoStat{
-				HostID:          "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
+				HostID:          "sn1",
 				Hostname:        "hostname_test",
 				Uptime:          540165,
 				BootTime:        1589223156,
@@ -806,7 +816,7 @@ func TestList(t *testing.T) {
 				Load15: 15,
 			},
 			wantedData: rpi.Host{
-				ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
+				ID:                 "sn1",
 				Hostname:           "hostname_test",
 				UpTime:             540165,
 				BootTime:           1589223156,
@@ -880,9 +890,10 @@ func TestList(t *testing.T) {
 				Load5:  5,
 				Load15: 15,
 			},
-			temp: "temp=20.9.C",
+			temp:         "temp=20.9.C",
+			serialNumber: "sn1",
 			wantedData: rpi.Host{
-				ID:                 "ab0aa7ee-3d03-3c21-91ad-5719d79d7af6",
+				ID:                 "sn1",
 				Hostname:           "hostname_test",
 				UpTime:             540165,
 				BootTime:           1589223156,
@@ -930,6 +941,7 @@ func TestList(t *testing.T) {
 				tc.sMemPer,
 				tc.load,
 				tc.temp,
+				tc.serialNumber,
 				tc.rpiv,
 				tc.listDev,
 				tc.netInfo)
