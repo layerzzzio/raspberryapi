@@ -2,6 +2,7 @@ package transport_test
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -32,34 +33,32 @@ func TestView(t *testing.T) {
 			req:          `a`,
 		},
 		// WARNING !!!!!
-		// running the below test does not work
-		// because it cannot run lsof on the current local machine
-		//
-		// {
-		// 	name: "error: View result is nil",
-		// 	req:  "1",
-		// 	psys: &mocksys.Port{
-		// 		ViewFn: func(int32, bool) (rpi.Port, error) {
-		// 			return rpi.Port{}, errors.New("test error")
-		// 		},
-		// 	},
-		// 	wantedStatus: http.StatusInternalServerError,
-		// },
-		// {
-		// 	name: "success",
-		// 	req:  "99",
-		// 	psys: &mocksys.Port{
-		// 		ViewFn: func(int32, bool) (rpi.Port, error) {
-		// 			return rpi.Port{
-		// 				IsSpecificPortListen: true,
-		// 			}, nil
-		// 		},
-		// 	},
-		// 	wantedStatus: http.StatusOK,
-		// 	wantedResp: rpi.Port{
-		// 		IsSpecificPortListen: true,
-		// 	},
-		// },
+		// using an impossible port that will return false
+		{
+			name: "error: View result is nil",
+			req:  "1",
+			psys: &mocksys.Port{
+				ViewFn: func(bool) (rpi.Port, error) {
+					return rpi.Port{}, errors.New("test error")
+				},
+			},
+			wantedStatus: http.StatusInternalServerError,
+		},
+		{
+			name: "success",
+			req:  "666666666",
+			psys: &mocksys.Port{
+				ViewFn: func(bool) (rpi.Port, error) {
+					return rpi.Port{
+						IsSpecificPortListen: false,
+					}, nil
+				},
+			},
+			wantedStatus: http.StatusOK,
+			wantedResp: rpi.Port{
+				IsSpecificPortListen: false,
+			},
+		},
 	}
 
 	for _, tc := range cases {
