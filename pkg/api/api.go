@@ -49,6 +49,10 @@ import (
 	ihul "github.com/raspibuddy/rpi/pkg/api/infos/humanuser/logging"
 	ihus "github.com/raspibuddy/rpi/pkg/api/infos/humanuser/platform/sys"
 	ihut "github.com/raspibuddy/rpi/pkg/api/infos/humanuser/transport"
+	"github.com/raspibuddy/rpi/pkg/api/infos/port"
+	ptl "github.com/raspibuddy/rpi/pkg/api/infos/port/logging"
+	pts "github.com/raspibuddy/rpi/pkg/api/infos/port/platform/sys"
+	ptt "github.com/raspibuddy/rpi/pkg/api/infos/port/transport"
 	"github.com/raspibuddy/rpi/pkg/api/infos/rpinterface"
 	iinl "github.com/raspibuddy/rpi/pkg/api/infos/rpinterface/logging"
 	iins "github.com/raspibuddy/rpi/pkg/api/infos/rpinterface/platform/sys"
@@ -146,6 +150,7 @@ func Start(cfg *config.Configuration) error {
 	isot.NewHTTP(isol.New(software.New(isos.Software{}, i), log).Service, v1)
 	iact.NewHTTP(iacl.New(appconfig.New(iacs.AppConfigVPNWithOvpn{}, i), log).Service, v1)
 	iast.NewHTTP(iasl.New(appstatus.New(iass.AppStatus{}, i), log).Service, v1)
+	ptt.NewHTTP(ptl.New(port.New(pts.Port{}, i), log).Service, v1)
 
 	// admin
 	vet.NewHTTP(vel.New(version.New(ves.Version{}, i), log).Service, v1)

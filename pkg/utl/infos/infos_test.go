@@ -1466,3 +1466,26 @@ func TestApiVersion(t *testing.T) {
 		})
 	}
 }
+
+func TestIsPortListening(t *testing.T) {
+	cases := []struct {
+		name       string
+		port       int32
+		wantedData bool
+	}{
+		{
+			name: "not listening",
+			// impossible port
+			port:       666666666,
+			wantedData: false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			i := infos.New()
+			isListen := i.IsPortListening(tc.port)
+			assert.Equal(t, tc.wantedData, isListen)
+		})
+	}
+}
