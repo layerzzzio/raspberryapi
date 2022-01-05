@@ -830,15 +830,13 @@ func (s Service) ApiVersion(directoryPath string, apiPrefix string) string {
 
 // IsPortListening checks if a port is in a listen mode
 func (s Service) IsPortListening(port int32) bool {
+	// this command might return an exit status 1
+	// if the port does not exist
+	// thus returning an error
+	// if don't want to check this error hence the replacement of err by _
 	command := fmt.Sprintf("lsof -i:%v | grep -i listen", port)
-	res, err := exec.Command("sh", "-c", command).Output()
-	if err != nil {
-		log.Fatal(err)
-	}
+	res, _ := exec.Command("sh", "-c", command).Output()
+	resClean := strings.ToLower(string(res))
 
-	if strings.TrimSpace(string(res)) == "" {
-		return false
-	} else {
-		return true
-	}
+	return strings.Contains(resClean, "listen")
 }

@@ -20,7 +20,7 @@ func TestView(t *testing.T) {
 		wantedErr  error
 	}{
 		{
-			name: "success: regular version",
+			name: "success: port listen",
 			port: 6666,
 			infos: mock.Infos{
 				IsPortListeningFn: func(int32) bool {
@@ -29,7 +29,6 @@ func TestView(t *testing.T) {
 			},
 			psys: mocksys.Port{
 				ViewFn: func(
-					int32,
 					bool,
 				) (rpi.Port, error) {
 					return rpi.Port{
@@ -39,6 +38,28 @@ func TestView(t *testing.T) {
 			},
 			wantedData: rpi.Port{
 				IsSpecificPortListen: true,
+			},
+			wantedErr: nil,
+		},
+		{
+			name: "success: port doesn't listen",
+			port: 6666,
+			infos: mock.Infos{
+				IsPortListeningFn: func(int32) bool {
+					return false
+				},
+			},
+			psys: mocksys.Port{
+				ViewFn: func(
+					bool,
+				) (rpi.Port, error) {
+					return rpi.Port{
+						IsSpecificPortListen: false,
+					}, nil
+				},
+			},
+			wantedData: rpi.Port{
+				IsSpecificPortListen: false,
 			},
 			wantedErr: nil,
 		},

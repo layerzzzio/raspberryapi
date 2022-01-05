@@ -17,7 +17,7 @@ type Port struct {
 
 // PSYS represents a Port repository service.
 type PSYS interface {
-	View(int32, bool) (rpi.Port, error)
+	View(bool) (rpi.Port, error)
 }
 
 // Infos represents the infos interface

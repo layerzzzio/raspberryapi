@@ -6,16 +6,14 @@ import (
 
 // Port mock
 type Port struct {
-	ViewFn func(int32, bool) (rpi.Port, error)
+	ViewFn func(bool) (rpi.Port, error)
 }
 
 // View mock
 func (p Port) View(
-	port int32,
 	isListen bool,
 ) (rpi.Port, error) {
 	return p.ViewFn(
-		port,
 		isListen,
 	)
 }

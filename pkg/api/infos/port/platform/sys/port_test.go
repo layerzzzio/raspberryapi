@@ -12,17 +12,22 @@ import (
 func TestView(t *testing.T) {
 	cases := []struct {
 		name       string
-		port       int32
 		isListen   bool
 		wantedData rpi.Port
 		wantedErr  error
 	}{
 		{
-			name:     "success: port found",
-			port:     6666,
+			name:     "success: port listen",
 			isListen: true,
 			wantedData: rpi.Port{
 				IsSpecificPortListen: true},
+			wantedErr: nil,
+		},
+		{
+			name:     "success: port doesn't listen",
+			isListen: false,
+			wantedData: rpi.Port{
+				IsSpecificPortListen: false},
 			wantedErr: nil,
 		},
 	}
@@ -31,7 +36,6 @@ func TestView(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			s := port.PSYS(sys.Port{})
 			version, err := s.View(
-				tc.port,
 				tc.isListen,
 			)
 			assert.Equal(t, tc.wantedData, version)
