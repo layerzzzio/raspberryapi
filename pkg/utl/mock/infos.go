@@ -29,6 +29,7 @@ type Infos struct {
 	IsFileContainsKey1OrKey2Fn   func(string, string, string) (string, error)
 	IsFileContainsUntilFn        func(string, string, string, int) (string, error)
 	ApiVersionFn                 func(string, string) string
+	IsPortListeningFn            func(int32) bool
 }
 
 // ReadFile mock
@@ -144,4 +145,9 @@ func (i Infos) IsFileContainsUntil(filepath string, keyword1 string, keyword2 st
 // ApiVersion mock
 func (i Infos) ApiVersion(apiPath string, apiPrefix string) string {
 	return i.ApiVersionFn(apiPath, apiPrefix)
+}
+
+// IsPortListening mock
+func (i Infos) IsPortListening(port int32) bool {
+	return i.IsPortListeningFn(port)
 }
