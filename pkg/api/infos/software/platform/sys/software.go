@@ -48,3 +48,13 @@ func (int Software) List(
 		IsVyprVpnVPNInstalled:   vyprVpnVPNInstalled,
 	}, nil
 }
+
+// View returns a list of Software info
+func (int Software) View(
+	isSpecificSoftwareInstalled bool,
+) (rpi.Software, error) {
+
+	return rpi.Software{
+		IsSpecificSoftwareInstalled: isSpecificSoftwareInstalled,
+	}, nil
+}

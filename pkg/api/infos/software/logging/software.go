@@ -40,3 +40,20 @@ func (ls *LogService) List(ctx echo.Context) (resp rpi.Software, err error) {
 	}(time.Now())
 	return ls.Service.List()
 }
+
+// View is the logging function attached to the View software services and responsible for logging it out.
+func (ls *LogService) View(ctx echo.Context, pkg string) (resp rpi.Software, err error) {
+	defer func(begin time.Time) {
+		ls.logger.Log(
+			ctx,
+			name,
+			"request: view software configuration",
+			err,
+			map[string]interface{}{
+				"resp": resp,
+				"took": time.Since(begin),
+			},
+		)
+	}(time.Now())
+	return ls.Service.View(pkg)
+}
