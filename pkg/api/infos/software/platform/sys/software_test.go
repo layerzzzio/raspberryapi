@@ -82,3 +82,33 @@ func TestList(t *testing.T) {
 		})
 	}
 }
+
+func TestView(t *testing.T) {
+	cases := []struct {
+		name                        string
+		isSpecificSoftwareInstalled bool
+		wantedData                  rpi.Software
+		wantedErr                   error
+	}{
+		{
+			name:                        "success: all VPNs true",
+			isSpecificSoftwareInstalled: true,
+
+			wantedData: rpi.Software{
+				IsSpecificSoftwareInstalled: true,
+			},
+			wantedErr: nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := software.SOFSYS(sys.Software{})
+			intf, err := s.View(
+				tc.isSpecificSoftwareInstalled,
+			)
+			assert.Equal(t, tc.wantedData, intf)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}

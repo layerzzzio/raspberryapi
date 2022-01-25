@@ -26,3 +26,9 @@ func (so *Software) List() (rpi.Software, error) {
 		isVyprVpnVPNInstalled,
 	)
 }
+
+// List populates and returns an array of Software model.
+func (so *Software) View(pkg string) (rpi.Software, error) {
+	isSpecificSoftwareInstalled := so.i.IsDPKGInstalled(pkg)
+	return so.sofsys.View(isSpecificSoftwareInstalled)
+}

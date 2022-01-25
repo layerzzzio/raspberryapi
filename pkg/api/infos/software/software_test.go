@@ -65,3 +65,44 @@ func TestList(t *testing.T) {
 		})
 	}
 }
+
+func TestView(t *testing.T) {
+	cases := []struct {
+		name       string
+		infos      mock.Infos
+		sofsys     mocksys.Software
+		wantedData rpi.Software
+		wantedErr  error
+	}{
+		{
+			name: "success",
+			infos: mock.Infos{
+				IsDPKGInstalledFn: func(string) bool {
+					return false
+				},
+			},
+			sofsys: mocksys.Software{
+				ViewFn: func(
+					bool,
+				) (rpi.Software, error) {
+					return rpi.Software{
+						IsSpecificSoftwareInstalled: true,
+					}, nil
+				},
+			},
+			wantedData: rpi.Software{
+				IsSpecificSoftwareInstalled: true,
+			},
+			wantedErr: nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := software.New(&tc.sofsys, tc.infos)
+			intf, err := s.View("dummy_pkg")
+			assert.Equal(t, tc.wantedData, intf)
+			assert.Equal(t, tc.wantedErr, err)
+		})
+	}
+}
