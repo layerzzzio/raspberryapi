@@ -108,3 +108,81 @@ func TestList(t *testing.T) {
 		})
 	}
 }
+
+func TestView(t *testing.T) {
+	var response rpi.Software
+
+	cases := []struct {
+		name         string
+		req          string
+		intsys       *mocksys.Software
+		wantedStatus int
+		wantedResp   rpi.Software
+	}{
+		{
+			name:         "error: no package",
+			req:          "?pkg=",
+			wantedStatus: http.StatusNotFound,
+		},
+		{
+			name: "error: View result is nil",
+			req:  "?pkg=XXXXXX",
+			intsys: &mocksys.Software{
+				ViewFn: func(bool) (rpi.Software, error) {
+					return rpi.Software{}, errors.New("test error")
+				},
+			},
+			wantedStatus: http.StatusInternalServerError,
+		},
+		{
+			name: "success",
+			req:  "?pkg=good_pkg",
+			intsys: &mocksys.Software{
+				ViewFn: func(
+					bool,
+				) (rpi.Software, error) {
+					return rpi.Software{
+						IsSpecificSoftwareInstalled: true,
+					}, nil
+				},
+			},
+			wantedStatus: http.StatusOK,
+			wantedResp: rpi.Software{
+				IsSpecificSoftwareInstalled: true,
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			r := server.New()
+			rg := r.Group("")
+			i := infos.New()
+			s := software.New(tc.intsys, i)
+			transport.NewHTTP(s, rg)
+			ts := httptest.NewServer(r)
+
+			defer ts.Close()
+			path := ts.URL + "/softwares/specifics" + tc.req
+			res, err := http.Get(path)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			defer res.Body.Close()
+
+			body, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				panic(err)
+			}
+
+			if tc.wantedResp.IsSpecificSoftwareInstalled == true || tc.wantedResp.IsSpecificSoftwareInstalled == false {
+				if err := json.Unmarshal(body, &response); err != nil {
+					t.Fatal(err)
+				}
+				assert.Equal(t, tc.wantedResp, response)
+			}
+			assert.Equal(t, tc.wantedStatus, res.StatusCode)
+		})
+	}
+}

@@ -15,6 +15,10 @@ type Software struct {
 		bool,
 		bool,
 	) (rpi.Software, error)
+
+	ViewFn func(
+		bool,
+	) (rpi.Software, error)
 }
 
 // List mock
@@ -35,5 +39,14 @@ func (in Software) List(
 		isSurfSharkVPN,
 		isIpVanishVPN,
 		isVyprVpnVPN,
+	)
+}
+
+// View mock
+func (in Software) View(
+	isSpecificSoftwareInstalled bool,
+) (rpi.Software, error) {
+	return in.ViewFn(
+		isSpecificSoftwareInstalled,
 	)
 }

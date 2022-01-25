@@ -7,6 +7,7 @@ import (
 // Service represents all Software application services.
 type Service interface {
 	List() (rpi.Software, error)
+	View(string) (rpi.Software, error)
 }
 
 // Software represents an Software application service.
@@ -26,6 +27,8 @@ type SOFSYS interface {
 		bool,
 		bool,
 	) (rpi.Software, error)
+
+	View(bool) (rpi.Software, error)
 }
 
 // Infos represents the infos interface
