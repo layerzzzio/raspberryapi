@@ -28,11 +28,102 @@ func TestExecuteAG(t *testing.T) {
 		wantedErr  error
 	}{
 		{
-			name:   "success",
+			name:   "success single pkg",
 			action: "install",
 			pkg:    "dummy",
 			plan: map[int](map[int]actions.Func){
 				1: {
+					1: {
+						Name:      "FuncA",
+						Reference: test_utl.FuncA,
+						Argument: []interface{}{
+							test_utl.ArgFuncA{
+								Arg0: "string0",
+								Arg1: "string1",
+							},
+						},
+					},
+				},
+			},
+			actions: &mock.Actions{
+				ExecuteBashCommandFn: func(interface{}) (rpi.Exec, error) {
+					return rpi.Exec{
+						Name:       "FuncA",
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "string0-string1",
+					}, nil
+				},
+			},
+			inssys: &mocksys.Action{
+				ExecuteAGFn: func(map[int](map[int]actions.Func)) (rpi.Action, error) {
+					return rpi.Action{
+						Name:          "FuncA",
+						NumberOfSteps: 1,
+						Progress: map[string]rpi.Exec{
+							"1": {
+								Name:       "FuncA",
+								StartTime:  1,
+								EndTime:    2,
+								ExitStatus: 0,
+								Stdout:     "string0-string1",
+							},
+						},
+						ExitStatus: 0,
+						StartTime:  2,
+						EndTime:    uint64(time.Now().Unix()),
+					}, nil
+				},
+			},
+			wantedData: rpi.Action{
+				Name:          "FuncA",
+				NumberOfSteps: 1,
+				Progress: map[string]rpi.Exec{
+					"1": {
+						Name:       "FuncA",
+						StartTime:  1,
+						EndTime:    2,
+						ExitStatus: 0,
+						Stdout:     "string0-string1",
+					},
+				},
+				ExitStatus: 0,
+				StartTime:  2,
+				EndTime:    uint64(time.Now().Unix()),
+			},
+			wantedErr: nil,
+		},
+		{
+			name:   "success multiple pkg",
+			action: "install",
+			pkg:    "dummy1<|>dummy2<|>dummy3<|>",
+			plan: map[int](map[int]actions.Func){
+				1: {
+					1: {
+						Name:      "FuncA",
+						Reference: test_utl.FuncA,
+						Argument: []interface{}{
+							test_utl.ArgFuncA{
+								Arg0: "string0",
+								Arg1: "string1",
+							},
+						},
+					},
+				},
+				2: {
+					1: {
+						Name:      "FuncA",
+						Reference: test_utl.FuncA,
+						Argument: []interface{}{
+							test_utl.ArgFuncA{
+								Arg0: "string0",
+								Arg1: "string1",
+							},
+						},
+					},
+				},
+				3: {
 					1: {
 						Name:      "FuncA",
 						Reference: test_utl.FuncA,
