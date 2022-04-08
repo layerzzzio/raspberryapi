@@ -3,14 +3,17 @@ package appinstall
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	"github.com/raspibuddy/rpi"
 	"github.com/raspibuddy/rpi/pkg/utl/actions"
 )
 
 // ExecuteAG install a package with apt-get
 func (ins *AppInstall) ExecuteAG(action string, pkg string) (rpi.Action, error) {
+	pkgs := strings.Split(pkg, actions.Separator)
+
 	plan := map[int](map[int]actions.Func){
 		1: {
 			1: {
@@ -23,17 +26,22 @@ func (ins *AppInstall) ExecuteAG(action string, pkg string) (rpi.Action, error) 
 				},
 			},
 		},
-		2: {
+	}
+
+	// add +2 because the index starts at 0 in pkgs
+	// and because index=1 in plan is already used
+	for i, p := range pkgs {
+		plan[i+2] = map[int]actions.Func{
 			1: {
 				Name:      actions.ExecuteBashCommand,
 				Reference: ins.a.ExecuteBashCommand,
 				Argument: []interface{}{
 					actions.EBC{
-						Command: fmt.Sprintf("apt-get %v -y %v", action, pkg),
+						Command: fmt.Sprintf("apt-get %v -y %v", action, p),
 					},
 				},
 			},
-		},
+		}
 	}
 
 	return ins.inssys.ExecuteAG(plan)
