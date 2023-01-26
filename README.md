@@ -9,7 +9,7 @@ Raspberry API is an open-source API written in Golang for fetching critical metr
 
 <a href="https://raspberryapi.com/docs/getting-started.html">Getting started 👩‍💻</a>
 
-# Branching: how-to?
+# Contributing
 
 There are 3 types of branches:
 - one main branch (long-lived)
