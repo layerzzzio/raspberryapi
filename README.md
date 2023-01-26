@@ -5,7 +5,7 @@
 
 # Getting started
 
-Raspberry API is an open-source API written in Golang for fetching critical metrics and other information from a Raspberry Pi. It also allows executing actions on it, such as installing packages or configuring the device.
+Raspberry API is an open-source application programming interface, developed using the Go programming language, which enables retrieval of vital metrics and other data from a Raspberry Pi device. Additionally, it allows for the execution of various actions such as package installation and device configuration.
 
 <a href="https://raspberryapi.com/docs/getting-started.html">Getting started 👩‍💻</a>
 
@@ -22,17 +22,11 @@ To have Go installed on your machine.
 
 ## Regular workflow
 
-If a feature has to be added, a branch starting with ft/[] is created.
-The development is done in this branch.
-Once done, the feature branch is merged to develop with a PR.
-The develop release is then tested in a real environment to test the quality of the code and find bugs.
-If after some time, the develop release works well, it is merge with main.
+To implement new functionality, a dedicated branch prefixed with "ft/" is established. Development efforts are focused on this branch, upon completion, it is merged with the "develop" branch via a pull request. The "develop" release is then thoroughly tested in a live environment to evaluate code quality and identify any issues. Once deemed stable, the "develop" release is subsequently merged with the "main" branch.
 
 ## A minor bug to fix
 
-Create a fix/* branch and fix the bug.
-Push to develop and test with a real device.
-If it works, merge to main.
+To resolve bugs, a "fix/*" branch is established and the necessary fixes are implemented. The updated code is then pushed to the "develop" branch and tested on a real device. Upon successful testing, the changes are merged into the "main" branch.
 
 ## Hot fix
 
@@ -40,7 +34,7 @@ Create a hotfix/* branch, fix the bug and push directly to main.
 
 # Info about the linter
 
-The following linter is being used: https://golangci-lint.run/usage/install#github-actions. It is the same "company" that used to maintain GolangCI.com. They closed GolangCI.com as explained here https://medium.com/golangci/golangci-com-is-closing-d1fc1bd30e0e, but kept maintaining the linter: golangci-lint
+The following linter is used in the project: https://golangci-lint.run/usage/install#github-actions. It is made by the same organization that used to maintain GolangCI.com, as outlined in this Medium article https://medium.com/golangci/golangci-com-is-closing-d1fc1bd30e0e. Despite the discontinuation of the website, the linter golangci-lint is still actively maintained by the same team.
 
 It can be used in VS Code that way:
 Code > Preferences > Settings > Extensions > Go > Linter Tool
