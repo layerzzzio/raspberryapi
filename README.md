@@ -1,7 +1,7 @@
+![raspberryapi_github_banner_readme](https://user-images.githubusercontent.com/98493964/214853808-9ef7599f-4097-4df8-b5b1-8fcfa40e5ebf.png)
+
 [![codecov](https://codecov.io/gh/layerzzzio/raspberryapi/branch/main/graph/badge.svg?token=IKY9WGCDIY)](https://codecov.io/gh/layerzzzio/raspberryapi)
 [![Go Report Card](https://goreportcard.com/badge/github.com/raspibuddy/rpi)](https://goreportcard.com/report/github.com/raspibuddy/rpi)
-
-![raspberryapi_github_banner](https://user-images.githubusercontent.com/98493964/214852032-edbbc2b7-2fe7-4a8b-8560-f50c66116402.png)
 
 # Getting started
 
