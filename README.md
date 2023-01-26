@@ -1,6 +1,8 @@
 [![codecov](https://codecov.io/gh/layerzzzio/raspberryapi/branch/main/graph/badge.svg?token=IKY9WGCDIY)](https://codecov.io/gh/layerzzzio/raspberryapi)
 [![Go Report Card](https://goreportcard.com/badge/github.com/raspibuddy/rpi)](https://goreportcard.com/report/github.com/raspibuddy/rpi)
 
+![raspberryapi_github_banner](https://user-images.githubusercontent.com/98493964/214852032-edbbc2b7-2fe7-4a8b-8560-f50c66116402.png)
+
 # Getting started
 
 Raspberry API is an open-source API written in Golang for fetching critical metrics and other information from a Raspberry Pi. It also allows executing actions on it, such as installing packages or configuring the device.
