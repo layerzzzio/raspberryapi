@@ -16,6 +16,10 @@ There are 3 types of branches:
 - one develop branch (long-lived)
 - multiple feature/fix/etc. branches
 
+## Prerequisites 
+
+To have Go installed on your machine.
+
 ## Regular workflow
 
 If a feature has to be added, a branch starting with ft/[] is created.
@@ -55,6 +59,22 @@ FYI, some of the GitHub Actions used:
 - golang-ci lint https://github.com/golangci/golangci-lint-action
 
 # Useful how-tos
+
+## Compiling the program locally
+
+Compiling for Raspberry Pi OS:
+```
+# from the root of the project
+cd cmd/api
+env GOOS=linux GOARCH=arm GOARM=5 go build -o raspberryapi
+```
+
+Note: parts of the API work on Mac. You can compile it that way:
+```
+# from the root of the project
+cd cmd/api
+go build -o raspberryapi
+```
 
 ## Detect data race
 
