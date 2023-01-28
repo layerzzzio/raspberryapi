@@ -1,33 +1,31 @@
-![raspberryapi_github_banner_readme](https://user-images.githubusercontent.com/98493964/214853808-9ef7599f-4097-4df8-b5b1-8fcfa40e5ebf.png)
+![raspberryapi_github_banner_final_small](https://user-images.githubusercontent.com/98493964/215260649-002553d8-8c77-40ef-a31a-c3c3a00392d7.jpg)
 
 [![codecov](https://codecov.io/gh/layerzzzio/raspberryapi/branch/main/graph/badge.svg?token=IKY9WGCDIY)](https://codecov.io/gh/layerzzzio/raspberryapi)
 [![Go Report Card](https://goreportcard.com/badge/github.com/raspibuddy/rpi)](https://goreportcard.com/report/github.com/raspibuddy/rpi)
 
-# Getting started
+# Raspberry API
 
 Raspberry API is an open-source application programming interface, developed using the Go programming language, which enables retrieval of vital metrics and other data from a Raspberry Pi device. Additionally, it allows for the execution of various actions such as package installation and device configuration.
 
-<a href="https://raspberryapi.com/docs/getting-started.html">Getting started 👩‍💻</a>
+<a style="font-weight: bold; " href="https://raspberryapi.com/docs/getting-started.html">Getting started 👩‍💻</a>
 
-# Info about the linter
+# Capabilities
 
-The following linter is used in the project: https://golangci-lint.run/usage/install#github-actions. It is made by the same organization that used to maintain GolangCI.com, as outlined in this Medium article https://medium.com/golangci/golangci-com-is-closing-d1fc1bd30e0e. Despite the discontinuation of the website, the linter golangci-lint is still actively maintained by the same team.
+## 🩺 Fetch vital metrics
 
-It can be used in VS Code that way:
-Code > Preferences > Settings > Extensions > Go > Linter Tool
+It provides access to various metrics of your Raspberry Pi including RAM, CPU usage, disk usage, temperature, active processes, network activity, and user sessions.
 
-# Info about CI/CD
+## 🚑 Fix issues
 
-The CI/CD pipelines are inspired by Bruno Paz:
-https://brunopaz.dev/blog/building-a-basic-ci-cd-pipeline-for-a-golang-application-using-github-actions
+It enables you to troubleshoot and resolve issues on your Raspberry Pi, such as terminating resource-intensive processes or deleting large files.
 
-There 2 of them located in .github/workflows: 
-- build (lint the code, run the tests and compile the code)
-- release (compile the code and release a version - trigger when a tag is pushed to the remote repository)
+## ⚙️ Configure your device
 
-FYI, some of the GitHub Actions used:
-- codecov https://github.com/marketplace/actions/codecov
-- golang-ci lint https://github.com/golangci/golangci-lint-action
+It allows for the execution of common administrative tasks, including adding or deleting users, altering hostnames, changing passwords and updating the package repository. It also enables the enablement or disablement of common Raspberry Pi interfaces like I2C, 1Wire, among others.
+
+## 📱 Manage packages
+
+It enables you to install packages on your Raspberry Pi device and also provides the ability to start or stop them.
 
 # Useful how-tos
 
@@ -65,3 +63,23 @@ Per test:
 ## Detect leak
 
 Use the following ressource: https://medium.com/a-journey-with-go/go-goroutine-leak-detector-61a949beb88
+
+# Info about the linter
+
+The following linter is used in the project: https://golangci-lint.run/usage/install#github-actions. It is made by the same organization that used to maintain GolangCI.com, as outlined in this Medium article https://medium.com/golangci/golangci-com-is-closing-d1fc1bd30e0e. Despite the discontinuation of the website, the linter golangci-lint is still actively maintained by the same team.
+
+It can be used in VS Code that way:
+Code > Preferences > Settings > Extensions > Go > Linter Tool
+
+# Info about CI/CD
+
+The CI/CD pipelines are inspired by Bruno Paz:
+https://brunopaz.dev/blog/building-a-basic-ci-cd-pipeline-for-a-golang-application-using-github-actions
+
+There 2 of them located in .github/workflows: 
+- build (lint the code, run the tests and compile the code)
+- release (compile the code and release a version - trigger when a tag is pushed to the remote repository)
+
+FYI, some of the GitHub Actions used:
+- codecov https://github.com/marketplace/actions/codecov
+- golang-ci lint https://github.com/golangci/golangci-lint-action
