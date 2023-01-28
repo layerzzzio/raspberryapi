@@ -13,7 +13,7 @@ Raspberry API is an open-source application programming interface, developed usi
 
 ## 🩺 Fetch vital metrics
 
-It provides access to various metrics of your Raspberry Pi including RAM, CPU usage, disk usage, temperature, active processes, network activity, and user sessions.
+It provides access to various metrics of your Raspberry Pi including RAM, CPU usage, disk usage, temperature, active processes, network activity, and user sessions among others.
 
 ## 🚑 Fix issues
 
@@ -21,7 +21,7 @@ It enables you to troubleshoot and resolve issues on your Raspberry Pi, such as 
 
 ## ⚙️ Configure your device
 
-It allows for the execution of common administrative tasks, including adding or deleting users, altering hostnames, changing passwords and updating the package repository. It also enables the enablement or disablement of common Raspberry Pi interfaces like I2C, 1Wire, among others.
+It allows for the execution of common administrative tasks, such as adding or deleting users, changing passwords, and updating the package repository. It also enables or disables common Raspberry Pi interfaces, such as I2C and 1Wire.
 
 ## 📱 Manage packages
 
