@@ -7,7 +7,7 @@
 
 Raspberry API is an open-source application programming interface, developed using the Go programming language, which enables retrieval of vital metrics and other data from a Raspberry Pi device. Additionally, it allows for the execution of various actions such as package installation and device configuration.
 
-<a style="font-weight: bold; " href="https://raspberryapi.com/docs/getting-started.html">Getting started 👩‍💻</a>
+<a style="font-weight: bold; " href="https://raspberryapi.com/docs/getting-started.html">Getting started + API documentation 👩‍💻</a>
 
 # Capabilities
 
