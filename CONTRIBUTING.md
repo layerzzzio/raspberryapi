@@ -6,7 +6,7 @@ Hi! We're really excited that you are interested in contributing to Raspberry AP
 
 ## Pull Request Guidelines
 
-- Checkout a topic branch from the relevant branch, e.g. `main`, and merge back against that branch.
+- Checkout a topic branch from the relevant branch, e.g. `main`, and merge back against that branch `develop` first then `main` after testing on a real device (more information about the here below).
 
 - If adding a new feature:
 
