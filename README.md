@@ -27,7 +27,7 @@ It allows for the execution of common administrative tasks, such as adding or de
 
 It enables you to install packages on your Raspberry Pi device and also provides the ability to start or stop them.
 
-# Helpful tutorials for developers
+# Useful how-tos for contributors
 
 ## Compiling the program locally
 
